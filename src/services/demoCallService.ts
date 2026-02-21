@@ -1,12 +1,12 @@
 import {
-    collection,
-    doc,
-    getDoc,
-    onSnapshot,
-    runTransaction,
-    serverTimestamp,
-    setDoc,
-    updateDoc
+  collection,
+  doc,
+  getDoc,
+  onSnapshot,
+  runTransaction,
+  serverTimestamp,
+  setDoc,
+  updateDoc
 } from 'firebase/firestore';
 
 import { db } from '@/src/lib/firebase';
@@ -39,7 +39,19 @@ export type DemoCallDocument = {
   demoCompletedAt: any;
 };
 
-const DEMO_CALL_WEBHOOK_URL = 'http://165.22.222.202:5678/webhook/ringg-init';
+function getValidatedDemoCallWebhookUrl(): string {
+  if (typeof window !== 'undefined') {
+    return '/api/proxy-demo';
+  }
+
+  const demoCallWebhookUrl = process.env.EXPO_PUBLIC_DEMO_CALL_WEBHOOK_URL?.trim() || '';
+
+  if (!demoCallWebhookUrl) {
+    throw new Error('Demo call webhook URL is not configured. Set EXPO_PUBLIC_DEMO_CALL_WEBHOOK_URL.');
+  }
+
+  return demoCallWebhookUrl;
+}
 
 export async function executeDemoCallFlow(
   userId: string,
@@ -56,6 +68,7 @@ export async function executeDemoCallFlow(
   const userRef = doc(db, 'users', userId);
   const demoCallRef = doc(collection(db, 'demoCalls'));
   const isGuestUser = userId.startsWith('GUEST_');
+  const webhookUrl = getValidatedDemoCallWebhookUrl();
 
   if (isGuestUser) {
     await setDoc(demoCallRef, {
@@ -118,7 +131,7 @@ export async function executeDemoCallFlow(
   }
 
   try {
-    const response = await fetch(DEMO_CALL_WEBHOOK_URL, {
+    const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

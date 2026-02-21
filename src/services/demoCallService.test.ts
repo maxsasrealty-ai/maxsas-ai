@@ -18,10 +18,21 @@ jest.mock('@/src/lib/firebase', () => ({
 describe('executeDemoCallFlow - Guard Logic', () => {
   const mockRunTransaction = runTransaction as jest.Mock;
   const mockFetch = jest.fn();
+  const originalWebhookUrl = process.env.EXPO_PUBLIC_DEMO_CALL_WEBHOOK_URL;
 
   beforeEach(() => {
     jest.clearAllMocks();
     global.fetch = mockFetch as unknown as typeof fetch;
+    process.env.EXPO_PUBLIC_DEMO_CALL_WEBHOOK_URL = 'https://example.com/webhook/ringg-init';
+  });
+
+  afterAll(() => {
+    if (originalWebhookUrl === undefined) {
+      delete process.env.EXPO_PUBLIC_DEMO_CALL_WEBHOOK_URL;
+      return;
+    }
+
+    process.env.EXPO_PUBLIC_DEMO_CALL_WEBHOOK_URL = originalWebhookUrl;
   });
 
   it('should throw error if userId is not provided', async () => {
@@ -124,7 +135,7 @@ describe('executeDemoCallFlow - Guard Logic', () => {
     expect(result).toHaveProperty('transcript', '');
 
     expect(mockFetch).toHaveBeenCalledWith(
-      'http://165.22.222.202:5678/webhook/ringg-init',
+      '/api/proxy-demo',
       {
         method: 'POST',
         headers: {
