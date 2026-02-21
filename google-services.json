@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "72516441787",
+    "project_id": "real-estate-ai-agent-cbd9b",
+    "storage_bucket": "real-estate-ai-agent-cbd9b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:72516441787:android:ea1c16a94aaa2a5038bb9e",
+        "android_client_info": {
+          "package_name": "com.maxsas.ai"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "72516441787-fu4cgforsgedkv5btgle1ihe8kbtlsqg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD4RT1oEgcHEBOnAz35LnnzjlH3MATjW-k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "72516441787-fu4cgforsgedkv5btgle1ihe8kbtlsqg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

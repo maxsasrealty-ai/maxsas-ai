@@ -1,0 +1,357 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===== HELPER FUNCTIONS =====
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isCurrentUser(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function isAutomation() {
+      return request.auth == null;
+    }
+
+    function isGuestDemoUserId(userId) {
+      return userId is string
+        && userId.matches('^GUEST_[A-Za-z0-9_-]{3,120}$');
+    }
+
+    function batchExists(batchId) {
+      return exists(/databases/$(database)/documents/batches/$(batchId));
+    }
+
+    function isBatchOwner(batchId) {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/batches/$(batchId)).data.userId
+        == request.auth.uid;
+    }
+
+    function isValidLeadStatus(status) {
+      return status in ['queued', 'calling', 'completed', 'failed'];
+    }
+
+    function isValidBatchStatus(status) {
+      return status in ['pending', 'running', 'scheduled', 'completed', 'failed'];
+    }
+
+    function isValidBatchSource(source) {
+      return source in ['manual', 'csv', 'clipboard', 'image'];
+    }
+
+    function isValidAction(action) {
+      return action in ['call_now', 'schedule'];
+    }
+
+    function isValidCallStatus(status) {
+      return status in ['pending', 'in_progress', 'answered', 'failed', 'busy', 'unreachable'];
+    }
+
+    function isValidAiDisposition(disposition) {
+      return disposition in ['interested', 'not_interested', 'follow_up', 'unknown'];
+    }
+
+    function isUserWalletTopUp(userId) {
+      return isAuthenticated()
+        && request.auth.uid == userId
+        && request.resource.data.userId == userId
+        && request.resource.data.balance is number
+        && request.resource.data.balance >= 0
+        && request.resource.data.lockedAmount is number
+        && request.resource.data.lockedAmount >= 0
+        && request.resource.data.lockedAmount <= request.resource.data.balance
+        && request.resource.data.totalRecharged is number
+        && request.resource.data.totalRecharged >= 0
+        && request.resource.data.updatedAt != null
+        && (resource == null || (
+          request.resource.data.balance >= resource.data.balance
+          && request.resource.data.totalRecharged >= resource.data.totalRecharged
+          && request.resource.data.lockedAmount == resource.data.lockedAmount
+          && request.resource.data.totalSpent == resource.data.totalSpent
+        ));
+    }
+
+    // ============================================================
+    // USERS
+    // Allows profile creation/updates during onboarding while protecting system fields
+    // ============================================================
+    match /users/{uid} {
+
+      allow read: if isCurrentUser(uid);
+
+      // Allow create - users can create their own document
+      allow create: if isCurrentUser(uid)
+        && request.resource.data.userId == uid;
+
+      // Allow update - users can modify profile fields but not protected system fields
+      allow update: if isCurrentUser(uid)
+        && request.resource.data.userId == resource.data.userId
+        // Protected field checks - only validate if field exists in BOTH old and new
+        && (isAutomation() 
+            || !('currentActiveCalls' in resource.data)
+            || !('currentActiveCalls' in request.resource.data)
+            || request.resource.data.currentActiveCalls == resource.data.currentActiveCalls)
+        && (isAutomation() 
+            || !('tier' in resource.data)
+            || !('tier' in request.resource.data)
+            || request.resource.data.tier == resource.data.tier)
+        && (isAutomation() 
+            || !('maxCurrentCalls' in resource.data)
+            || !('maxCurrentCalls' in request.resource.data)
+            || request.resource.data.maxCurrentCalls == resource.data.maxCurrentCalls)
+        // Demo protection: cannot change demoEligible from false to true
+        && (isAutomation()
+            || !('demoEligible' in resource.data)
+            || !('demoEligible' in request.resource.data)
+            || request.resource.data.demoEligible == resource.data.demoEligible
+            || request.resource.data.demoEligible == false);
+
+      allow delete: if false;
+    }
+
+    // ============================================================
+    // DEMO CALLS
+    // Users can create/read/update only their own demo call documents
+    // ============================================================
+    match /demoCalls/{demoCallId} {
+      allow create: if (
+        isAuthenticated()
+          && request.resource.data.userId == request.auth.uid
+      ) || (
+        !isAuthenticated()
+          && isGuestDemoUserId(request.resource.data.userId)
+      )
+        && request.resource.data.demoCallId == demoCallId
+        && request.resource.data.status in ['initiated', 'in_progress', 'completed', 'failed']
+        && request.resource.data.createdAt != null
+        && request.resource.data.updatedAt != null;
+
+      allow read: if (
+        isAuthenticated()
+          && resource.data.userId == request.auth.uid
+      ) || (
+        !isAuthenticated()
+          && isGuestDemoUserId(resource.data.userId)
+      );
+
+      allow update: if (
+        (isAuthenticated() && resource.data.userId == request.auth.uid)
+        || (!isAuthenticated() && isGuestDemoUserId(resource.data.userId))
+      )
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.demoCallId == resource.data.demoCallId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.status in ['initiated', 'in_progress', 'completed', 'failed']
+        && request.resource.data.updatedAt != null;
+
+      allow delete: if false;
+    }
+
+    // ============================================================
+    // PRIVATE BETA ACCESS PASSES
+    // Public read by document id for URL pass validation, write automation-only
+    // ============================================================
+    match /betaAccess/{passId} {
+      allow get: if true;
+      allow list: if false;
+      allow write: if false;
+    }
+
+    // ============================================================
+    // SYSTEM (Global Concurrency Control)
+    // PHASE 2: Runtime configuration - Automation only
+    // Users can read but not write
+    // ============================================================
+    match /system/runtime {
+      allow read: if isAuthenticated() || isAutomation();
+      allow write: if isAutomation();
+    }
+
+    // ============================================================
+    // BATCHES
+    // ============================================================
+    match /batches/{batchId} {
+
+      // CREATE
+      // PHASE 0 & 4: Require lastDispatchedAt, lock fields, priority, updatedAt
+      allow create: if (isAutomation() || isAuthenticated())
+        && (isAutomation() || request.resource.data.userId == request.auth.uid)
+        && request.resource.data.batchId == batchId
+        && isValidBatchStatus(request.resource.data.status)
+        && isValidAction(request.resource.data.action)
+        && isValidBatchSource(request.resource.data.source)
+        && request.resource.data.processingLock is bool
+        // PHASE 4: Lock fields - users cannot set locks on create
+        && (isAutomation() || (
+          request.resource.data.lockOwner == null
+          && request.resource.data.lockExpiresAt == null
+        ))
+        && request.resource.data.priority is number
+        && request.resource.data.priority >= 0
+        // PHASE 0: Require lastDispatchedAt
+        && request.resource.data.lastDispatchedAt != null
+        && request.resource.data.totalContacts is number
+        && request.resource.data.totalContacts > 0
+        && request.resource.data.runningCount is number
+        && request.resource.data.completedCount is number
+        && request.resource.data.failedCount is number
+        && request.resource.data.createdAt != null
+        && request.resource.data.updatedAt != null;
+
+      // READ
+      allow read: if isAutomation() ||
+        (isAuthenticated() && request.auth.uid == resource.data.userId);
+
+      // UPDATE
+      // PHASE 4: Lock fields and lastDispatchedAt are automation-only
+      // SCHEDULE: Only automation can transition from scheduled → running
+      allow update: if (isAutomation() ||
+        (isAuthenticated() && request.auth.uid == resource.data.userId))
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.batchId == resource.data.batchId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && isValidBatchStatus(request.resource.data.status)
+        && request.resource.data.processingLock is bool
+        // PHASE 4: Users cannot modify lock fields
+        && (isAutomation() || (
+          request.resource.data.lockOwner == resource.data.lockOwner
+          && request.resource.data.lockExpiresAt == resource.data.lockExpiresAt
+        ))
+        // PHASE 0: Users cannot modify lastDispatchedAt
+        && (isAutomation() || (
+          request.resource.data.lastDispatchedAt == resource.data.lastDispatchedAt
+        ))
+        // SCHEDULE: Only automation can change status from 'scheduled' to 'running'
+        && (
+          // If current status is 'scheduled', only automation can update status field
+          (resource.data.status == 'scheduled' && isAutomation()) ||
+          // If current status is not 'scheduled', status can be changed normally
+          (resource.data.status != 'scheduled') ||
+          // Users can update if status is not changing
+          (request.resource.data.status == resource.data.status && isAuthenticated())
+        )
+        // SCHEDULE: startedAt is automation-only when status changes to 'running'
+        && (isAutomation() || (
+          request.resource.data.startedAt == resource.data.startedAt
+        ))
+        && request.resource.data.priority is number
+        && request.resource.data.runningCount is number
+        && request.resource.data.completedCount is number
+        && request.resource.data.failedCount is number
+        && request.resource.data.updatedAt != null;
+
+      // DELETE
+      allow delete: if isAuthenticated()
+        && request.auth.uid == resource.data.userId;
+    }
+
+    // ============================================================
+    // LEADS
+    // ============================================================
+    match /leads/{leadId} {
+
+      // CREATE
+      // PHASE 3: Require maxAttempts, lock fields, billing fields, call timestamps
+      allow create: if (isAutomation() || isAuthenticated())
+        && (isAutomation() || request.resource.data.userId == request.auth.uid)
+        && request.resource.data.batchId != null
+        && request.resource.data.phone != null
+        && request.resource.data.phone != ''
+        && request.resource.data.leadId == leadId
+        && isValidLeadStatus(request.resource.data.status)
+        && isValidCallStatus(request.resource.data.callStatus)
+        && isValidAiDisposition(request.resource.data.aiDisposition)
+        && (request.resource.data.callAttempts is number || request.resource.data.attempts is number)
+        // PHASE 3: Require maxAttempts
+        && request.resource.data.maxAttempts is number
+        && request.resource.data.maxAttempts > 0
+        // PHASE 3: Users cannot set lock or billing fields on create
+        && (isAutomation() || (
+          request.resource.data.lockOwner == null
+          && request.resource.data.lockExpiresAt == null
+          && request.resource.data.billingStatus == null
+          && request.resource.data.callStartedAt == null
+          && request.resource.data.callEndedAt == null
+        ))
+        && request.resource.data.createdAt != null
+        && batchExists(request.resource.data.batchId)
+        && (isAutomation() || isBatchOwner(request.resource.data.batchId));
+
+      // READ
+      allow read: if isAutomation() ||
+        (isAuthenticated() && request.auth.uid == resource.data.userId);
+
+      // UPDATE
+      // PHASE 3: Lock, billing, and call timestamp fields are automation-only
+      allow update: if (isAutomation() ||
+        (isAuthenticated() && request.auth.uid == resource.data.userId))
+        && request.resource.data.leadId == resource.data.leadId
+        && request.resource.data.batchId == resource.data.batchId
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && isValidLeadStatus(request.resource.data.status)
+        && isValidCallStatus(request.resource.data.callStatus)
+        && isValidAiDisposition(request.resource.data.aiDisposition)
+        && (request.resource.data.callAttempts is number || request.resource.data.attempts is number)
+        && request.resource.data.maxAttempts is number
+        && request.resource.data.maxAttempts > 0
+        // PHASE 3: Users cannot modify lock, billing, or timestamp fields
+        && (isAutomation() || (
+          request.resource.data.lockOwner == resource.data.lockOwner
+          && request.resource.data.lockExpiresAt == resource.data.lockExpiresAt
+          && request.resource.data.billingStatus == resource.data.billingStatus
+          && request.resource.data.callStartedAt == resource.data.callStartedAt
+          && request.resource.data.callEndedAt == resource.data.callEndedAt
+        ));
+
+      // DELETE
+      allow delete: if isAuthenticated()
+        && request.auth.uid == resource.data.userId;
+    }
+
+    // ============================================================
+    // WALLETS
+    // Automation handles billing
+    // ============================================================
+    match /wallets/{userId} {
+
+      allow read: if isAutomation() ||
+        (isAuthenticated() && request.auth.uid == userId);
+
+      allow create, update: if (
+        (isAutomation()
+          && request.resource.data.userId == userId
+          && request.resource.data.balance is number
+          && request.resource.data.balance >= 0
+          && request.resource.data.lockedAmount is number
+          && request.resource.data.lockedAmount >= 0
+          && request.resource.data.lockedAmount <= request.resource.data.balance
+          && request.resource.data.updatedAt != null)
+        || isUserWalletTopUp(userId)
+      );
+
+      allow delete: if false;
+    }
+
+    // ============================================================
+    // TRANSACTIONS (LEDGER)
+    // Users can read their own ledger entries; client writes are blocked
+    // ============================================================
+    match /transactions/{transactionId} {
+      allow read: if isAuthenticated()
+        && resource.data.userId == request.auth.uid;
+
+      allow create, update, delete: if false;
+    }
+
+    // ============================================================
+    // DEFAULT DENY
+    // ============================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
