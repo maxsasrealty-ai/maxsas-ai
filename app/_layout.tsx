@@ -58,6 +58,7 @@ export default function RootLayout() {
                 <Stack.Screen name="signup" options={{ headerShown: false, headerBackVisible: false }} />
                 <Stack.Screen name="batch-dashboard" options={{ title: 'Batch Dashboard' }} />
                 <Stack.Screen name="batch-detail" options={{ title: 'Batch Details' }} />
+                <Stack.Screen name="batch-results" options={{ title: 'Batch Results' }} />
                 <Stack.Screen name="imports" options={{ title: 'Import Leads' }} />
                 <Stack.Screen name="upload-leads" options={{ title: 'Upload Leads' }} />
                 <Stack.Screen name="attach-file" options={{ title: 'Attach File' }} />

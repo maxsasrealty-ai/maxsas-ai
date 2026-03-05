@@ -34,6 +34,7 @@ export function TransactionHistory() {
       case 'recharge':
         return { name: 'arrow-down-circle' as const, color: colors.success };
       case 'deduction':
+      case 'batch_debit':
         return { name: 'arrow-up-circle' as const, color: colors.danger };
       case 'refund':
         return { name: 'refresh-circle' as const, color: colors.info };

@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
-import { getAuth } from 'firebase/auth';
-import { collection, doc, setDoc, Timestamp } from 'firebase/firestore';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { router, useLocalSearchParams, useNavigation } from 'expo-router';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { collection, doc, runTransaction, setDoc, Timestamp, writeBatch } from 'firebase/firestore';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
     Dimensions,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
@@ -24,6 +25,7 @@ import { useWallet } from '../../context/WalletContext';
 import { usePricing } from '../../hooks/usePricing';
 import { db } from '../../lib/firebase';
 import { subscribeToBatchLeads } from '../../services/leadService';
+import { finalizeBatchBillingFromClient } from '../../services/walletService';
 import { Batch, BatchDraft, Lead } from '../../types/batch';
 
 // Color constants
@@ -44,6 +46,16 @@ const verticalScale = (size: number) => (maxScaleHeight / 667) * size;
 
 const MAX_CONTENT_WIDTH = 800;
 const SECTION_GAP = verticalScale(10);
+const AUTO_RETRY_LIMIT_DISPOSITION = 'attempt_limit_reached';
+const USER_DELETED_DISPOSITION = 'user_deleted';
+const JUNK_DISPOSITIONS = ['invalid_number', 'wrong_person', AUTO_RETRY_LIMIT_DISPOSITION, USER_DELETED_DISPOSITION];
+const RETRY_ALL_MIN_DELAY_MS = 4000;
+const RETRY_ALL_MAX_DELAY_MS = 5000;
+
+const sleep = (delayMs: number) => new Promise<void>((resolve) => setTimeout(resolve, delayMs));
+const getRetryAllDelayMs = () =>
+  Math.floor(Math.random() * (RETRY_ALL_MAX_DELAY_MS - RETRY_ALL_MIN_DELAY_MS + 1)) +
+  RETRY_ALL_MIN_DELAY_MS;
 
 /**
  * PHASE 3 & 5 - BATCH DETAIL SCREEN
@@ -53,6 +65,7 @@ const SECTION_GAP = verticalScale(10);
 
 export const BatchDetailScreen: React.FC = () => {
   const { batchId } = useLocalSearchParams<{ batchId: string }>();
+  const navigation = useNavigation();
   const { currentBatch, allBatches, getBatchDetail, saveBatchToFirebase, deleteDraftBatch } =
     useBatch();
   const { pricing } = usePricing();
@@ -69,14 +82,55 @@ export const BatchDetailScreen: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [showScheduleComingSoonModal, setShowScheduleComingSoonModal] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   
   const [saving, setSaving] = useState(false);
-  const [leadFilter, setLeadFilter] = useState<'pending' | 'completed' | 'failed' | 'retrying'>('pending');
+  const [leadFilter, setLeadFilter] = useState<'pending' | 'completed' | 'failed' | 'retrying' | 'junk'>('pending');
+  const [retryingLeads, setRetryingLeads] = useState<Record<string, boolean>>({});
+  const [deletingLeads, setDeletingLeads] = useState<Record<string, boolean>>({});
+  const [bulkActionLoading, setBulkActionLoading] = useState<'retry' | 'delete' | null>(null);
+  const [retryToastVisible, setRetryToastVisible] = useState(false);
+  const [retryToastMessage, setRetryToastMessage] = useState('');
+  const [retryToastType, setRetryToastType] = useState<'success' | 'error'>('success');
+  const autoFinalizingLeadsRef = useRef<Set<string>>(new Set());
+  const autoFinalizeBlockedRef = useRef(false);
+  const autoFinalizePermissionToastShownRef = useRef(false);
+  const billingSyncRef = useRef<Set<string>>(new Set());
 
   const MAX_RETRY_COUNT = 3;
 
+  const handleHeaderBack = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace('/batch-dashboard');
+  }, []);
+
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      headerLeft: () => (
+        <TouchableOpacity onPress={handleHeaderBack} style={styles.headerBackButton}>
+          <Ionicons name="chevron-back" size={scale(18)} color={colors.dark} />
+        </TouchableOpacity>
+      ),
+    });
+  }, [handleHeaderBack, navigation]);
+
   useEffect(() => {
-    if (!batchId) return;
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUserId(user?.uid ?? null);
+      setAuthReady(true);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!batchId || !authReady) return;
 
     console.log('🔍 Looking for batch:', batchId);
     console.log('📦 Current batch:', currentBatch?.batchId);
@@ -97,6 +151,11 @@ export const BatchDetailScreen: React.FC = () => {
       return;
     }
 
+    if (!currentUserId) {
+      console.log('⏳ Skipping Firebase batch fetch until user is authenticated');
+      return;
+    }
+
     // Finally, try to fetch from Firebase (for saved batches)
     console.log('🔥 Fetching from Firebase...');
     getBatchDetail(batchId)
@@ -105,14 +164,17 @@ export const BatchDetailScreen: React.FC = () => {
         setBatch(b);
       })
       .catch((err) => {
+        if (err?.message === 'User not authenticated') {
+          return;
+        }
         console.error('❌ Failed to fetch batch:', err);
         Alert.alert('Error', err.message);
       });
-  }, [batchId, currentBatch, allBatches, getBatchDetail]);
+  }, [batchId, currentBatch, allBatches, getBatchDetail, authReady, currentUserId]);
 
   // REAL-TIME LISTENER FOR BATCH LEADS
   useEffect(() => {
-    if (!batch || batch.status === 'draft') {
+    if (!batch || batch.status === 'draft' || !authReady || !currentUserId) {
       setStatsLoading(false);
       return;
     }
@@ -140,7 +202,43 @@ export const BatchDetailScreen: React.FC = () => {
         unsubscribe();
       }
     };
-  }, [batch?.batchId, batch?.status, batch]);
+  }, [batch?.batchId, batch?.status, batch, authReady, currentUserId]);
+
+  const batchIdForBilling = batch?.batchId;
+  const batchStatusForBilling = batch?.status;
+  const batchBillingStatusForBilling =
+    batch && 'billingLedgerStatus' in batch ? batch.billingLedgerStatus : undefined;
+
+  useEffect(() => {
+    if (!authReady || !currentUserId || !batchIdForBilling || !batchStatusForBilling || batchStatusForBilling === 'draft') {
+      return;
+    }
+
+    if (batchStatusForBilling !== 'completed') {
+      return;
+    }
+
+    const billingLedgerStatus = String(batchBillingStatusForBilling || 'pending').toLowerCase();
+    if (billingLedgerStatus === 'finalized') {
+      return;
+    }
+
+    if (billingSyncRef.current.has(batchIdForBilling)) {
+      return;
+    }
+
+    billingSyncRef.current.add(batchIdForBilling);
+
+    const syncBilling = async () => {
+      const result = await finalizeBatchBillingFromClient(batchIdForBilling);
+
+      if (!result.success) {
+        console.error('Batch detail client billing finalization failed:', result.errorMessage);
+      }
+    };
+
+    void syncBilling();
+  }, [authReady, currentUserId, batchIdForBilling, batchStatusForBilling, batchBillingStatusForBilling]);
 
   // CALCULATE LIVE STATS FROM LEADS
   const calculateStats = useCallback(() => {
@@ -156,13 +254,33 @@ export const BatchDetailScreen: React.FC = () => {
       };
     }
 
+    const isRetryCandidate = (lead: Lead) => {
+      const status = String(lead.status || '').toLowerCase();
+      const callStatus = String(lead.callStatus || '').toLowerCase();
+
+      if (status === 'failed_permanent' || status === 'failed' || status === 'completed') {
+        return false;
+      }
+
+      if (status === 'failed_retryable') {
+        return true;
+      }
+
+      if (status === 'queued' || status === 'calling') {
+        return (lead.retryCount || 0) > 0 || !!lead.nextRetryAt || callStatus === 'in_progress';
+      }
+
+      return false;
+    };
+
     const total = liveLeads.length;
     const completed = liveLeads.filter((l) => l.status === 'completed').length;
     const pending = liveLeads.filter((l) => l.status === 'queued').length;
     const inProgress = liveLeads.filter((l) => l.status === 'calling' || l.callStatus === 'in_progress').length;
-    const totalRetries = liveLeads.reduce((sum, l) => sum + (l.retryCount || 0), 0);
+    const retryCandidates = liveLeads.filter(isRetryCandidate);
+    const totalRetries = retryCandidates.reduce((sum, l) => sum + (l.retryCount || 0), 0);
     const avgRetries = Math.round(totalRetries / total);
-    const nextRetryTimes = liveLeads
+    const nextRetryTimes = retryCandidates
       .filter((l) => l.nextRetryAt)
       .map((l) => l.nextRetryAt);
 
@@ -179,12 +297,43 @@ export const BatchDetailScreen: React.FC = () => {
 
   const stats = useMemo(() => calculateStats(), [calculateStats]);
 
+  const summaryStats = useMemo(() => {
+    const totalLeads = batch?.status === 'draft'
+      ? batch.totalContacts
+      : (liveLeads.length || batch?.totalContacts || 0);
+
+    const successCount = liveLeads.filter((lead) => lead.status === 'completed').length;
+    const actionRequiredCount = liveLeads.filter(
+      (lead) => lead.status === 'failed_retryable' && (lead.retryCount || 0) < MAX_RETRY_COUNT
+    ).length;
+
+    return {
+      totalLeads,
+      successCount,
+      actionRequiredCount,
+    };
+  }, [batch?.status, batch?.totalContacts, liveLeads, MAX_RETRY_COUNT]);
+
   const formatTime = (timestamp: Timestamp | null) => {
     if (!timestamp) return 'N/A';
     return new Date(timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   const getLeadDisplayStatus = (lead: Lead) => {
+    const normalizedStatus = String(lead.status || '').toLowerCase();
+
+    if (lead.status === 'failed_retryable') {
+      return { label: 'Failed', color: '#ef4444', emoji: '🔴' };
+    }
+
+    if (lead.status === 'failed_permanent' && lead.aiDisposition === 'not_interested') {
+      return { label: 'Not Interested', color: '#ef4444', emoji: '🔴' };
+    }
+
+    if (lead.status === 'failed_permanent' || normalizedStatus === 'failed') {
+      return { label: 'Failed', color: '#ef4444', emoji: '🔴' };
+    }
+
     if (lead.callStatus === 'failed' || lead.callStatus === 'busy' || lead.callStatus === 'unreachable') {
       return { label: 'Failed', color: '#ef4444', emoji: '🔴' };
     }
@@ -200,21 +349,565 @@ export const BatchDetailScreen: React.FC = () => {
     return { label: 'Pending', color: '#f59e0b', emoji: '🟡' };
   };
 
+  const getFailureReasonLabel = (aiDisposition: string | null | undefined) => {
+    const normalized = (aiDisposition || 'unknown').toLowerCase();
+
+    if (normalized.includes('busy')) return 'Busy';
+    if (normalized.includes('switch') || normalized.includes('off') || normalized.includes('unreachable')) return 'Switched Off';
+    if (normalized.includes('wrong')) return 'Wrong Number';
+    if (normalized === AUTO_RETRY_LIMIT_DISPOSITION) return 'Attempt Limit Reached';
+    if (normalized === USER_DELETED_DISPOSITION) return 'User Deleted';
+    if (normalized === 'not_interested') return 'Not Interested';
+    if (normalized === 'follow_up') return 'Follow Up';
+
+    return 'Unknown';
+  };
+
+  const isRetryingLead = useCallback((lead: Lead) => {
+    const status = String(lead.status || '').toLowerCase();
+    const retryCount = lead.retryCount || 0;
+    const hasRetryScheduled = !!lead.nextRetryAt;
+    const hasRetrySignal = retryCount > 0 || hasRetryScheduled;
+    const isTerminalFailure = status === 'failed_permanent' || status === 'failed';
+
+    if (isTerminalFailure) {
+      return false;
+    }
+
+    if (status === 'failed_retryable') {
+      return true;
+    }
+
+    return (
+      hasRetrySignal &&
+      (status === 'queued' || status === 'calling' || lead.callStatus === 'in_progress')
+    );
+  }, []);
+
   const filteredLeads = useMemo(() => {
     if (batch?.status === 'draft') return liveLeads;
 
-    return liveLeads.filter((lead) => {
-      if (leadFilter === 'retrying') {
-        return (lead.retryCount || 0) > 0 || !!lead.nextRetryAt;
+    const isCompletedLead = (lead: Lead) => lead.status === 'completed';
+
+    const isJunkLead = (lead: Lead) => {
+      const disposition = String(lead.aiDisposition || '').toLowerCase();
+      return JUNK_DISPOSITIONS.includes(disposition);
+    };
+
+    const isFailedLead = (lead: Lead) => {
+      const status = String(lead.status).toLowerCase();
+
+      if (status === 'completed') {
+        return false;
       }
 
-      const status = getLeadDisplayStatus(lead).label;
-      if (leadFilter === 'pending') return status === 'Pending';
-      if (leadFilter === 'completed') return status === 'Completed';
-      if (leadFilter === 'failed') return status === 'Failed';
+      if (isJunkLead(lead)) {
+        return false;
+      }
+
+      return status === 'failed' || status === 'failed_retryable' || status === 'failed_permanent';
+    };
+
+    return liveLeads.filter((lead) => {
+      if (leadFilter === 'failed') {
+        return isFailedLead(lead);
+      }
+
+      if (leadFilter === 'junk') {
+        return isJunkLead(lead);
+      }
+
+      if (leadFilter === 'retrying') {
+        return isRetryingLead(lead);
+      }
+
+      if (leadFilter === 'completed') return isCompletedLead(lead);
+      if (leadFilter === 'pending') {
+        return (
+          !isCompletedLead(lead) &&
+          !isFailedLead(lead) &&
+          !isJunkLead(lead) &&
+          !isRetryingLead(lead)
+        );
+      }
       return true;
     });
-  }, [batch?.status, leadFilter, liveLeads]);
+  }, [batch?.status, leadFilter, liveLeads, isRetryingLead]);
+
+  const retryingLeadsForDelete = useMemo(
+    () => liveLeads.filter((lead) => isRetryingLead(lead)),
+    [liveLeads, isRetryingLead]
+  );
+
+  const failedLeads = useMemo(() => {
+    return liveLeads.filter((lead) => {
+      const status = String(lead.status || '').toLowerCase();
+      const disposition = String(lead.aiDisposition || '').toLowerCase();
+      const isJunk = JUNK_DISPOSITIONS.includes(disposition);
+      return !isJunk && (status === 'failed' || status === 'failed_retryable' || status === 'failed_permanent');
+    });
+  }, [liveLeads]);
+
+  const retryableFailedLeads = useMemo(() => {
+    return failedLeads.filter(
+      (lead) => lead.status === 'failed_retryable' && (lead.retryCount || 0) < MAX_RETRY_COUNT
+    );
+  }, [failedLeads, MAX_RETRY_COUNT]);
+
+  const showRetryToast = (message: string, type: 'success' | 'error') => {
+    setRetryToastMessage(message);
+    setRetryToastType(type);
+    setRetryToastVisible(true);
+    setTimeout(() => setRetryToastVisible(false), 2400);
+  };
+
+  const getRetryWebhookUrl = () => {
+    const webhookUrl = process.env.EXPO_PUBLIC_RETRY_LEAD_WEBHOOK_URL?.trim() || '';
+
+    if (!webhookUrl) {
+      throw new Error('Retry lead webhook URL is not configured. Set EXPO_PUBLIC_RETRY_LEAD_WEBHOOK_URL.');
+    }
+
+    return webhookUrl;
+  };
+
+  const updateBatchForBillingIfResolved = async (remainingLeads: Lead[]) => {
+    if (!batch || batch.status === 'draft') {
+      return;
+    }
+
+    const totalContacts = batch.totalContacts || remainingLeads.length;
+    const remainingCompleted = remainingLeads.filter((lead) => lead.status === 'completed').length;
+    const allLeadsCompleted = remainingCompleted >= totalContacts;
+
+    const allLeadsInFinalStates = remainingLeads.every((lead) => {
+      const status = String(lead.status || '').toLowerCase();
+      const disposition = String(lead.aiDisposition || '').toLowerCase();
+      const isJunkLead = JUNK_DISPOSITIONS.includes(disposition);
+      return status === 'completed' || status === 'failed_permanent' || isJunkLead;
+    });
+
+    if (!allLeadsCompleted && !allLeadsInFinalStates) {
+      return;
+    }
+
+    const failedCount = remainingLeads.filter((lead) => {
+      const status = String(lead.status || '').toLowerCase();
+      return status === 'failed_permanent';
+    }).length;
+
+    const remainingRunning = remainingLeads.filter(
+      (lead) => lead.status === 'calling' || lead.callStatus === 'in_progress'
+    ).length;
+
+    await setDoc(
+      doc(db, 'batches', batch.batchId),
+      {
+        status: 'completed',
+        processingLock: true,
+        completedAt: Timestamp.now(),
+        completedCount: remainingCompleted,
+        failedCount,
+        runningCount: remainingRunning,
+        updatedAt: Timestamp.now(),
+      },
+      { merge: true }
+    );
+
+    setBatch((prev) => {
+      if (!prev || prev.status === 'draft') {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        status: 'completed',
+        processingLock: true,
+        completedAt: Timestamp.now(),
+        completedCount: remainingCompleted,
+        failedCount,
+        runningCount: remainingRunning,
+      } as Batch;
+    });
+  };
+
+  // Auto-finalize leads that have reached retry limit so they move to Junk immediately.
+  useEffect(() => {
+    if (
+      !batch ||
+      batch.status === 'draft' ||
+      !authReady ||
+      !currentUserId ||
+      liveLeads.length === 0 ||
+      autoFinalizeBlockedRef.current
+    ) {
+      return;
+    }
+
+    const leadsToFinalize = liveLeads.filter((lead) => {
+      const retryCount = lead.retryCount || 0;
+      const disposition = String(lead.aiDisposition || '').toLowerCase();
+      const callStatus = String(lead.callStatus || '').toLowerCase();
+
+      const alreadyFinalized =
+        lead.status === 'failed_permanent' &&
+        callStatus === 'completed' &&
+        disposition === AUTO_RETRY_LIMIT_DISPOSITION &&
+        lead.lockOwner === null &&
+        lead.lockExpiresAt === null;
+
+      return (
+        retryCount >= MAX_RETRY_COUNT &&
+        !alreadyFinalized &&
+        !autoFinalizingLeadsRef.current.has(lead.leadId)
+      );
+    });
+
+    if (leadsToFinalize.length === 0) {
+      return;
+    }
+
+    leadsToFinalize.forEach((lead) => autoFinalizingLeadsRef.current.add(lead.leadId));
+
+    const finalizeLeads = async () => {
+      try {
+        await Promise.all(
+          leadsToFinalize.map((lead) =>
+            setDoc(
+              doc(db, 'leads', lead.leadId),
+              {
+                aiDisposition: AUTO_RETRY_LIMIT_DISPOSITION,
+                leadTemperature: 'cold',
+                status: 'failed_permanent',
+                callStatus: 'completed',
+                lockOwner: null,
+                lockExpiresAt: null,
+                lastActionAt: Timestamp.now(),
+              },
+              { merge: true }
+            )
+          )
+        );
+
+        const finalizedIds = new Set(leadsToFinalize.map((lead) => lead.leadId));
+        const updatedLeads = liveLeads.map((lead) =>
+          finalizedIds.has(lead.leadId)
+            ? {
+                ...lead,
+                aiDisposition: AUTO_RETRY_LIMIT_DISPOSITION as unknown as Lead['aiDisposition'],
+                status: 'failed_permanent',
+                callStatus: 'completed' as unknown as Lead['callStatus'],
+                lockOwner: null,
+                lockExpiresAt: null,
+                lastActionAt: Timestamp.now(),
+              } as Lead
+            : lead
+        );
+
+        setLiveLeads(updatedLeads);
+        await updateBatchForBillingIfResolved(updatedLeads);
+      } catch (error) {
+        const errorCode =
+          typeof error === 'object' && error && 'code' in error
+            ? String((error as { code?: unknown }).code || '')
+            : '';
+        const errorMessage = error instanceof Error ? error.message : String(error || '');
+        const isPermissionDenied =
+          errorCode.toLowerCase().includes('permission-denied') ||
+          errorMessage.toLowerCase().includes('missing or insufficient permissions');
+
+        if (isPermissionDenied) {
+          autoFinalizeBlockedRef.current = true;
+
+          if (!autoFinalizePermissionToastShownRef.current) {
+            autoFinalizePermissionToastShownRef.current = true;
+            showRetryToast('Auto-finalize disabled: Firestore permission denied', 'error');
+          }
+
+          console.error('Auto-finalize disabled due to Firestore permissions:', error);
+          return;
+        }
+
+        console.error('Failed to auto-finalize retry limit leads:', error);
+      } finally {
+        leadsToFinalize.forEach((lead) => autoFinalizingLeadsRef.current.delete(lead.leadId));
+      }
+    };
+
+    void finalizeLeads();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [batch?.batchId, batch?.status, liveLeads, MAX_RETRY_COUNT, authReady, currentUserId]);
+
+  const preserveRetryFieldsAndQueue = async (lead: Lead): Promise<{ attempts: number; retryCount: number }> => {
+    const leadRef = doc(db, 'leads', lead.leadId);
+
+    return runTransaction(db, async (transaction) => {
+      const leadSnap = await transaction.get(leadRef);
+
+      if (!leadSnap.exists()) {
+        throw new Error('Lead not found');
+      }
+
+      const leadData = leadSnap.data() as Partial<Lead>;
+      const currentAttempts = leadData.attempts ?? lead.attempts ?? 0;
+      const currentRetryCount = leadData.retryCount ?? lead.retryCount ?? 0;
+      const now = Timestamp.now();
+
+      transaction.set(
+        leadRef,
+        {
+          attempts: currentAttempts,
+          retryCount: currentRetryCount,
+          status: 'queued',
+          callStatus: 'pending',
+          lastActionAt: now,
+        },
+        { merge: true }
+      );
+
+      return { attempts: currentAttempts, retryCount: currentRetryCount };
+    });
+  };
+
+  const queueRetryLead = async (lead: Lead, webhookUrl: string, preservedRetryCount: number, preservedAttempts: number) => {
+    const payloadLeadId = (lead as { id?: string }).id ?? lead.leadId;
+
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        leadId: payloadLeadId,
+        attempts: preservedAttempts,
+        retryCount: preservedRetryCount,
+        maxAttempts: lead.maxAttempts,
+        userId: lead.userId,
+        batchId: lead.batchId,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Webhook failed with status ${response.status}`);
+    }
+
+    setLiveLeads((prev) =>
+      prev.map((item) =>
+        item.leadId === lead.leadId
+          ? {
+              ...item,
+              attempts: preservedAttempts,
+              retryCount: preservedRetryCount,
+              status: 'queued',
+              callStatus: 'pending',
+              lastActionAt: Timestamp.now(),
+            }
+          : item
+      )
+    );
+  };
+
+  const handleRetryLead = async (lead: Lead) => {
+    if (!batch || batch.status !== 'completed') {
+      return;
+    }
+
+    if (lead.status !== 'failed_retryable' || (lead.retryCount || 0) >= MAX_RETRY_COUNT) {
+      return;
+    }
+
+    if (retryingLeads[lead.leadId]) {
+      return;
+    }
+
+    setRetryingLeads((prev) => ({ ...prev, [lead.leadId]: true }));
+
+    try {
+      const { attempts: preservedAttempts, retryCount: preservedRetryCount } =
+        await preserveRetryFieldsAndQueue(lead);
+
+      const webhookUrl = getRetryWebhookUrl();
+      await queueRetryLead(lead, webhookUrl, preservedRetryCount, preservedAttempts);
+
+      showRetryToast('Lead successfully queued for retry', 'success');
+    } catch (error) {
+      showRetryToast(error instanceof Error ? error.message : 'Failed to queue retry', 'error');
+    } finally {
+      setRetryingLeads((prev) => {
+        const next = { ...prev };
+        delete next[lead.leadId];
+        return next;
+      });
+    }
+  };
+
+  const handleDeleteLead = async (lead: Lead) => {
+    if (!batch || deletingLeads[lead.leadId] || !isRetryingLead(lead)) {
+      return;
+    }
+
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm(`Delete ${lead.phone} from retry?`);
+      if (!confirmed) return;
+    }
+
+    setDeletingLeads((prev) => ({ ...prev, [lead.leadId]: true }));
+
+    try {
+      const now = Timestamp.now();
+
+      await setDoc(
+        doc(db, 'leads', lead.leadId),
+        {
+          status: 'failed_permanent',
+          callStatus: 'completed',
+          aiDisposition: USER_DELETED_DISPOSITION,
+          leadTemperature: 'cold',
+          lockOwner: null,
+          lockExpiresAt: null,
+          nextRetryAt: null,
+          lastActionAt: now,
+        },
+        { merge: true }
+      );
+
+      const updatedLeads = liveLeads.map((item) =>
+        item.leadId === lead.leadId
+          ? {
+              ...item,
+              status: 'failed_permanent',
+              callStatus: 'completed' as unknown as Lead['callStatus'],
+              aiDisposition: USER_DELETED_DISPOSITION as unknown as Lead['aiDisposition'],
+              lockOwner: null,
+              lockExpiresAt: null,
+              nextRetryAt: null,
+              lastActionAt: now,
+            } as Lead
+          : item
+      );
+
+      setLiveLeads(updatedLeads);
+      await updateBatchForBillingIfResolved(updatedLeads);
+
+      showRetryToast('Lead moved to final state', 'success');
+    } catch (error) {
+      showRetryToast(error instanceof Error ? error.message : 'Failed to finalize lead', 'error');
+    } finally {
+      setDeletingLeads((prev) => {
+        const next = { ...prev };
+        delete next[lead.leadId];
+        return next;
+      });
+    }
+  };
+
+  const handleRetryAllFailed = async () => {
+    if (!batch || batch.status !== 'completed' || retryableFailedLeads.length === 0 || bulkActionLoading) {
+      return;
+    }
+
+    let webhookUrl = '';
+    try {
+      webhookUrl = getRetryWebhookUrl();
+    } catch (error) {
+      showRetryToast(error instanceof Error ? error.message : 'Retry webhook is not configured', 'error');
+      return;
+    }
+
+    setBulkActionLoading('retry');
+
+    try {
+      let successCount = 0;
+      let failureCount = 0;
+
+      for (let index = 0; index < retryableFailedLeads.length; index += 1) {
+        const lead = retryableFailedLeads[index];
+
+        try {
+          const { attempts: preservedAttempts, retryCount: preservedRetryCount } =
+            await preserveRetryFieldsAndQueue(lead);
+          await queueRetryLead(lead, webhookUrl, preservedRetryCount, preservedAttempts);
+          successCount += 1;
+        } catch (error) {
+          console.error(`Failed to queue retry for lead ${lead.leadId}:`, error);
+          failureCount += 1;
+        }
+
+        const hasMoreLeads = index < retryableFailedLeads.length - 1;
+        if (hasMoreLeads) {
+          await sleep(getRetryAllDelayMs());
+        }
+      }
+
+      if (failureCount === 0) {
+        showRetryToast(`Retry queued for ${successCount} leads`, 'success');
+      } else {
+        showRetryToast(`Retry queued: ${successCount}, failed: ${failureCount}`, 'error');
+      }
+    } finally {
+      setBulkActionLoading(null);
+    }
+  };
+
+  const handleDeleteAllFailed = async () => {
+    if (!batch || retryingLeadsForDelete.length === 0 || bulkActionLoading) {
+      return;
+    }
+
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm(`Delete all ${retryingLeadsForDelete.length} retry leads?`);
+      if (!confirmed) return;
+    }
+
+    setBulkActionLoading('delete');
+
+    try {
+      const batchWriter = writeBatch(db);
+      const failedLeadIds = new Set(retryingLeadsForDelete.map((lead) => lead.leadId));
+      const now = Timestamp.now();
+
+      retryingLeadsForDelete.forEach((lead) => {
+        batchWriter.set(
+          doc(db, 'leads', lead.leadId),
+          {
+            status: 'failed_permanent',
+            callStatus: 'completed',
+            aiDisposition: USER_DELETED_DISPOSITION,
+            leadTemperature: 'cold',
+            lockOwner: null,
+            lockExpiresAt: null,
+            nextRetryAt: null,
+            lastActionAt: now,
+          },
+          { merge: true }
+        );
+      });
+
+      await batchWriter.commit();
+
+      const updatedLeads = liveLeads.map((lead) =>
+        failedLeadIds.has(lead.leadId)
+          ? {
+              ...lead,
+              status: 'failed_permanent',
+              callStatus: 'completed' as unknown as Lead['callStatus'],
+              aiDisposition: USER_DELETED_DISPOSITION as unknown as Lead['aiDisposition'],
+              lockOwner: null,
+              lockExpiresAt: null,
+              nextRetryAt: null,
+              lastActionAt: now,
+            } as Lead
+          : lead
+      );
+
+      setLiveLeads(updatedLeads);
+      await updateBatchForBillingIfResolved(updatedLeads);
+
+      showRetryToast('All retry leads moved to final state', 'success');
+    } catch (error) {
+      showRetryToast(error instanceof Error ? error.message : 'Failed to finalize retry leads', 'error');
+    } finally {
+      setBulkActionLoading(null);
+    }
+  };
 
   if (!batch) {
     return (
@@ -446,7 +1139,7 @@ export const BatchDetailScreen: React.FC = () => {
 
     // UX: Navigate back immediately with no perceived delay
     setShowDeleteModal(false);
-    router.back();
+    handleHeaderBack();
 
     // Perform local state cleanup without blocking navigation
     requestAnimationFrame(() => {
@@ -522,6 +1215,8 @@ export const BatchDetailScreen: React.FC = () => {
         phone: '+1-555-TEST-0001',
         name: 'Firebase Test Lead',
         status: 'queued',
+        attempts: 0,
+        retryCount: 0,
         createdAt: Timestamp.now(),
       };
 
@@ -593,7 +1288,7 @@ export const BatchDetailScreen: React.FC = () => {
       <View style={styles.content}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.headerBackButton}>
+          <TouchableOpacity onPress={handleHeaderBack} style={styles.headerBackButton}>
             <Ionicons name="chevron-back" size={scale(18)} color="#fff" />
           </TouchableOpacity>
           <View style={styles.headerTextBlock}>
@@ -603,6 +1298,36 @@ export const BatchDetailScreen: React.FC = () => {
             </Text>
           </View>
         </View>
+
+        {retryToastVisible && (
+          <View
+            style={[
+              styles.toast,
+              retryToastType === 'error' ? styles.toastError : styles.toastSuccess,
+            ]}
+          >
+            <Ionicons
+              name={retryToastType === 'error' ? 'alert-circle' : 'checkmark-circle'}
+              size={scale(12)}
+              color={retryToastType === 'error' ? '#b91c1c' : '#16a34a'}
+            />
+            <Text
+              style={[
+                styles.toastText,
+                retryToastType === 'error' ? styles.toastTextError : styles.toastTextSuccess,
+              ]}
+            >
+              {retryToastMessage}
+            </Text>
+          </View>
+        )}
+
+        {retryToastVisible && (
+          <View style={styles.toast}>
+            <Ionicons name="checkmark-circle" size={scale(12)} color="#16a34a" />
+            <Text style={styles.toastText}>Lead successfully queued for retry</Text>
+          </View>
+        )}
 
         {/* Batch Info */}
         <View style={styles.infoSection}>
@@ -726,13 +1451,29 @@ export const BatchDetailScreen: React.FC = () => {
                   : 'Batch completed'}
             </Text>
           </View>
-          <TouchableOpacity
-            style={styles.billingLinkButton}
-            onPress={() => router.push({ pathname: '/batch-billing-detail', params: { batchId: batch.batchId } })}
-          >
-            <Ionicons name="receipt-outline" size={scale(16)} color={colors.primary} />
-            <Text style={styles.billingLinkText}>View Billing Detail</Text>
-          </TouchableOpacity>
+          <View style={styles.statusActionsRow}>
+            <TouchableOpacity
+              style={[styles.billingLinkButton, batch.status === 'completed' ? styles.statusActionHalf : styles.statusActionFull]}
+              onPress={() => router.push({ pathname: '/batch-billing-detail', params: { batchId: batch.batchId } })}
+            >
+              <Ionicons name="receipt-outline" size={scale(18)} color={colors.primary} />
+              <Text style={styles.billingLinkText}>View Billing Detail</Text>
+            </TouchableOpacity>
+            {batch.status === 'completed' && (
+              <TouchableOpacity
+                style={[styles.billingLinkButton, styles.statusActionHalf]}
+                onPress={() =>
+                  router.push({
+                    pathname: '/batch-results',
+                    params: { batchId: batch.batchId, source: 'batch-detail' },
+                  })
+                }
+              >
+                <Ionicons name="bar-chart-outline" size={scale(18)} color={colors.primary} />
+                <Text style={styles.billingLinkText}>View Results</Text>
+              </TouchableOpacity>
+            )}
+          </View>
           </View>
         )}
 
@@ -777,24 +1518,31 @@ export const BatchDetailScreen: React.FC = () => {
 
           {/* Live Stats Cards */}
           <View style={styles.statsCardsContainer}>
-            {/* Completed Calls */}
+            <View style={styles.statCard}>
+              <View style={styles.statHeader}>
+                <Ionicons name="people" size={scale(20)} color="#0a7ea4" />
+                <Text style={styles.statLabel}>Total Leads</Text>
+              </View>
+              <Text style={[styles.statValue, { color: '#0a7ea4' }]}>{summaryStats.totalLeads}</Text>
+              <Text style={styles.statSubtext}>in this batch</Text>
+            </View>
+
             <View style={styles.statCard}>
               <View style={styles.statHeader}>
                 <Ionicons name="checkmark-circle" size={scale(20)} color="#4caf50" />
-                <Text style={styles.statLabel}>Completed</Text>
+                <Text style={styles.statLabel}>Success</Text>
               </View>
-              <Text style={[styles.statValue, { color: '#4caf50' }]}>{stats.completed}</Text>
-              <Text style={styles.statSubtext}>of {stats.total}</Text>
+              <Text style={[styles.statValue, { color: '#4caf50' }]}>{summaryStats.successCount}</Text>
+              <Text style={styles.statSubtext}>completed</Text>
             </View>
 
-            {/* Pending Calls */}
             <View style={styles.statCard}>
               <View style={styles.statHeader}>
-                <Ionicons name="time" size={scale(20)} color="#2196f3" />
-                <Text style={styles.statLabel}>Pending</Text>
+                <Ionicons name="alert-circle" size={scale(20)} color="#ef4444" />
+                <Text style={styles.statLabel}>Action Required</Text>
               </View>
-              <Text style={[styles.statValue, { color: '#2196f3' }]}>{stats.pending}</Text>
-              <Text style={styles.statSubtext}>waiting</Text>
+              <Text style={[styles.statValue, { color: '#ef4444' }]}>{summaryStats.actionRequiredCount}</Text>
+              <Text style={styles.statSubtext}>retry pending</Text>
             </View>
           </View>
 
@@ -852,6 +1600,7 @@ export const BatchDetailScreen: React.FC = () => {
                 { key: 'completed', label: 'Show Completed' },
                 { key: 'failed', label: 'Show Failed' },
                 { key: 'retrying', label: 'Show Retrying' },
+                { key: 'junk', label: 'Junk' },
               ] as const).map((tab) => (
                 <TouchableOpacity
                   key={tab.key}
@@ -871,6 +1620,28 @@ export const BatchDetailScreen: React.FC = () => {
                   </Text>
                 </TouchableOpacity>
               ))}
+            </View>
+          )}
+          {batch.status !== 'draft' && leadFilter === 'retrying' && (
+            <View style={styles.bulkActionsRow}>
+              <TouchableOpacity
+                style={[styles.bulkActionButton, styles.bulkRetryButton, (bulkActionLoading || retryableFailedLeads.length === 0) && styles.bulkActionButtonDisabled]}
+                onPress={handleRetryAllFailed}
+                disabled={!!bulkActionLoading || retryableFailedLeads.length === 0}
+              >
+                <Text style={styles.bulkActionButtonText}>
+                  {bulkActionLoading === 'retry' ? 'Retrying...' : 'Retry All'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.bulkActionButton, styles.bulkDeleteButton, (bulkActionLoading || retryingLeadsForDelete.length === 0) && styles.bulkActionButtonDisabled]}
+                onPress={handleDeleteAllFailed}
+                disabled={!!bulkActionLoading || retryingLeadsForDelete.length === 0}
+              >
+                <Text style={styles.bulkActionButtonText}>
+                  {bulkActionLoading === 'delete' ? 'Deleting...' : 'Delete All'}
+                </Text>
+              </TouchableOpacity>
             </View>
           )}
           <View style={styles.contactsContainer}>
@@ -901,6 +1672,16 @@ export const BatchDetailScreen: React.FC = () => {
               const lastAttempt = formatTime(lead.lastAttemptAt || null);
               const nextRetry = formatTime(lead.nextRetryAt || null);
               const disposition = lead.aiDisposition || 'unknown';
+              const failureReason = getFailureReasonLabel(disposition);
+              const isFinalFailure = (lead.retryCount || 0) >= MAX_RETRY_COUNT;
+              const isRetryButtonVisible =
+                leadFilter === 'failed' && lead.status === 'failed_retryable' && !isFinalFailure;
+              const showRetryDisabledHint = isRetryButtonVisible && batch.status !== 'completed';
+              const isRetryDisabled =
+                batch.status !== 'completed' ||
+                lead.status !== 'failed_retryable' ||
+                (lead.retryCount || 0) >= MAX_RETRY_COUNT ||
+                retryingLeads[lead.leadId];
 
               return (
                 <View key={lead.leadId} style={styles.contactRow}>
@@ -912,11 +1693,53 @@ export const BatchDetailScreen: React.FC = () => {
                       <Text style={styles.contactPhone} numberOfLines={1}>{lead.phone}</Text>
                     </View>
                     <View style={styles.contactRight}>
+                      {leadFilter === 'failed' && (
+                        <View style={styles.failureReasonBadge}>
+                          <Text style={styles.failureReasonText}>{failureReason}</Text>
+                        </View>
+                      )}
                       <View style={[styles.statusBadge, { backgroundColor: displayStatus.color }]}>
                         <Text style={styles.statusBadgeText} numberOfLines={1}>
                           {displayStatus.emoji} {displayStatus.label}
                         </Text>
                       </View>
+                      {isRetryButtonVisible && (
+                        <TouchableOpacity
+                          style={[
+                            styles.retryNowButton,
+                            isRetryDisabled && styles.retryNowButtonDisabled,
+                          ]}
+                          onPress={() => handleRetryLead(lead)}
+                          disabled={isRetryDisabled}
+                        >
+                          {retryingLeads[lead.leadId] ? (
+                            <ActivityIndicator size={scale(10)} color="#fff" />
+                          ) : (
+                            <Text style={styles.retryNowButtonText}>Retry</Text>
+                          )}
+                        </TouchableOpacity>
+                      )}
+                      {leadFilter === 'retrying' && (
+                        <TouchableOpacity
+                          style={[
+                            styles.deleteLeadButton,
+                            deletingLeads[lead.leadId] && styles.deleteLeadButtonDisabled,
+                          ]}
+                          onPress={() => handleDeleteLead(lead)}
+                          disabled={!!deletingLeads[lead.leadId]}
+                        >
+                          {deletingLeads[lead.leadId] ? (
+                            <ActivityIndicator size={scale(10)} color="#fff" />
+                          ) : (
+                            <Text style={styles.deleteLeadButtonText}>Delete</Text>
+                          )}
+                        </TouchableOpacity>
+                      )}
+                      {leadFilter === 'failed' && isFinalFailure && (
+                        <View style={styles.finalFailureTag}>
+                          <Text style={styles.finalFailureTagText}>Final Failure</Text>
+                        </View>
+                      )}
                     </View>
                   </View>
                   <View style={styles.contactMetaRow}>
@@ -926,6 +1749,11 @@ export const BatchDetailScreen: React.FC = () => {
                     <Text style={styles.contactMetaText} numberOfLines={1}>
                       Last: {lastAttempt} · Status: {lead.callStatus} · AI: {disposition}
                     </Text>
+                    {showRetryDisabledHint && (
+                      <Text style={styles.retryDisabledHint} numberOfLines={1}>
+                        Retry available after batch completion
+                      </Text>
+                    )}
                   </View>
                 </View>
               );
@@ -1179,21 +2007,33 @@ const styles = StyleSheet.create({
     color: colors.dark,
     flex: 1,
   },
-  billingLinkButton: {
-    marginTop: verticalScale(8),
-    alignSelf: 'flex-start',
+  statusActionsRow: {
+    marginTop: verticalScale(10),
     flexDirection: 'row',
     alignItems: 'center',
+    gap: scale(8),
+  },
+  billingLinkButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: scale(6),
-    paddingHorizontal: scale(10),
-    paddingVertical: verticalScale(6),
+    paddingHorizontal: scale(12),
+    paddingVertical: verticalScale(9),
     borderRadius: scale(8),
     borderWidth: 1,
     borderColor: '#bfe5ef',
     backgroundColor: '#eef8fb',
+    minHeight: verticalScale(38),
+  },
+  statusActionHalf: {
+    flex: 1,
+  },
+  statusActionFull: {
+    width: '100%',
   },
   billingLinkText: {
-    fontSize: scale(10),
+    fontSize: scale(11),
     color: colors.primary,
     fontWeight: '700',
   },
@@ -1242,6 +2082,33 @@ const styles = StyleSheet.create({
   filterTabTextActive: {
     color: '#fff',
   },
+  bulkActionsRow: {
+    flexDirection: 'row',
+    gap: scale(8),
+    marginBottom: verticalScale(8),
+  },
+  bulkActionButton: {
+    flex: 1,
+    borderRadius: scale(10),
+    paddingHorizontal: scale(10),
+    paddingVertical: verticalScale(7),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bulkRetryButton: {
+    backgroundColor: '#2196f3',
+  },
+  bulkDeleteButton: {
+    backgroundColor: '#ef4444',
+  },
+  bulkActionButtonDisabled: {
+    backgroundColor: '#9ca3af',
+  },
+  bulkActionButtonText: {
+    color: '#fff',
+    fontSize: scale(9),
+    fontWeight: '700',
+  },
   contactRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1281,6 +2148,66 @@ const styles = StyleSheet.create({
     fontSize: scale(8),
     color: colors.gray,
     fontWeight: '500',
+  },
+  failureReasonBadge: {
+    backgroundColor: '#fef3c7',
+    borderColor: '#f59e0b',
+    borderWidth: 1,
+    borderRadius: scale(8),
+    paddingHorizontal: scale(6),
+    paddingVertical: verticalScale(2),
+  },
+  failureReasonText: {
+    fontSize: scale(7),
+    fontWeight: '700',
+    color: '#b45309',
+  },
+  retryDisabledHint: {
+    fontSize: scale(8),
+    color: '#b45309',
+    fontWeight: '600',
+  },
+  finalFailureTag: {
+    backgroundColor: '#fee2e2',
+    borderColor: '#ef4444',
+    borderWidth: 1,
+    borderRadius: scale(8),
+    paddingHorizontal: scale(6),
+    paddingVertical: verticalScale(2),
+  },
+  finalFailureTagText: {
+    fontSize: scale(7),
+    fontWeight: '700',
+    color: '#b91c1c',
+  },
+  toast: {
+    marginTop: verticalScale(8),
+    marginBottom: verticalScale(6),
+    borderWidth: 1,
+    paddingVertical: verticalScale(6),
+    paddingHorizontal: scale(10),
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: scale(6),
+    borderRadius: scale(8),
+  },
+  toastSuccess: {
+    borderColor: '#dcfce7',
+    backgroundColor: '#f0fdf4',
+  },
+  toastError: {
+    borderColor: '#fee2e2',
+    backgroundColor: '#fef2f2',
+  },
+  toastText: {
+    fontSize: scale(9),
+    fontWeight: '600',
+  },
+  toastTextSuccess: {
+    color: '#166534',
+  },
+  toastTextError: {
+    color: '#b91c1c',
   },
   contactIndex: {
     width: scale(22),
@@ -1565,5 +2492,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: scale(6),
+  },
+  retryNowButtonDisabled: {
+    backgroundColor: '#9ca3af',
+  },
+  retryNowButtonText: {
+    fontSize: scale(8),
+    fontWeight: '700',
+    color: '#fff',
+  },
+  deleteLeadButton: {
+    backgroundColor: '#ef4444',
+    borderRadius: scale(8),
+    paddingHorizontal: scale(10),
+    paddingVertical: verticalScale(6),
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: scale(4),
+  },
+  deleteLeadButtonDisabled: {
+    backgroundColor: '#9ca3af',
+  },
+  deleteLeadButtonText: {
+    fontSize: scale(8),
+    fontWeight: '700',
+    color: '#fff',
   },
 });

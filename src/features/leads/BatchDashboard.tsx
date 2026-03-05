@@ -2,15 +2,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    Pressable,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
@@ -57,6 +57,7 @@ export const BatchDashboard: React.FC = () => {
     loading: walletLoading,
   } = useWallet();
   const [refreshing, setRefreshing] = useState(false);
+  const [contentLayoutWidth, setContentLayoutWidth] = useState(getContentWidth(width) - scale(32));
   const [startingBatchId, setStartingBatchId] = useState<string | null>(null);
   const [showCallConfirmModal, setShowCallConfirmModal] = useState(false);
   const [selectedBatchForCall, setSelectedBatchForCall] = useState<Batch | BatchDraft | null>(null);
@@ -191,11 +192,11 @@ export const BatchDashboard: React.FC = () => {
     setShowCallConfirmModal(true);
   };
 
-  const columns = getColumnCount(width);
-  const contentWidth = getContentWidth(width);
-  const cardWidth = columns === 1
-    ? contentWidth - scale(32)
-    : (contentWidth - scale(32) - GRID_GAP * (columns - 1)) / columns;
+  const columns = getColumnCount(contentLayoutWidth);
+  const cardWidth =
+    columns === 1
+      ? Math.max(0, contentLayoutWidth)
+      : Math.floor((contentLayoutWidth - GRID_GAP * (columns - 1)) / columns);
 
   if (loading && allBatches.length === 0) {
     return (
@@ -220,7 +221,15 @@ export const BatchDashboard: React.FC = () => {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
         contentContainerStyle={styles.scrollContent}
       >
-        <View style={styles.content}>
+        <View
+          style={styles.content}
+          onLayout={(event) => {
+            const measuredWidth = event.nativeEvent.layout.width;
+            if (measuredWidth > 0 && Math.abs(measuredWidth - contentLayoutWidth) > 1) {
+              setContentLayoutWidth(measuredWidth);
+            }
+          }}
+        >
           {/* Real-time Indicator */}
           <View style={[styles.liveIndicator, { backgroundColor: themeColors.success + '1A', borderRadius: radius.sm, marginTop: spacing.xs }]}>
             <View style={[styles.liveDot, { backgroundColor: themeColors.success }]} />
@@ -235,9 +244,22 @@ export const BatchDashboard: React.FC = () => {
           )}
 
           {/* Header */}
-          <View style={[styles.header, { backgroundColor: themeColors.primary, borderRadius: radius.lg, marginTop: spacing.sm, paddingTop: spacing.md, paddingBottom: spacing.sm }]}>
-            <Text style={[styles.headerTitle, { fontSize: typography.h2 }]}>Calling Batches</Text>
-            <Text style={[styles.headerSubtitle, { fontSize: typography.caption }]}>Central command for all campaigns</Text>
+          <View
+            style={[
+              styles.header,
+              {
+                backgroundColor: themeColors.primary + '12',
+                borderColor: themeColors.primary + '2A',
+                borderRadius: radius.lg,
+                marginTop: spacing.sm,
+                paddingTop: spacing.md,
+                paddingBottom: spacing.md,
+              },
+            ]}
+          >
+            <View style={[styles.headerAccent, { backgroundColor: themeColors.primary }]} />
+            <Text style={[styles.headerTitle, { fontSize: typography.h2, color: themeColors.text }]}>Calling Batches</Text>
+            <Text style={[styles.headerSubtitle, { fontSize: typography.caption, color: themeColors.textMuted }]}>Central command for all campaigns</Text>
           </View>
 
           {/* Empty State */}
@@ -557,21 +579,30 @@ const styles = StyleSheet.create({
     backgroundColor: '#e6e9ee',
   },
   header: {
-    paddingTop: verticalScale(16),
-    paddingBottom: scale(12),
-    backgroundColor: colors.primary,
+    paddingTop: verticalScale(14),
+    paddingBottom: scale(14),
+    backgroundColor: '#e8f2f6',
     borderRadius: scale(12),
     marginTop: scale(12),
+    paddingHorizontal: scale(14),
+    borderWidth: 1,
+    borderColor: '#d3e3ea',
+    gap: scale(6),
+  },
+  headerAccent: {
+    width: scale(42),
+    height: verticalScale(4),
+    borderRadius: scale(999),
   },
   headerTitle: {
     fontSize: scale(isSmallDevice ? 18 : 22),
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: '700',
+    color: colors.dark,
   },
   headerSubtitle: {
     fontSize: scale(12),
-    color: 'rgba(255,255,255,0.8)',
-    marginTop: scale(4),
+    color: colors.gray,
+    marginTop: scale(2),
   },
   statsContainer: {
     flexDirection: 'row',
@@ -652,6 +683,8 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: GRID_GAP,
     paddingBottom: scale(16),
+    justifyContent: 'flex-start',
+    alignItems: 'stretch',
   },
   batchCard: {
     backgroundColor: '#fff',

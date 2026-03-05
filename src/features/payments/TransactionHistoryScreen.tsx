@@ -5,13 +5,14 @@ import { AppCard } from '@/src/components/ui/AppCard';
 import { AppHeader } from '@/src/components/ui/AppHeader';
 import { ScreenContainer } from '@/src/components/ui/ScreenContainer';
 import { useAuth } from '@/src/context/AuthContext';
-import { getBalanceHistoryTransactions, LedgerTransaction } from '@/src/services/ledgerService';
+import { getTransactionHistory, getWallet } from '@/src/services/walletService';
 import { useAppTheme } from '@/src/theme/use-app-theme';
+import { WalletTransaction } from '@/src/types/batch';
 
 export default function TransactionHistoryScreen() {
   const { colors } = useAppTheme();
   const { user } = useAuth();
-  const [transactions, setTransactions] = useState<LedgerTransaction[]>([]);
+  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,9 +32,29 @@ export default function TransactionHistoryScreen() {
       setError(null);
 
       try {
-        const result = await getBalanceHistoryTransactions(user.uid, 100);
+        const result = await getTransactionHistory(user.uid, 100);
         if (mounted) {
-          setTransactions(result);
+          if (result.length > 0) {
+            setTransactions(result);
+            return;
+          }
+
+          const wallet = await getWallet(user.uid);
+          if (wallet.totalRecharged > 0) {
+            const fallbackRow: WalletTransaction = {
+              transactionId: `fallback_recharge_${user.uid}`,
+              userId: user.uid,
+              type: 'recharge',
+              amount: wallet.totalRecharged,
+              previousBalance: 0,
+              newBalance: wallet.balance,
+              description: 'Opening balance (test mode credit summary)',
+              createdAt: wallet.updatedAt,
+            };
+            setTransactions([fallbackRow]);
+          } else {
+            setTransactions([]);
+          }
         }
       } catch (loadError) {
         if (mounted) {
@@ -54,7 +75,10 @@ export default function TransactionHistoryScreen() {
   }, [user?.uid]);
 
   const totalDebits = useMemo(
-    () => transactions.filter((item) => item.type === 'batch_debit').reduce((sum, item) => sum + item.amount, 0),
+    () =>
+      transactions
+        .filter((item) => item.type === 'batch_debit' || item.type === 'deduction')
+        .reduce((sum, item) => sum + item.amount, 0),
     [transactions]
   );
 
@@ -69,9 +93,10 @@ export default function TransactionHistoryScreen() {
     });
   };
 
-  const getLabel = (type: LedgerTransaction['type']) => {
+  const getLabel = (type: WalletTransaction['type']) => {
     if (type === 'batch_debit') return 'Batch Debit';
-    if (type === 'lead_debit') return 'Lead Usage';
+    if (type === 'deduction') return 'Deduction';
+    if (type === 'refund') return 'Refund';
     return 'Recharge';
   };
 
@@ -105,7 +130,7 @@ export default function TransactionHistoryScreen() {
 
       {!loading && !error && transactions.length === 0 && (
         <AppCard>
-          <Text style={[styles.meta, { color: colors.textMuted }]}>No ledger transactions yet.</Text>
+          <Text style={[styles.meta, { color: colors.textMuted }]}>No wallet transactions yet.</Text>
         </AppCard>
       )}
 

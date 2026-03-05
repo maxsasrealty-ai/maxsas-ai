@@ -15,6 +15,7 @@ import { useWallet } from '@/src/context/WalletContext';
 import { useDashboardStats } from '@/src/hooks/useDashboardStats';
 import { db } from '@/src/lib/firebase';
 import { DemoCallDocument, executeDemoCallFlow, getDemoCallById, subscribeToDemoCall } from '@/src/services/demoCallService';
+import { startOperationalNotificationEngine } from '@/src/services/notificationService';
 import {
     getUserCurrentDemoCallId,
     getUserDemoStatus,
@@ -105,6 +106,19 @@ export default function HomeScreen() {
   
   // Real-time wallet data from Firestore
   const { wallet, availableBalance, loading: walletLoading } = useWallet();
+  const hotLeadCount =
+    dashboardStats.qualifiedLeadsTodayFromCompletedBatches > 0
+      ? dashboardStats.qualifiedLeadsTodayFromCompletedBatches
+      : dashboardStats.qualifiedLeadsToday;
+
+  useEffect(() => {
+    if (!user?.uid) {
+      return;
+    }
+
+    const stopEngine = startOperationalNotificationEngine(user.uid);
+    return () => stopEngine();
+  }, [user?.uid]);
 
   const showDemoSuccessToast = () => {
     setDemoSuccessToastVisible(true);
@@ -839,6 +853,65 @@ export default function HomeScreen() {
         </View>
       )}
 
+      {hotLeadCount > 0 && (
+        <AppCard style={[styles.hotLeadCard, { borderColor: colors.success }]}> 
+          <View style={styles.hotLeadHeader}>
+            <View style={[styles.hotLeadIconWrap, { backgroundColor: colors.success + '20' }]}>
+              <Text style={styles.hotLeadIcon}>🔥</Text>
+            </View>
+            <View style={styles.hotLeadTextWrap}>
+              <Text style={[styles.hotLeadTitle, { color: colors.text }]}>Hot Leads Found Today</Text>
+              <Text style={[styles.hotLeadBody, { color: colors.textMuted }]}>
+                {hotLeadCount} new qualified lead{hotLeadCount > 1 ? 's' : ''} detected from completed outreach.
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.hotLeadCta, { backgroundColor: colors.success }]}
+              onPress={() => router.push('/leads')}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.hotLeadCtaText}>View</Text>
+            </TouchableOpacity>
+          </View>
+        </AppCard>
+      )}
+
+      <AppSection title="Value Generated Today" />
+      <View style={styles.statsGrid}>
+        {[
+          {
+            label: 'Qualified Leads Today',
+            value: dashboardStats.qualifiedLeadsToday,
+            color: colors.success,
+            icon: '🔥',
+          },
+          {
+            label: 'Batches Completed',
+            value: dashboardStats.completedBatchesToday,
+            color: colors.primary,
+            icon: '🎯',
+          },
+          {
+            label: 'Active Calls',
+            value: dashboardStats.totalRunningCalls,
+            color: colors.info,
+            icon: '📞',
+          },
+          {
+            label: 'Wallet Balance',
+            value: walletLoading ? '...' : `Rs.${Math.max(0, Math.round(availableBalance))}`,
+            color: colors.text,
+            icon: '💳',
+          },
+        ].map((item) => (
+          <View key={item.label} style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.border }]}> 
+            <Text style={styles.statIcon}>{item.icon}</Text>
+            <Text style={[styles.statValue, { color: item.color, fontSize: typography.h2 }]}>{item.value}</Text>
+            <Text style={[styles.statLabel, { color: colors.textMuted, fontSize: typography.overline }]}>{item.label}</Text>
+          </View>
+        ))}
+      </View>
+
       {/* Today Activity - Calls in Progress */}
       <AppSection title="Today Activity" />
       <View style={styles.statsGrid}>
@@ -963,18 +1036,18 @@ export default function HomeScreen() {
         <View style={styles.insightRow}>
           <View style={[styles.insightDot, { backgroundColor: colors.success }]} />
           <View style={styles.insightText}>
-            <Text style={[styles.insightTitle, { color: colors.text }]}>Real-Time Monitoring</Text>
+            <Text style={[styles.insightTitle, { color: colors.text }]}>New Buyer Interest Detected</Text>
             <Text style={[styles.insightBody, { color: colors.textMuted }]}>
-              {dashboardStats.totalLeads} total leads tracked • {dashboardStats.totalRunningCalls} calls in progress
+              {dashboardStats.qualifiedLeadsFromCompletedBatches} qualified leads identified from completed batches.
             </Text>
           </View>
         </View>
         <View style={styles.insightRow}>
           <View style={[styles.insightDot, { backgroundColor: colors.info }]} />
           <View style={styles.insightText}>
-            <Text style={[styles.insightTitle, { color: colors.text }]}>Batch Performance</Text>
+            <Text style={[styles.insightTitle, { color: colors.text }]}>Pipeline Activity</Text>
             <Text style={[styles.insightBody, { color: colors.textMuted }]}>
-              {dashboardStats.runningBatches} batches running • {dashboardStats.totalCompletedCalls} calls completed today
+              {dashboardStats.runningBatches} running • {dashboardStats.pendingLeads} pending • {dashboardStats.totalCompletedCalls} calls completed.
             </Text>
           </View>
         </View>
@@ -1285,6 +1358,46 @@ const styles = StyleSheet.create({
   liveText: {
     fontSize: 11,
     fontWeight: '600',
+  },
+  hotLeadCard: {
+    marginBottom: 14,
+    borderWidth: 1,
+  },
+  hotLeadHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  hotLeadIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hotLeadIcon: {
+    fontSize: 16,
+  },
+  hotLeadTextWrap: {
+    flex: 1,
+  },
+  hotLeadTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  hotLeadBody: {
+    marginTop: 3,
+    fontSize: 11,
+  },
+  hotLeadCta: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  hotLeadCtaText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '700',
   },
   walletCard: {
     marginBottom: 18,

@@ -338,6 +338,137 @@ export async function finalizeBatchPayment(
 }
 
 /**
+ * Finalizes billing for a completed batch directly from client side.
+ * Uses batch.batchTotalCost and marks batch billingLedgerStatus as finalized
+ * in the same Firestore transaction to guarantee single execution per batch.
+ */
+export async function finalizeBatchBillingFromClient(
+  batchId: string
+): Promise<WalletOperationResult> {
+  if (!batchId) {
+    return {
+      success: false,
+      errorMessage: 'Batch ID is required',
+    };
+  }
+
+  const currentUserId = getAuth().currentUser?.uid;
+  if (!currentUserId) {
+    return {
+      success: false,
+      errorMessage: 'User not authenticated',
+    };
+  }
+
+  try {
+    let finalizedAmount = 0;
+
+    await runTransaction(db, async (transaction) => {
+      const batchRef = doc(db, 'batches', batchId);
+      const batchSnap = await transaction.get(batchRef);
+
+      if (!batchSnap.exists()) {
+        throw new Error('Batch not found');
+      }
+
+      const batchData = batchSnap.data();
+      const batchStatus = String(batchData.status || '').toLowerCase();
+      const billingLedgerStatus = String(batchData.billingLedgerStatus || 'pending').toLowerCase();
+
+      if (billingLedgerStatus === 'finalized') {
+        finalizedAmount = 0;
+        return;
+      }
+
+      if (batchStatus !== 'completed') {
+        throw new Error('Batch is not completed yet');
+      }
+
+      const userId = String(batchData.userId || '');
+      if (!userId) {
+        throw new Error('Batch userId missing');
+      }
+
+      if (userId !== currentUserId) {
+        throw new Error('Unauthorized billing operation for this batch');
+      }
+
+      const batchTotalCostRaw = Number(batchData.batchTotalCost ?? 0);
+      if (!Number.isFinite(batchTotalCostRaw) || batchTotalCostRaw < 0) {
+        throw new Error('Invalid batchTotalCost');
+      }
+
+      const batchTotalCost = Number(batchTotalCostRaw.toFixed(2));
+
+      const walletRef = doc(db, 'wallets', userId);
+      const walletSnap = await transaction.get(walletRef);
+
+      if (!walletSnap.exists()) {
+        throw new Error('Wallet not found');
+      }
+
+      const walletData = walletSnap.data();
+      const previousBalance = Number(walletData.balance ?? 0);
+      const previousTotalSpent = Number(walletData.totalSpent ?? 0);
+      const previousLockedAmount = Number(walletData.lockedAmount ?? 0);
+      const previousTotalRecharged = Number(walletData.totalRecharged ?? 0);
+
+      if (previousBalance < batchTotalCost) {
+        throw new Error('Insufficient wallet balance for batch billing');
+      }
+
+      const newBalance = Number((previousBalance - batchTotalCost).toFixed(2));
+      const newTotalSpent = Number((previousTotalSpent + batchTotalCost).toFixed(2));
+      const newLockedAmount = Number(
+        Math.max(0, Math.min(previousLockedAmount, newBalance)).toFixed(2)
+      );
+
+      transaction.update(walletRef, {
+        balance: newBalance,
+        lockedAmount: newLockedAmount,
+        totalSpent: newTotalSpent,
+        totalRecharged: previousTotalRecharged,
+        updatedAt: serverTimestamp(),
+      });
+
+      const transactionId = `batch_debit_${batchId}`;
+      const walletTransactionRef = doc(db, 'wallets', userId, 'transactions', transactionId);
+
+      transaction.set(walletTransactionRef, {
+        transactionId,
+        userId,
+        type: 'batch_debit',
+        amount: batchTotalCost,
+        batchId,
+        previousBalance,
+        newBalance,
+        description: `Batch debit for batch ${batchId}`,
+        createdAt: serverTimestamp(),
+      });
+
+      transaction.update(batchRef, {
+        billingLedgerStatus: 'finalized',
+        billedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      finalizedAmount = batchTotalCost;
+    });
+
+    return {
+      success: true,
+      requiredAmount: finalizedAmount,
+    };
+  } catch (error) {
+    console.error('Error finalizing client-side batch billing:', error);
+    return {
+      success: false,
+      errorMessage: error instanceof Error ? error.message : 'Failed to finalize batch billing',
+    };
+  }
+}
+
+/**
  * Adds balance to user's wallet (for admin/recharge operations)
  * 
  * @param userId - User ID
@@ -430,7 +561,7 @@ export async function addBalanceToWallet(
 
 /**
  * Adds test balance to the current user's wallet (dev-only helper)
- * No transaction record is created.
+ * Records a recharge transaction so test credits appear in wallet history.
  */
 export async function addTestBalance(amount: number): Promise<WalletOperationResult> {
   const userId = getAuth().currentUser?.uid;
@@ -467,6 +598,8 @@ export async function addTestBalance(amount: number): Promise<WalletOperationRes
 
       const newBalance = currentBalance + amount;
       const newTotalRecharged = currentTotalRecharged + amount;
+      const transactionId = `test_recharge_${Date.now()}`;
+
       if (walletSnap.exists()) {
         transaction.update(walletRef, {
           balance: newBalance,
@@ -484,6 +617,18 @@ export async function addTestBalance(amount: number): Promise<WalletOperationRes
           updatedAt: serverTimestamp(),
         });
       }
+
+      const walletTransactionRef = doc(db, 'wallets', userId, 'transactions', transactionId);
+      transaction.set(walletTransactionRef, {
+        transactionId,
+        userId,
+        type: 'recharge' as const,
+        amount,
+        previousBalance: currentBalance,
+        newBalance,
+        description: `Test recharge: Rs.${amount}`,
+        createdAt: serverTimestamp(),
+      });
     });
 
     return { success: true };

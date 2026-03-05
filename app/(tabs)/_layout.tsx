@@ -7,11 +7,6 @@ import { useAuth } from '@/src/context/AuthContext';
 import { isUserProfileComplete } from '@/src/services/userService';
 import { useAppTheme } from '@/src/theme/use-app-theme';
 
-const lockTabDuringBeta = {
-  tabPress: (event: { preventDefault: () => void }) => event.preventDefault(),
-  tabLongPress: (event: { preventDefault: () => void }) => event.preventDefault(),
-};
-
 export default function TabLayout() {
   const { colors } = useAppTheme();
   const { user } = useAuth();
@@ -79,37 +74,29 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="leads"
-        listeners={lockTabDuringBeta}
         options={{
           title: 'Leads',
-          tabBarItemStyle: { opacity: 0.6 },
           tabBarIcon: ({ color, size }) => <Feather name="users" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="wallet"
-        listeners={lockTabDuringBeta}
         options={{
           title: 'Wallet',
-          tabBarItemStyle: { opacity: 0.6 },
           tabBarIcon: ({ color, size }) => <Feather name="credit-card" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="notifications"
-        listeners={lockTabDuringBeta}
         options={{
           title: 'Alerts',
-          tabBarItemStyle: { opacity: 0.6 },
           tabBarIcon: ({ color, size }) => <Feather name="bell" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="reports"
-        listeners={lockTabDuringBeta}
         options={{
           title: 'Reports',
-          tabBarItemStyle: { opacity: 0.6 },
           tabBarIcon: ({ color, size }) => <Feather name="bar-chart-2" size={size} color={color} />,
         }}
       />

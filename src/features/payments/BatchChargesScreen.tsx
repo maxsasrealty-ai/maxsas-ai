@@ -1,63 +1,19 @@
 import { router } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppCard } from '@/src/components/ui/AppCard';
 import { AppHeader } from '@/src/components/ui/AppHeader';
 import { ScreenContainer } from '@/src/components/ui/ScreenContainer';
 import { useAuth } from '@/src/context/AuthContext';
-import { getBatchDebitTransactions, LedgerTransaction } from '@/src/services/ledgerService';
 import { useAppTheme } from '@/src/theme/use-app-theme';
+
+import { useBatchChargesViewModel } from './useBatchChargesViewModel';
 
 export default function BatchChargesScreen() {
   const { colors } = useAppTheme();
   const { user } = useAuth();
 
-  const [batchDebits, setBatchDebits] = useState<LedgerTransaction[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const load = async () => {
-      if (!user?.uid) {
-        if (mounted) {
-          setBatchDebits([]);
-          setLoading(false);
-        }
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const result = await getBatchDebitTransactions(user.uid, 200);
-        if (mounted) {
-          setBatchDebits(result);
-        }
-      } catch (loadError) {
-        if (mounted) {
-          setError(loadError instanceof Error ? loadError.message : 'Failed to load batch charges');
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, [user?.uid]);
-
-  const totalBatchCharges = useMemo(
-    () => batchDebits.reduce((sum, row) => sum + row.amount, 0),
-    [batchDebits]
-  );
+  const { loading, error, batches, totalBatchCharges } = useBatchChargesViewModel(user?.uid);
 
   const formatCreatedAt = (createdAt: any) => {
     const date = createdAt?.toDate?.();
@@ -77,7 +33,7 @@ export default function BatchChargesScreen() {
       <View style={styles.summaryRow}>
         <AppCard style={styles.summaryCard}>
           <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Charged Batches</Text>
-          <Text style={[styles.summaryValue, { color: colors.text }]}>{batchDebits.length}</Text>
+          <Text style={[styles.summaryValue, { color: colors.text }]}>{batches.length}</Text>
         </AppCard>
         <AppCard style={styles.summaryCard}>
           <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Total Charges</Text>
@@ -98,27 +54,28 @@ export default function BatchChargesScreen() {
         </AppCard>
       )}
 
-      {!loading && !error && batchDebits.length === 0 && (
+      {!loading && !error && batches.length === 0 && (
         <AppCard>
-          <Text style={[styles.metaText, { color: colors.textMuted }]}>No batch charges found.</Text>
+          <Text style={[styles.metaText, { color: colors.textMuted }]}>No completed batches found.</Text>
         </AppCard>
       )}
 
       <View style={styles.list}>
-        {batchDebits.map((entry) => (
+        {batches.map((batch, index) => (
           <Pressable
-            key={entry.transactionId}
+            key={batch.batchId}
             onPress={() =>
-              entry.batchId && router.push({ pathname: '/batch-detail', params: { batchId: entry.batchId } })
+              router.push({ pathname: '/batch-billing-detail', params: { batchId: batch.batchId } })
             }
           >
             <AppCard style={styles.rowCard}>
               <View style={styles.rowLeft}>
-                <Text style={[styles.rowTitle, { color: colors.text }]}>Batch {entry.batchId?.slice(0, 8) || 'N/A'}</Text>
-                <Text style={[styles.metaText, { color: colors.textMuted }]}>{formatCreatedAt(entry.createdAt)}</Text>
+                <Text style={[styles.rowTitle, { color: colors.text }]}>Batch {index + 1} - ₹{batch.batchTotalCost.toFixed(2)}</Text>
+                <Text style={[styles.metaText, { color: colors.textMuted }]}>Batch ID: {batch.batchId}</Text>
+                <Text style={[styles.metaText, { color: colors.textMuted }]}>{formatCreatedAt(batch.completedAt)}</Text>
                 <Text style={[styles.tapHint, { color: colors.primary }]}>Tap to view batch detail</Text>
               </View>
-              <Text style={[styles.rowAmount, { color: colors.danger }]}>-₹{entry.amount.toFixed(2)}</Text>
+              <Text style={[styles.rowAmount, { color: colors.text }]}>₹{batch.batchTotalCost.toFixed(2)}</Text>
             </AppCard>
           </Pressable>
         ))}

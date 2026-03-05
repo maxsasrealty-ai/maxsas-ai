@@ -31,11 +31,18 @@ service cloud.firestore {
     }
 
     function isValidLeadStatus(status) {
-      return status in ['queued', 'calling', 'completed', 'failed'];
+      return status in [
+        'queued',
+        'calling',
+        'completed',
+        'failed',
+        'failed_retryable',
+        'failed_permanent'
+      ];
     }
 
     function isValidBatchStatus(status) {
-      return status in ['pending', 'running', 'scheduled', 'completed', 'failed'];
+      return status in ['pending', 'queued', 'running', 'scheduled', 'completed', 'failed'];
     }
 
     function isValidBatchSource(source) {
@@ -47,11 +54,15 @@ service cloud.firestore {
     }
 
     function isValidCallStatus(status) {
-      return status in ['pending', 'in_progress', 'answered', 'failed', 'busy', 'unreachable'];
+      return status in ['pending', 'in_progress', 'answered', 'failed', 'busy', 'unreachable', 'completed'];
     }
 
     function isValidAiDisposition(disposition) {
-      return disposition in ['interested', 'not_interested', 'follow_up', 'unknown'];
+      return disposition in ['interested', 'callback_requested', 'meeting_scheduled', 'not_interested', 'follow_up', 'unknown', 'attempt_limit_reached', 'user_deleted'];
+    }
+
+    function approximatelyEqual(left, right, tolerance) {
+      return left >= right - tolerance && left <= right + tolerance;
     }
 
     function isUserWalletTopUp(userId) {
@@ -72,6 +83,39 @@ service cloud.firestore {
           && request.resource.data.lockedAmount == resource.data.lockedAmount
           && request.resource.data.totalSpent == resource.data.totalSpent
         ));
+    }
+
+    function isClientWalletBatchDebit(userId) {
+      let previousLockedAmount = ('lockedAmount' in resource.data) ? resource.data.lockedAmount : 0;
+      let previousTotalRecharged = ('totalRecharged' in resource.data) ? resource.data.totalRecharged : 0;
+      let debitDeltaBalance = resource.data.balance - request.resource.data.balance;
+      let debitDeltaSpent = request.resource.data.totalSpent - resource.data.totalSpent;
+      return isAuthenticated()
+        && request.auth.uid == userId
+        && resource != null
+        && request.resource.data.userId == userId
+        && request.resource.data.balance is number
+        && request.resource.data.balance >= 0
+        && request.resource.data.totalSpent is number
+        && request.resource.data.totalSpent >= 0
+        && request.resource.data.lockedAmount is number
+        && request.resource.data.lockedAmount >= 0
+        && request.resource.data.lockedAmount <= request.resource.data.balance
+        && request.resource.data.totalRecharged is number
+        && request.resource.data.totalRecharged == previousTotalRecharged
+        && (
+          request.resource.data.lockedAmount == previousLockedAmount
+          || (
+            previousLockedAmount > request.resource.data.balance
+            && request.resource.data.lockedAmount == request.resource.data.balance
+          )
+        )
+        && request.resource.data.balance <= resource.data.balance
+        && request.resource.data.totalSpent >= resource.data.totalSpent
+        && debitDeltaBalance >= 0
+        && debitDeltaSpent >= 0
+        && approximatelyEqual(debitDeltaBalance, debitDeltaSpent, 0.01)
+        && request.resource.data.updatedAt != null;
     }
 
     // ============================================================
@@ -110,6 +154,19 @@ service cloud.firestore {
             || request.resource.data.demoEligible == false);
 
       allow delete: if false;
+
+      // Subcollection: users/{uid}/notifications
+      match /notifications/{notificationId} {
+        allow read: if isCurrentUser(uid);
+        allow create, update: if isCurrentUser(uid)
+          && request.resource.data.userId == uid
+          && request.resource.data.dedupeKey is string
+          && request.resource.data.type is string
+          && request.resource.data.title is string
+          && request.resource.data.body is string
+          && request.resource.data.createdAt != null;
+        allow delete: if false;
+      }
     }
 
     // ============================================================
@@ -203,7 +260,10 @@ service cloud.firestore {
 
       // READ
       allow read: if isAutomation() ||
-        (isAuthenticated() && request.auth.uid == resource.data.userId);
+        (isAuthenticated() && (
+          request.auth.uid == resource.data.userId
+          || isBatchOwner(resource.data.batchId)
+        ));
 
       // UPDATE
       // PHASE 4: Lock fields and lastDispatchedAt are automation-only
@@ -282,7 +342,10 @@ service cloud.firestore {
 
       // READ
       allow read: if isAutomation() ||
-        (isAuthenticated() && request.auth.uid == resource.data.userId);
+        (isAuthenticated() && (
+          request.auth.uid == resource.data.userId
+          || isBatchOwner(resource.data.batchId)
+        ));
 
       // UPDATE
       // PHASE 3: Lock, billing, and call timestamp fields are automation-only
@@ -300,9 +363,20 @@ service cloud.firestore {
         && request.resource.data.maxAttempts > 0
         // PHASE 3: Users cannot modify lock, billing, or timestamp fields
         && (isAutomation() || (
-          request.resource.data.lockOwner == resource.data.lockOwner
-          && request.resource.data.lockExpiresAt == resource.data.lockExpiresAt
-          && request.resource.data.billingStatus == resource.data.billingStatus
+          (
+            request.resource.data.lockOwner == resource.data.lockOwner
+            && request.resource.data.lockExpiresAt == resource.data.lockExpiresAt
+          )
+          || (
+            // Allow owner to clear lock fields only when finalizing a lead
+            request.resource.data.lockOwner == null
+            && request.resource.data.lockExpiresAt == null
+            && request.resource.data.status == 'failed_permanent'
+            && request.resource.data.callStatus == 'completed'
+          )
+        ))
+        && (isAutomation() || (
+          request.resource.data.billingStatus == resource.data.billingStatus
           && request.resource.data.callStartedAt == resource.data.callStartedAt
           && request.resource.data.callEndedAt == resource.data.callEndedAt
         ));
@@ -331,9 +405,67 @@ service cloud.firestore {
           && request.resource.data.lockedAmount <= request.resource.data.balance
           && request.resource.data.updatedAt != null)
         || isUserWalletTopUp(userId)
+        || isClientWalletBatchDebit(userId)
       );
 
       allow delete: if false;
+
+      // Subcollection: wallets/{userId}/transactions
+      // Wallet service listens here for real-time ledger history.
+      match /transactions/{transactionId} {
+        allow read: if isAutomation() || (isAuthenticated() && request.auth.uid == userId);
+        allow create: if isAuthenticated()
+          && request.auth.uid == userId
+          && request.resource.data.userId == userId
+          && request.resource.data.transactionId == transactionId
+          && request.resource.data.amount is number
+          && request.resource.data.amount >= 0
+          && request.resource.data.previousBalance is number
+          && request.resource.data.previousBalance >= 0
+          && request.resource.data.newBalance is number
+          && request.resource.data.newBalance >= 0
+          && (
+            (
+              request.resource.data.type == 'batch_debit'
+              && approximatelyEqual(
+                request.resource.data.newBalance,
+                request.resource.data.previousBalance - request.resource.data.amount,
+                0.01
+              )
+              && request.resource.data.batchId is string
+            )
+            || (
+              request.resource.data.type == 'recharge'
+              && approximatelyEqual(
+                request.resource.data.newBalance,
+                request.resource.data.previousBalance + request.resource.data.amount,
+                0.01
+              )
+            )
+          )
+          && request.resource.data.createdAt != null;
+        allow update, delete: if false;
+      }
+    }
+
+    // ============================================================
+    // BATCH ISSUE REPORTING
+    // Users can create/read only their own issue reports
+    // ============================================================
+    match /batchIssues/{issueId} {
+      allow create: if isAuthenticated()
+        && request.resource.data.issueId == issueId
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.batchId is string
+        && request.resource.data.issueType is string
+        && request.resource.data.createdAt != null
+        && request.resource.data.issueStatus == 'open';
+
+      allow read: if isAutomation() || (
+        isAuthenticated() && resource.data.userId == request.auth.uid
+      );
+
+      allow update, delete: if false;
     }
 
     // ============================================================

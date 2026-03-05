@@ -25,7 +25,7 @@ export const ScreenContainer = ({
     return (
       <SafeAreaView edges={safeAreaEdges} style={[styles.safe, { backgroundColor: colors.background }]}> 
         <ScrollView
-          contentContainerStyle={[styles.scroll, { paddingBottom: bottomPadding }]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPadding }]}
           showsVerticalScrollIndicator={false}
         >
           <AppContainer>{children}</AppContainer>
@@ -36,8 +36,8 @@ export const ScreenContainer = ({
 
   return (
     <SafeAreaView edges={safeAreaEdges} style={[styles.safe, { backgroundColor: colors.background }]}> 
-      <View style={styles.scroll}>
-        <AppContainer>{children}</AppContainer>
+      <View style={styles.fixedRoot}>
+        <AppContainer style={styles.fixedContent}>{children}</AppContainer>
       </View>
     </SafeAreaView>
   );
@@ -47,7 +47,13 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
   },
-  scroll: {
+  scrollContent: {
     flexGrow: 1,
+  },
+  fixedRoot: {
+    flex: 1,
+  },
+  fixedContent: {
+    flex: 1,
   },
 });

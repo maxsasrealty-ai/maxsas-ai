@@ -11,6 +11,6 @@ export type Lead = {
   propertyInterest: string;
   budget: string;
   status: LeadStatus;
-  aiDisposition?: 'interested' | 'not_interested' | 'follow_up' | 'unknown';
+  aiDisposition?: 'interested' | 'callback_requested' | 'meeting_scheduled' | 'not_interested' | 'follow_up' | 'unknown';
   callStatus?: 'pending' | 'in_progress' | 'answered' | 'failed' | 'busy' | 'unreachable';
 };

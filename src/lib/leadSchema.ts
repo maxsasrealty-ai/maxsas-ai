@@ -14,6 +14,14 @@ export type LeadStatus = (typeof LEAD_STATUS_VALUES)[number];
 export type LegacyLeadStatus = 'new' | 'closed';
 export type LeadStatusInput = LeadStatus | LegacyLeadStatus;
 export type IntakeStatus = 'pending' | 'in_progress' | 'completed' | 'failed';
+export type LeadCallStatus = 'pending' | 'in_progress' | 'answered' | 'failed' | 'busy' | 'unreachable';
+export type LeadAiDisposition =
+  | 'interested'
+  | 'callback_requested'
+  | 'meeting_scheduled'
+  | 'not_interested'
+  | 'follow_up'
+  | 'unknown';
 
 export interface HistoryEntry {
   action: string;
@@ -53,6 +61,10 @@ export interface Lead {
   history: HistoryEntry[];
 
   // Additional fields for tracking
+  attempts?: number;
+  retryCount?: number;
+  callStatus?: LeadCallStatus;
+  aiDisposition?: LeadAiDisposition;
   automationTriggered?: boolean;
   automationError?: string;
 }
@@ -78,6 +90,10 @@ export const createLeadSchema = (
     phone,
     source,
     status: normalizedStatus,
+    attempts: 0,
+    retryCount: 0,
+    callStatus: 'pending',
+    aiDisposition: 'unknown',
     intakeAction: 'none',
     intakeStatus: 'pending',
     followUpRequired: false,

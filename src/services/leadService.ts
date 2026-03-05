@@ -166,7 +166,11 @@ export async function getLeadsForBatch(batchId: string): Promise<Lead[]> {
         lockExpiresAt: data.lockExpiresAt || null,
         callStartedAt: data.callStartedAt || null,
         callEndedAt: data.callEndedAt || null,
-        billingStatus: data.billingStatus || null,
+        billingStatus: data.billingStatus ?? 'pending',
+        callCost: data.callCost ?? 0,
+        minutesCharged: data.minutesCharged ?? 0,
+        successFeeApplied: data.successFeeApplied ?? 0,
+        billedAt: data.billedAt ?? null,
         providerCallId: data.providerCallId || null,
         notes: data.notes || null,
       } as Lead;
@@ -178,6 +182,75 @@ export async function getLeadsForBatch(batchId: string): Promise<Lead[]> {
     console.error('Error getting leads for batch:', error);
     throw error;
   }
+}
+
+/**
+ * Syncs stuck leads when a batch has already completed.
+ * Any lead still in queued/calling/running is marked failed with batch_ended_unexpectedly reason.
+ */
+export async function syncLeadStatusesWithBatch(batchId: string): Promise<{ updatedCount: number; skipped: boolean }> {
+  const auth = getAuth();
+  const userId = auth.currentUser?.uid;
+
+  if (!userId) {
+    throw new Error('User not authenticated');
+  }
+
+  if (!batchId) {
+    throw new Error('batchId is required');
+  }
+
+  const batchRef = doc(db, 'batches', batchId);
+  const batchSnap = await getDoc(batchRef);
+
+  if (!batchSnap.exists()) {
+    throw new Error('Batch not found');
+  }
+
+  const batchData = batchSnap.data();
+  if (batchData.userId !== userId) {
+    throw new Error('Not authorized to sync this batch');
+  }
+
+  if (batchData.status !== 'completed') {
+    return { updatedCount: 0, skipped: true };
+  }
+
+  const stuckStatuses = ['queued', 'calling', 'running'];
+  const stuckLeadsQuery = query(
+    collection(db, 'leads'),
+    where('batchId', '==', batchId),
+    where('status', 'in', stuckStatuses)
+  );
+
+  const stuckLeadsSnapshot = await getDocs(stuckLeadsQuery);
+  if (stuckLeadsSnapshot.empty) {
+    return { updatedCount: 0, skipped: false };
+  }
+
+  const wb = writeBatch(db);
+  const now = Timestamp.now();
+
+  stuckLeadsSnapshot.docs.forEach((leadDoc) => {
+    wb.set(
+      leadDoc.ref,
+      {
+        status: 'failed',
+        callStatus: 'failed',
+        notes: 'batch_ended_unexpectedly',
+        nextRetryAt: null,
+        lastActionAt: now,
+      },
+      { merge: true }
+    );
+  });
+
+  await wb.commit();
+
+  return {
+    updatedCount: stuckLeadsSnapshot.size,
+    skipped: false,
+  };
 }
 
 /**
@@ -221,7 +294,11 @@ export async function getLeadsForUser(): Promise<Lead[]> {
           lockExpiresAt: data.lockExpiresAt || null,
           callStartedAt: data.callStartedAt || null,
           callEndedAt: data.callEndedAt || null,
-          billingStatus: data.billingStatus || null,
+          billingStatus: data.billingStatus ?? 'pending',
+          callCost: data.callCost ?? 0,
+          minutesCharged: data.minutesCharged ?? 0,
+          successFeeApplied: data.successFeeApplied ?? 0,
+          billedAt: data.billedAt ?? null,
           providerCallId: data.providerCallId || null,
           notes: data.notes || null,
         } as Lead;
@@ -291,7 +368,11 @@ export function subscribeToLeadsForUser(
           lockExpiresAt: data.lockExpiresAt || null,
           callStartedAt: data.callStartedAt || null,
           callEndedAt: data.callEndedAt || null,
-          billingStatus: data.billingStatus || null,
+          billingStatus: data.billingStatus ?? 'pending',
+          callCost: data.callCost ?? 0,
+          minutesCharged: data.minutesCharged ?? 0,
+          successFeeApplied: data.successFeeApplied ?? 0,
+          billedAt: data.billedAt ?? null,
           providerCallId: data.providerCallId || null,
           notes: data.notes || null,
         } as Lead;
@@ -621,6 +702,15 @@ export function subscribeToBatchStats(
           nextRetryAt: data.nextRetryAt || null,
           aiDisposition: data.aiDisposition || 'unknown',
           callDuration: data.callDuration || null,
+          lockOwner: data.lockOwner || null,
+          lockExpiresAt: data.lockExpiresAt || null,
+          callStartedAt: data.callStartedAt || null,
+          callEndedAt: data.callEndedAt || null,
+          billingStatus: data.billingStatus ?? 'pending',
+          callCost: data.callCost ?? 0,
+          minutesCharged: data.minutesCharged ?? 0,
+          successFeeApplied: data.successFeeApplied ?? 0,
+          billedAt: data.billedAt ?? null,
           providerCallId: data.providerCallId || null,
           notes: data.notes || null,
         } as Lead;
@@ -707,6 +797,15 @@ export function subscribeToBatchLeads(
           nextRetryAt: data.nextRetryAt || null,
           aiDisposition: data.aiDisposition || 'unknown',
           callDuration: data.callDuration || null,
+          lockOwner: data.lockOwner || null,
+          lockExpiresAt: data.lockExpiresAt || null,
+          callStartedAt: data.callStartedAt || null,
+          callEndedAt: data.callEndedAt || null,
+          billingStatus: data.billingStatus ?? 'pending',
+          callCost: data.callCost ?? 0,
+          minutesCharged: data.minutesCharged ?? 0,
+          successFeeApplied: data.successFeeApplied ?? 0,
+          billedAt: data.billedAt ?? null,
           providerCallId: data.providerCallId || null,
           notes: data.notes || null,
         } as Lead;

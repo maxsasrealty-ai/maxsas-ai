@@ -2,6 +2,7 @@ import {
     collection,
     doc,
     getDocs,
+    increment,
     limit,
     orderBy,
     query,
@@ -79,66 +80,71 @@ export async function recordLeadDebitAndAccumulateBatch(input: RecordLeadDebitIn
   return transactionRef.id;
 }
 
-export async function finalizeCompletedBatchBilling(userId: string, batchId: string): Promise<void> {
-  if (!userId || !batchId) {
-    throw new Error('userId and batchId are required');
+export async function finalizeCompletedBatchBilling(batchId: string): Promise<void> {
+  if (!batchId) {
+    throw new Error('batchId is required');
   }
 
   const batchRef = doc(db, 'batches', batchId);
-  const walletRef = doc(db, 'wallets', userId);
-  const transactionRef = doc(collection(db, 'transactions'));
+  const deterministicLedgerId = `batch_debit_${batchId}`;
+  const deterministicLedgerRef = doc(db, 'transactions', deterministicLedgerId);
 
   await runTransaction(db, async (transaction) => {
-    const [batchSnap, walletSnap] = await Promise.all([
-      transaction.get(batchRef),
-      transaction.get(walletRef),
-    ]);
+    const batchSnap = await transaction.get(batchRef);
 
     if (!batchSnap.exists()) {
       throw new Error('Batch not found');
     }
 
-    if (!walletSnap.exists()) {
-      throw new Error('Wallet not found');
-    }
-
     const batchData = batchSnap.data();
-    const walletData = walletSnap.data();
-
-    if (batchData.status !== 'completed') {
-      throw new Error('Batch is not completed');
-    }
 
     if (batchData.billingLedgerStatus === 'finalized') {
       return;
     }
 
-    const batchTotalCost = Number(batchData.batchTotalCost || 0);
-    const currentBalance = Number(walletData.balance || 0);
-    const currentLocked = Number(walletData.lockedAmount || 0);
-    const currentTotalSpent = Number(walletData.totalSpent || 0);
+    const ledgerSnap = await transaction.get(deterministicLedgerRef);
+    if (ledgerSnap.exists()) {
+      return;
+    }
 
+    const userId = batchData.userId;
+    if (!userId) {
+      throw new Error('Batch userId is missing');
+    }
+
+    const batchTotalCost = Number(batchData.batchTotalCost ?? 0);
     if (batchTotalCost < 0) {
       throw new Error('Invalid batchTotalCost');
     }
+
+    const walletRef = doc(db, 'wallets', userId);
+    const walletSnap = await transaction.get(walletRef);
+
+    if (!walletSnap.exists()) {
+      throw new Error('Wallet not found');
+    }
+
+    const walletData = walletSnap.data();
+    const currentBalance = Number(walletData.balance ?? 0);
 
     if (currentBalance < batchTotalCost) {
       throw new Error('Insufficient wallet balance for batch finalization');
     }
 
-    const newBalance = Number((currentBalance - batchTotalCost).toFixed(2));
-    const newLockedAmount = Math.max(0, Number((currentLocked - batchTotalCost).toFixed(2)));
-    const newTotalSpent = Number((currentTotalSpent + batchTotalCost).toFixed(2));
-
     transaction.update(walletRef, {
-      balance: newBalance,
-      lockedAmount: newLockedAmount,
-      totalSpent: newTotalSpent,
+      balance: increment(-batchTotalCost),
+      totalSpent: increment(batchTotalCost),
       updatedAt: serverTimestamp(),
     });
 
-    transaction.set(transactionRef, {
-      transactionId: transactionRef.id,
+    transaction.update(batchRef, {
+      billingLedgerStatus: 'finalized',
+      billedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    transaction.set(deterministicLedgerRef, {
+      transactionId: deterministicLedgerId,
       userId,
       batchId,
       leadId: null,
@@ -147,12 +153,6 @@ export async function finalizeCompletedBatchBilling(userId: string, batchId: str
       minutesCharged: 0,
       rate: COST_PER_CALL,
       createdAt: serverTimestamp(),
-    });
-
-    transaction.update(batchRef, {
-      billingLedgerStatus: 'finalized',
-      billedAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
     });
   });
 }

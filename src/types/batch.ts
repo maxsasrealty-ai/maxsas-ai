@@ -6,9 +6,19 @@ export type BatchSource = 'manual' | 'csv' | 'clipboard' | 'image';
 export type LeadStatus =
   | 'queued'
   | 'calling'
-  | 'completed';
-export type CallStatus = 'pending' | 'in_progress' | 'answered' | 'failed' | 'busy' | 'unreachable';
-export type AiDisposition = 'interested' | 'not_interested' | 'follow_up' | 'unknown';
+  | 'completed'
+  | 'failed_retryable'
+  | 'failed_permanent';
+export type CallStatus = 'pending' | 'in_progress' | 'answered' | 'failed' | 'busy' | 'unreachable' | 'completed';
+export type AiDisposition =
+  | 'interested'
+  | 'callback_requested'
+  | 'meeting_scheduled'
+  | 'not_interested'
+  | 'follow_up'
+  | 'unknown'
+  | 'attempt_limit_reached'
+  | 'user_deleted';
 export type UserTier = 'free' | 'pro';
 export type BillingStatus = 'pending' | 'charged' | 'refunded';
 
@@ -76,6 +86,11 @@ export interface Batch {
   completedCount: number;
   failedCount: number;
   runningCount: number;
+  batchTotalCost?: number;
+  connectedCount?: number;
+  interestedCount?: number;
+  billingLedgerStatus?: 'pending' | 'finalized';
+  billedAt?: Timestamp | null;
   contacts?: ExtractedContact[]; // Only populated when fetched with leads
 }
 
@@ -128,7 +143,11 @@ export interface Lead {
   notes: string | null;
   lockOwner: string | null; // PHASE 3: Dispatcher instance ID
   lockExpiresAt: Timestamp | null; // PHASE 3: Lock expiration time
-  billingStatus: BillingStatus | null; // PHASE 3: Billing state
+  billingStatus?: BillingStatus | 'billed' | null; // PHASE 3: Billing state (backward compatible)
+  callCost?: number;
+  minutesCharged?: number;
+  successFeeApplied?: number;
+  billedAt?: Timestamp | null;
 }
 
 /**
@@ -167,7 +186,7 @@ export interface SystemRuntime {
 export interface WalletTransaction {
   transactionId: string;
   userId: string;
-  type: 'recharge' | 'deduction' | 'refund';
+  type: 'recharge' | 'deduction' | 'refund' | 'batch_debit';
   amount: number;
   previousBalance: number;
   newBalance: number;

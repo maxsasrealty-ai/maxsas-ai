@@ -12,7 +12,8 @@ import {
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Batch, BatchDraft, ExtractedContact } from '../types/batch';
-import { createLeadsForBatch, getLeadsForBatch } from './leadService';
+import { createLeadsForBatch, getLeadsForBatch, syncLeadStatusesWithBatch } from './leadService';
+import { finalizeCompletedBatchBilling } from './ledgerService';
 
 /**
  * PHASE 4 - FIREBASE WRITE LOGIC
@@ -151,7 +152,7 @@ export async function saveBatchToFirebase(
       completedAt: null,
       completedCount: 0,
       failedCount: 0,
-      runningCount: action === 'call_now' ? batch.contacts.length : 0,
+      runningCount: 0,
     };
 
     console.log('\n📝 [Service] Creating batch document in Firestore');
@@ -260,6 +261,11 @@ export async function getBatchesForUser(): Promise<Batch[]> {
         completedCount: data.completedCount || 0,
         failedCount: data.failedCount || 0,
         runningCount: data.runningCount || 0,
+        batchTotalCost: data.batchTotalCost ?? 0,
+        connectedCount: data.connectedCount ?? 0,
+        interestedCount: data.interestedCount ?? 0,
+        billingLedgerStatus: data.billingLedgerStatus ?? 'pending',
+        billedAt: data.billedAt ?? null,
         contacts: [], // Contacts are in separate leads collection
         metadata: data.metadata || {},
       } as Batch;
@@ -332,6 +338,11 @@ export function subscribeToBatches(
           completedCount: data.completedCount || 0,
           failedCount: data.failedCount || 0,
           runningCount: data.runningCount || 0,
+          batchTotalCost: data.batchTotalCost ?? 0,
+          connectedCount: data.connectedCount ?? 0,
+          interestedCount: data.interestedCount ?? 0,
+          billingLedgerStatus: data.billingLedgerStatus ?? 'pending',
+          billedAt: data.billedAt ?? null,
           contacts: [], // Contacts are in separate leads collection
           metadata: data.metadata || {},
         } as Batch;
@@ -420,6 +431,11 @@ export async function getBatchDetail(batchId: string): Promise<Batch | null> {
       completedCount: batchData.completedCount || 0,
       failedCount: batchData.failedCount || 0,
       runningCount: batchData.runningCount || 0,
+      batchTotalCost: batchData.batchTotalCost ?? 0,
+      connectedCount: batchData.connectedCount ?? 0,
+      interestedCount: batchData.interestedCount ?? 0,
+      billingLedgerStatus: batchData.billingLedgerStatus ?? 'pending',
+      billedAt: batchData.billedAt ?? null,
       contacts,
     } as Batch;
 
@@ -457,6 +473,11 @@ export async function updateBatchStatus(
     }
 
     await setDoc(batchRef, updateData, { merge: true });
+
+    if (status === 'completed') {
+      await syncLeadStatusesWithBatch(batchId);
+      await finalizeCompletedBatchBilling(batchId);
+    }
   } catch (error) {
     console.error('Error updating batch status:', error);
     throw error;

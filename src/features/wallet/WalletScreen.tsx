@@ -15,7 +15,6 @@ import { PricingModal } from '../../components/pricing/PricingModal';
 import { AppCard } from '../../components/ui/AppCard';
 import { AppSection } from '../../components/ui/AppSection';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
-import { useBatch } from '../../context/BatchContext';
 import { useWallet } from '../../context/WalletContext';
 import { usePricing } from '../../hooks/usePricing';
 import { addTestBalance } from '../../services/walletService';
@@ -25,8 +24,7 @@ import { TransactionHistory } from './';
 export default function WalletScreen() {
   const { colors } = useAppTheme();
   const { pricing } = usePricing();
-  const { wallet, availableBalance, loading, costPerCall, transactions } = useWallet();
-  const { allBatches } = useBatch();
+  const { wallet, availableBalance, loading, transactions } = useWallet();
   const [rechargeAmount, setRechargeAmount] = useState('');
   const [recharging, setRecharging] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
@@ -35,7 +33,7 @@ export default function WalletScreen() {
   const quickAmounts = [100, 500, 1000, 2000, 5000];
 
   const lastDeduction = transactions
-    .filter((txn) => txn.type === 'deduction')
+    .filter((txn) => txn.type === 'deduction' || txn.type === 'batch_debit')
     .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))[0];
 
   const recentTransactions = transactions.slice(0, 5);
@@ -61,12 +59,6 @@ export default function WalletScreen() {
       year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
     });
   };
-
-  const lowBalanceDrafts = allBatches.filter((batch) => {
-    if (batch.status !== 'draft') return false;
-    const required = batch.totalContacts * costPerCall;
-    return required > availableBalance;
-  });
 
   const handleRecharge = async (amount: number) => {
     if (amount <= 0) {
@@ -184,29 +176,6 @@ export default function WalletScreen() {
               <Text style={[styles.statLabel, { color: colors.textMuted }]}>Last Deduction</Text>
             </AppCard>
           </View>
-
-          <AppSection title="Pending Batches (Low Balance)" />
-          <AppCard>
-            {lowBalanceDrafts.length === 0 ? (
-              <Text style={[styles.infoText, { color: colors.textMuted }]}>No pending batches.</Text>
-            ) : (
-              lowBalanceDrafts.map((batch) => (
-                <View key={batch.batchId} style={styles.pendingRow}>
-                  <Text style={[styles.pendingText, { color: colors.text }]}>
-                    Batch {batch.batchId.substring(0, 8)}
-                  </Text>
-                  <Text style={[styles.pendingAmount, { color: colors.danger }]}>₹{(batch.totalContacts * costPerCall).toLocaleString()}</Text>
-                </View>
-              ))
-            )}
-          </AppCard>
-
-          <AppCard style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Ionicons name="information-circle" size={20} color={colors.info} />
-            <Text style={[styles.infoText, { color: colors.text }]}>
-              Each call costs ₹{costPerCall}. Locked balance is held for running batches.
-            </Text>
-          </AppCard>
 
         {isDev && (
           <>
@@ -460,33 +429,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginTop: 4,
   },
-  infoCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    padding: 12,
-    borderWidth: 1,
-  },
   infoText: {
     flex: 1,
     fontSize: 12,
     lineHeight: 16,
-  },
-  pendingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  pendingText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  pendingAmount: {
-    fontSize: 12,
-    fontWeight: '700',
   },
   recentRow: {
     flexDirection: 'row',

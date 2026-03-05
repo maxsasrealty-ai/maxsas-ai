@@ -48,6 +48,8 @@ export const addLeadWithSchema = async (
     const dataToSave = {
       ...leadData,
       userId,
+      attempts: 0,
+      retryCount: 0,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
@@ -69,7 +71,7 @@ export const updateLeadStatus = async (
   leadId: string,
   status: LeadStatusInput,
   notes?: string,
-  aiDisposition?: 'interested' | 'not_interested' | 'follow_up' | 'unknown',
+  aiDisposition?: 'interested' | 'callback_requested' | 'meeting_scheduled' | 'not_interested' | 'follow_up' | 'unknown',
   callStatus?: 'pending' | 'in_progress' | 'answered' | 'failed' | 'busy' | 'unreachable'
 ) => {
   try {

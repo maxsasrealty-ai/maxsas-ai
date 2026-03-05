@@ -33,9 +33,13 @@ const normalizeDashboardStatus = (rawStatus: unknown): DashboardLeadStatus => {
   if (normalized === 'closed') return 'completed';
 
   if (normalized === 'queued') return 'queued';
+  if (normalized === 'pending') return 'queued';
   if (normalized === 'calling') return 'calling';
+  if (normalized === 'in_progress') return 'calling';
   if (normalized === 'completed') return 'completed';
   if (normalized === 'failed') return 'failed';
+  if (normalized === 'failed_retryable') return 'failed';
+  if (normalized === 'failed_permanent') return 'failed';
 
   return 'unknown';
 };
@@ -56,6 +60,12 @@ export interface DashboardStats {
   // Aggregated Counts
   totalRunningCalls: number; // In-progress leads (calling)
   totalCompletedCalls: number; // Sum of completedCount from all batches
+
+  // Value signals
+  qualifiedLeadsToday: number;
+  qualifiedLeadsTodayFromCompletedBatches: number;
+  completedBatchesToday: number;
+  qualifiedLeadsFromCompletedBatches: number;
   
   // Loading state
   loading: boolean;
@@ -79,6 +89,10 @@ export function useDashboardStats(): DashboardStats {
     failedLeads: 0,
     totalRunningCalls: 0,
     totalCompletedCalls: 0,
+    qualifiedLeadsToday: 0,
+    qualifiedLeadsTodayFromCompletedBatches: 0,
+    completedBatchesToday: 0,
+    qualifiedLeadsFromCompletedBatches: 0,
     loading: true,
     error: null,
   });
@@ -117,6 +131,39 @@ export function useDashboardStats(): DashboardStats {
     let batchesLoaded = false;
     let leadsLoaded = false;
 
+    const QUALIFIED_DISPOSITIONS = new Set(['interested', 'callback_requested', 'meeting_scheduled']);
+
+    const toDate = (value: unknown): Date | null => {
+      if (!value) return null;
+
+      if (value instanceof Date) return value;
+
+      if (typeof value === 'object' && value !== null && 'toDate' in value && typeof (value as { toDate?: unknown }).toDate === 'function') {
+        return (value as { toDate: () => Date }).toDate();
+      }
+
+      if (typeof value === 'string' || typeof value === 'number') {
+        const date = new Date(value);
+        if (!Number.isNaN(date.getTime())) {
+          return date;
+        }
+      }
+
+      return null;
+    };
+
+    const isToday = (value: unknown): boolean => {
+      const date = toDate(value);
+      if (!date) return false;
+
+      const now = new Date();
+      return (
+        date.getFullYear() === now.getFullYear() &&
+        date.getMonth() === now.getMonth() &&
+        date.getDate() === now.getDate()
+      );
+    };
+
     // Helper to calculate and update stats
     const updateStats = () => {
       if (!batchesLoaded || !leadsLoaded) {
@@ -132,6 +179,15 @@ export function useDashboardStats(): DashboardStats {
       const runningBatches = batchData.filter(b => b.status === 'running').length;
       const scheduledBatches = batchData.filter(b => b.status === 'scheduled').length;
       const completedBatches = batchData.filter(b => b.status === 'completed').length;
+      const completedBatchesToday = batchData.filter(
+        (b) => b.status === 'completed' && isToday(b.completedAt || b.updatedAt)
+      ).length;
+
+      const completedBatchIds = new Set(
+        batchData
+          .filter((b) => b.status === 'completed')
+          .map((b) => b.batchId)
+      );
 
       // Aggregated counts from batch metadata
       const totalCompletedCalls = batchData
@@ -143,10 +199,11 @@ export function useDashboardStats(): DashboardStats {
       const leadStatusCounts = leadData.reduce(
         (acc, lead) => {
           const status = normalizeDashboardStatus(lead.status);
-          const isFailed = ['failed', 'busy', 'unreachable'].includes(lead.callStatus || '');
+          const callStatus = String(lead.callStatus || '').toLowerCase();
+          const isFailed = status === 'failed' || ['failed', 'busy', 'unreachable'].includes(callStatus);
 
           if (status === 'queued') acc.pending += 1;
-          if (status === 'calling' || lead.callStatus === 'in_progress') acc.inProgress += 1;
+          if (status === 'calling' || callStatus === 'in_progress') acc.inProgress += 1;
           if (status === 'completed') acc.completed += 1;
           if (isFailed) acc.failed += 1;
 
@@ -167,6 +224,23 @@ export function useDashboardStats(): DashboardStats {
       // Failed leads
       const failedLeads = leadStatusCounts.failed;
 
+      const qualifiedLeads = leadData.filter((lead) =>
+        QUALIFIED_DISPOSITIONS.has(String(lead.aiDisposition || '').toLowerCase())
+      );
+
+      const qualifiedLeadsToday = qualifiedLeads.filter((lead) =>
+        isToday(lead.lastActionAt || lead.lastAttemptAt || lead.createdAt)
+      ).length;
+
+      const qualifiedLeadsFromCompletedBatches = qualifiedLeads.filter((lead) =>
+        completedBatchIds.has(lead.batchId)
+      ).length;
+
+      const qualifiedLeadsTodayFromCompletedBatches = qualifiedLeads.filter((lead) =>
+        completedBatchIds.has(lead.batchId) &&
+        isToday(lead.lastActionAt || lead.lastAttemptAt || lead.createdAt)
+      ).length;
+
       const newStats: DashboardStats = {
         totalBatches,
         runningBatches,
@@ -178,6 +252,10 @@ export function useDashboardStats(): DashboardStats {
         failedLeads,
         totalRunningCalls: inProgressLeads,
         totalCompletedCalls,
+        qualifiedLeadsToday,
+        qualifiedLeadsTodayFromCompletedBatches,
+        completedBatchesToday,
+        qualifiedLeadsFromCompletedBatches,
         loading: false,
         error: null,
       };
@@ -204,10 +282,15 @@ export function useDashboardStats(): DashboardStats {
             userId: data.userId,
             status: data.status,
             processingLock: data.processingLock ?? false,
+            lockOwner: data.lockOwner ?? null,
+            lockExpiresAt: data.lockExpiresAt || null,
+            priority: data.priority ?? 1,
+            lastDispatchedAt: data.lastDispatchedAt || data.updatedAt || data.createdAt,
             action: data.action,
             source: data.source,
             totalContacts: data.totalContacts,
             createdAt: data.createdAt,
+            updatedAt: data.updatedAt || data.createdAt,
             startedAt: data.startedAt || null,
             scheduleAt: data.scheduleAt || null,
             completedAt: data.completedAt || null,

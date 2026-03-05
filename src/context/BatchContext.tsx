@@ -3,14 +3,14 @@ import { Timestamp } from 'firebase/firestore';
 import React, { createContext, useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { v4 as uuidv4 } from 'uuid';
-import { getBatchDetail as fetchBatchDetail, getBatchesForUser, saveBatchToFirebase, subscribeToBatches } from '../services/batchService';
+import { getBatchDetail as fetchBatchDetail, saveBatchToFirebase, subscribeToBatches } from '../services/batchService';
 import { subscribeToLeadsForUser } from '../services/leadService';
 import {
-    Batch,
-    BatchContextType,
-    BatchDraft,
-    BatchSource,
-    ExtractedContact,
+  Batch,
+  BatchContextType,
+  BatchDraft,
+  BatchSource,
+  ExtractedContact,
 } from '../types/batch';
 
 export const BatchContext = createContext<BatchContextType | undefined>(undefined);
@@ -89,13 +89,15 @@ export const BatchProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           }
 
           const stats = nextStats[lead.batchId];
-          const status = lead.status;
-          const callStatus = lead.callStatus;
+          const status = String(lead.status || '').toLowerCase();
+          const callStatus = String(lead.callStatus || '').toLowerCase();
 
           if (status === 'queued') stats.pending += 1;
           if (status === 'calling' || callStatus === 'in_progress') stats.running += 1;
           if (status === 'completed') stats.completed += 1;
-          if (['failed', 'busy', 'unreachable'].includes(callStatus)) stats.failed += 1;
+          if (status === 'failed' || status === 'failed_retryable' || status === 'failed_permanent' || ['failed', 'busy', 'unreachable'].includes(callStatus)) {
+            stats.failed += 1;
+          }
 
           if (lead.retryCount) stats.retries += lead.retryCount;
         });
@@ -113,19 +115,58 @@ export const BatchProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Merge Firebase batches with local drafts whenever either changes
   useEffect(() => {
+    const deriveUiBatchStatus = (batch: Batch): Batch => {
+      const stats = leadStatsByBatch[batch.batchId];
+
+      if (!stats) {
+        return batch;
+      }
+
+      const totalFromStats = stats.pending + stats.running + stats.completed + stats.failed;
+      const totalLeads = batch.totalContacts || totalFromStats;
+      const terminalCount = stats.completed + stats.failed;
+      const hasLeadData = totalFromStats > 0;
+      const isTerminalByLeads =
+        hasLeadData &&
+        totalLeads > 0 &&
+        stats.pending === 0 &&
+        stats.running === 0 &&
+        terminalCount >= totalLeads;
+
+      if (batch.status === 'running' && isTerminalByLeads) {
+        return {
+          ...batch,
+          status: 'completed',
+          runningCount: 0,
+          completedCount: stats.completed,
+          failedCount: stats.failed,
+          completedAt: batch.completedAt || batch.updatedAt || Timestamp.now(),
+        };
+      }
+
+      return {
+        ...batch,
+        runningCount: stats.running,
+        completedCount: stats.completed,
+        failedCount: stats.failed,
+      };
+    };
+
+    const derivedFirebaseBatches = firebaseBatches.map(deriveUiBatchStatus);
     const firebaseBatchIds = new Set(firebaseBatches.map(b => b.batchId));
     const uniqueLocalDrafts = localDrafts.filter(b => !firebaseBatchIds.has(b.batchId));
     
-    const combined = [...uniqueLocalDrafts, ...firebaseBatches];
+    const combined = [...uniqueLocalDrafts, ...derivedFirebaseBatches];
     
     console.log('🔄 BatchContext: Merging batches');
     console.log('  - Local drafts:', localDrafts.length);
     console.log('  - Firebase batches:', firebaseBatches.length);
+    console.log('  - Derived Firebase batches:', derivedFirebaseBatches.length);
     console.log('  - Unique local drafts:', uniqueLocalDrafts.length);
     console.log('  - Total combined:', combined.length);
     
     setAllBatches(combined);
-  }, [firebaseBatches, localDrafts]);
+  }, [firebaseBatches, leadStatsByBatch, localDrafts]);
 
   const createLocalBatch = useCallback((
     contacts: ExtractedContact[],
@@ -428,29 +469,12 @@ export const BatchProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 
   const getAllBatches = useCallback(async (): Promise<void> => {
-    // This function is now deprecated in favor of real-time subscription
-    // We keep it for backward compatibility, but it just ensures data is loaded
-    console.log('⚠️ getAllBatches called (deprecated - using real-time listener)');
-    console.log('📦 Current batches:', allBatches.length);
-    
-    // If this is called before the listener has populated data, fetch once
-    if (allBatches.length === 0 && firebaseBatches.length === 0) {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        console.log('📚 Initial fetch of batches...');
-        const batches = await getBatchesForUser();
-        setFirebaseBatches(batches);
-        setLoading(false);
-      } catch (err) {
-        console.error('❌ Error fetching batches:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch batches');
-        setLoading(false);
-        throw err;
-      }
+    // Kept for backward compatibility; batches are driven by real-time listeners.
+    if (!userId) {
+      setError('User not authenticated');
+      return;
     }
-  }, [allBatches, firebaseBatches]);
+  }, [userId]);
 
   const getBatchDetail = useCallback(
     async (batchId: string) => {

@@ -1,66 +1,19 @@
 import { useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { AppCard } from '@/src/components/ui/AppCard';
 import { AppHeader } from '@/src/components/ui/AppHeader';
 import { ScreenContainer } from '@/src/components/ui/ScreenContainer';
-import { useAuth } from '@/src/context/AuthContext';
-import { getBatchLeadDebitTransactions, LedgerTransaction } from '@/src/services/ledgerService';
 import { useAppTheme } from '@/src/theme/use-app-theme';
+
+import { useBatchBillingDetailViewModel } from './useBatchBillingDetailViewModel';
 
 export default function BatchBillingDetailScreen() {
   const { colors } = useAppTheme();
-  const { user } = useAuth();
   const { batchId } = useLocalSearchParams<{ batchId?: string }>();
 
-  const [items, setItems] = useState<LedgerTransaction[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const load = async () => {
-      if (!user?.uid || !batchId) {
-        if (mounted) {
-          setLoading(false);
-          setItems([]);
-        }
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const result = await getBatchLeadDebitTransactions(user.uid, batchId);
-        if (mounted) {
-          setItems(result);
-        }
-      } catch (loadError) {
-        if (mounted) {
-          setError(loadError instanceof Error ? loadError.message : 'Failed to load batch billing details');
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    load();
-
-    return () => {
-      mounted = false;
-    };
-  }, [batchId, user?.uid]);
-
-  const totals = useMemo(() => {
-    const amount = items.reduce((sum, entry) => sum + entry.amount, 0);
-    const minutes = items.reduce((sum, entry) => sum + entry.minutesCharged, 0);
-    return { amount, minutes };
-  }, [items]);
+  const { loading, error, batch, leads, connectedLeads, failedLeads, computedLeadTotal } =
+    useBatchBillingDetailViewModel(batchId);
 
   const formatCreatedAt = (createdAt: any) => {
     const date = createdAt?.toDate?.();
@@ -82,20 +35,23 @@ export default function BatchBillingDetailScreen() {
 
       <View style={styles.summaryRow}>
         <AppCard style={styles.summaryCard}>
-          <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Lead Debits</Text>
-          <Text style={[styles.summaryValue, { color: colors.text }]}>{items.length}</Text>
+          <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Connected Leads</Text>
+          <Text style={[styles.summaryValue, { color: colors.text }]}>{connectedLeads}</Text>
         </AppCard>
         <AppCard style={styles.summaryCard}>
-          <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Batch Total</Text>
-          <Text style={[styles.summaryValue, { color: colors.text }]}>₹{totals.amount.toFixed(2)}</Text>
-          <Text style={[styles.summaryMeta, { color: colors.textMuted }]}>{totals.minutes} min billed</Text>
+          <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Failed Leads</Text>
+          <Text style={[styles.summaryValue, { color: colors.text }]}>{failedLeads}</Text>
+        </AppCard>
+        <AppCard style={styles.summaryCard}>
+          <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Final Batch Total</Text>
+          <Text style={[styles.summaryValue, { color: colors.text }]}>₹{(batch?.batchTotalCost ?? 0).toFixed(2)}</Text>
         </AppCard>
       </View>
 
       {loading && (
         <View style={styles.loadingRow}>
           <ActivityIndicator size="small" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.textMuted }]}>Loading lead-level debits...</Text>
+          <Text style={[styles.loadingText, { color: colors.textMuted }]}>Loading lead billing details...</Text>
         </View>
       )}
 
@@ -105,26 +61,72 @@ export default function BatchBillingDetailScreen() {
         </AppCard>
       )}
 
-      {!loading && !error && items.length === 0 && (
+      {!loading && !error && leads.length === 0 && (
         <AppCard>
-          <Text style={[styles.metaText, { color: colors.textMuted }]}>No lead debit records found for this batch.</Text>
+          <Text style={[styles.metaText, { color: colors.textMuted }]}>No leads found for this batch.</Text>
         </AppCard>
       )}
 
       <View style={styles.list}>
-        {items.map((entry) => (
-          <AppCard key={entry.transactionId} style={styles.rowCard}>
-            <View style={styles.rowLeft}>
-              <Text style={[styles.rowTitle, { color: colors.text }]}>Lead {entry.leadId?.slice(0, 8) || 'N/A'}</Text>
-              <Text style={[styles.metaText, { color: colors.textMuted }]}>{formatCreatedAt(entry.createdAt)}</Text>
+        {leads.map((lead) => (
+          <AppCard key={lead.leadId} style={styles.leadCard}>
+            <View style={styles.leadRow}>
+              <Text style={[styles.label, { color: colors.textMuted }]}>Phone</Text>
+              <Text style={[styles.value, { color: colors.text }]}>{lead.phone}</Text>
             </View>
-            <View style={styles.rowRight}>
-              <Text style={[styles.rowAmount, { color: colors.danger }]}>-₹{entry.amount.toFixed(2)}</Text>
-              <Text style={[styles.metaText, { color: colors.textMuted }]}>{entry.minutesCharged} min</Text>
+            <View style={styles.leadRow}>
+              <Text style={[styles.label, { color: colors.textMuted }]}>Status</Text>
+              <Text style={[styles.value, { color: lead.displayStatus === 'Connected' ? colors.success : colors.textMuted }]}>
+                {lead.displayStatus}
+              </Text>
+            </View>
+            <View style={styles.leadRow}>
+              <Text style={[styles.label, { color: colors.textMuted }]}>Duration (seconds)</Text>
+              <Text style={[styles.value, { color: colors.text }]}>{lead.duration}</Text>
+            </View>
+            <View style={styles.leadRow}>
+              <Text style={[styles.label, { color: colors.textMuted }]}>Minutes Charged</Text>
+              <Text style={[styles.value, { color: colors.text }]}>{lead.minutesCharged}</Text>
+            </View>
+            <View style={styles.leadRow}>
+              <Text style={[styles.label, { color: colors.textMuted }]}>Call Cost</Text>
+              <Text style={[styles.value, { color: colors.text }]}>₹{lead.callCost.toFixed(2)}</Text>
+            </View>
+            <View style={styles.leadRow}>
+              <Text style={[styles.label, { color: colors.textMuted }]}>Success Fee</Text>
+              <Text style={[styles.value, { color: colors.text }]}>₹{lead.successFee.toFixed(2)}</Text>
+            </View>
+            <View style={[styles.leadRow, styles.totalRow, { borderTopColor: colors.border }]}>
+              <Text style={[styles.totalLabel, { color: colors.text }]}>Total Cost</Text>
+              <Text style={[styles.totalValue, { color: colors.text }]}>₹{lead.uiTotalCost.toFixed(2)}</Text>
             </View>
           </AppCard>
         ))}
       </View>
+
+      {!loading && (
+        <AppCard style={styles.footerSummaryCard}>
+          <View style={styles.footerSummaryRow}>
+            <Text style={[styles.footerLabel, { color: colors.textMuted }]}>Total Connected Leads</Text>
+            <Text style={[styles.footerValue, { color: colors.text }]}>{connectedLeads}</Text>
+          </View>
+          <View style={styles.footerSummaryRow}>
+            <Text style={[styles.footerLabel, { color: colors.textMuted }]}>Total Failed Leads</Text>
+            <Text style={[styles.footerValue, { color: colors.text }]}>{failedLeads}</Text>
+          </View>
+          <View style={styles.footerSummaryRow}>
+            <Text style={[styles.footerLabel, { color: colors.textMuted }]}>Computed Lead Total</Text>
+            <Text style={[styles.footerValue, { color: colors.text }]}>₹{computedLeadTotal.toFixed(2)}</Text>
+          </View>
+          <View style={styles.footerSummaryRow}>
+            <Text style={[styles.footerLabel, { color: colors.textMuted }]}>Final Batch Total</Text>
+            <Text style={[styles.footerFinalValue, { color: colors.text }]}>₹{(batch?.batchTotalCost ?? 0).toFixed(2)}</Text>
+          </View>
+          <Text style={[styles.summaryMeta, { color: colors.textMuted }]}>
+            {formatCreatedAt(batch?.completedAt)}
+          </Text>
+        </AppCard>
+      )}
     </ScreenContainer>
   );
 }
@@ -132,7 +134,7 @@ export default function BatchBillingDetailScreen() {
 const styles = StyleSheet.create({
   summaryRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
     marginBottom: 12,
   },
   summaryCard: {
@@ -163,27 +165,58 @@ const styles = StyleSheet.create({
   list: {
     gap: 10,
   },
-  rowCard: {
+  leadCard: {
+    gap: 6,
+  },
+  leadRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  rowLeft: {
-    flex: 1,
+  label: {
+    fontSize: 12,
+    fontWeight: '600',
   },
-  rowRight: {
-    alignItems: 'flex-end',
+  value: {
+    fontSize: 12,
+    fontWeight: '700',
   },
-  rowTitle: {
+  totalRow: {
+    marginTop: 2,
+    paddingTop: 6,
+    borderTopWidth: 1,
+  },
+  totalLabel: {
     fontSize: 13,
     fontWeight: '700',
   },
-  rowAmount: {
-    fontSize: 14,
+  totalValue: {
+    fontSize: 13,
     fontWeight: '800',
   },
   metaText: {
     marginTop: 2,
     fontSize: 11,
+  },
+  footerSummaryCard: {
+    marginTop: 8,
+    gap: 7,
+  },
+  footerSummaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  footerLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  footerValue: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  footerFinalValue: {
+    fontSize: 13,
+    fontWeight: '800',
   },
 });
