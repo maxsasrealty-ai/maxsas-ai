@@ -123,6 +123,10 @@ function normalizeWebhookAmountFromPaise(value: unknown): number {
 }
 
 export default async function handler(req: any, res: any) {
+  console.log('[RAZORPAY_WEBHOOK] request_received', {
+    method: req.method,
+  });
+
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method not allowed' });
@@ -137,25 +141,33 @@ export default async function handler(req: any, res: any) {
     const rawBody = await getRawBody(req);
     const signature = String(req.headers['x-razorpay-signature'] || '');
 
+    console.log('[RAZORPAY_WEBHOOK] signature_received', {
+      hasSignature: !!signature,
+    });
+
     if (!signature) {
+      console.warn('[RAZORPAY_WEBHOOK] signature_verification_failed', {
+        reason: 'missing_signature_header',
+      });
       return res.status(401).json({ error: 'Missing Razorpay webhook signature' });
     }
 
     const expectedSignature = createHmac('sha256', webhookSecret).update(rawBody).digest('hex');
     const isValidSignature = safeCompareHex(expectedSignature, signature);
 
+    console.log('[RAZORPAY_WEBHOOK] signature_verification', {
+      passed: isValidSignature,
+    });
+
     if (!isValidSignature) {
+      console.warn('[RAZORPAY_WEBHOOK] signature_verification_failed', {
+        reason: 'invalid_signature',
+      });
       return res.status(401).json({ error: 'Invalid webhook signature' });
     }
 
     const event = JSON.parse(rawBody) as RazorpayWebhookEvent;
     const eventType = String(event.event || 'unknown');
-
-    const handledEvent = eventType === 'payment.captured' || eventType === 'order.paid';
-    if (!handledEvent) {
-      console.log('[razorpay:webhook] Ignored event:', eventType);
-      return res.status(200).json({ ok: true, ignored: true, eventType });
-    }
 
     const paymentEntity = event.payload?.payment?.entity;
     const orderEntity = event.payload?.order?.entity;
@@ -163,14 +175,35 @@ export default async function handler(req: any, res: any) {
     const paymentId = String(paymentEntity?.id || '');
     const orderId = String(paymentEntity?.order_id || orderEntity?.id || '');
 
+    console.log('[RAZORPAY_WEBHOOK] event_parsed', {
+      eventType,
+      orderId: orderId || null,
+      paymentId: paymentId || null,
+    });
+
+    const handledEvent = eventType === 'payment.captured' || eventType === 'order.paid';
+    if (!handledEvent) {
+      console.log('[RAZORPAY_WEBHOOK] event_ignored', {
+        reason: 'unhandled_event_type',
+        eventType,
+        orderId: orderId || null,
+        paymentId: paymentId || null,
+      });
+      return res.status(200).json({ ok: true, ignored: true, eventType });
+    }
+
     if (!orderId && !paymentId) {
+      console.warn('[RAZORPAY_WEBHOOK] event_rejected', {
+        reason: 'missing_order_or_payment_id',
+        eventType,
+      });
       return res.status(400).json({ error: 'Missing order_id/payment_id in webhook payload' });
     }
 
-    console.log('[razorpay:webhook] Received', {
+    console.log('[RAZORPAY_WEBHOOK] settlement_start', {
       eventType,
-      orderId,
-      paymentId,
+      orderId: orderId || null,
+      paymentId: paymentId || null,
     });
 
     const db = getAdminDb();
@@ -186,6 +219,12 @@ export default async function handler(req: any, res: any) {
 
       if (!byOrder.empty) {
         intentSnap = byOrder.docs[0];
+        console.log('[RAZORPAY_WEBHOOK] intent_lookup_success', {
+          strategy: 'order_id',
+          intentId: intentSnap.id,
+          orderId,
+          paymentId: paymentId || null,
+        });
       }
     }
 
@@ -198,13 +237,19 @@ export default async function handler(req: any, res: any) {
 
       if (!byPayment.empty) {
         intentSnap = byPayment.docs[0];
+        console.log('[RAZORPAY_WEBHOOK] intent_lookup_success', {
+          strategy: 'payment_id',
+          intentId: intentSnap.id,
+          orderId: orderId || null,
+          paymentId,
+        });
       }
     }
 
     if (!intentSnap) {
-      console.warn('[razorpay:webhook] No payment intent found', {
-        orderId,
-        paymentId,
+      console.warn('[RAZORPAY_WEBHOOK] intent_lookup_failed', {
+        orderId: orderId || null,
+        paymentId: paymentId || null,
       });
 
       return res.status(200).json({ ok: true, ignored: true, reason: 'intent_not_found' });
@@ -247,6 +292,13 @@ export default async function handler(req: any, res: any) {
       const existingRechargeSnap = await transaction.get(walletTxnRef);
 
       if (status === 'credited' || existingRechargeSnap.exists) {
+        console.log('[RAZORPAY_WEBHOOK] settlement_idempotent_skip', {
+          intentId,
+          userId,
+          amount,
+          reason: status === 'credited' ? 'intent_already_credited' : 'recharge_transaction_exists',
+        });
+
         transaction.set(
           intentRef,
           {
@@ -328,13 +380,38 @@ export default async function handler(req: any, res: any) {
       };
     });
 
+    if (transactionResult.credited) {
+      console.log('[RAZORPAY_WEBHOOK] settlement_wallet_credited', {
+        intentId: transactionResult.intentId,
+        userId: transactionResult.userId,
+        amountCredited: transactionResult.amount,
+        orderId: orderId || null,
+        paymentId: paymentId || null,
+      });
+    } else if (transactionResult.alreadyCredited) {
+      console.log('[RAZORPAY_WEBHOOK] settlement_already_processed', {
+        intentId: transactionResult.intentId,
+        userId: transactionResult.userId,
+        amount: transactionResult.amount,
+      });
+    }
+
+    console.log('[RAZORPAY_WEBHOOK] settlement_complete', {
+      eventType,
+      intentId: transactionResult.intentId,
+      credited: transactionResult.credited,
+      alreadyCredited: transactionResult.alreadyCredited,
+    });
+
     return res.status(200).json({
       ok: true,
       eventType,
       result: transactionResult,
     });
   } catch (error) {
-    console.error('[razorpay:webhook] Settlement failed', error);
+    console.error('[RAZORPAY_WEBHOOK] settlement_failed', {
+      error: error instanceof Error ? error.message : 'Webhook settlement failed',
+    });
     return res.status(500).json({
       ok: false,
       error: error instanceof Error ? error.message : 'Webhook settlement failed',
