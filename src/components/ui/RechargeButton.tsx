@@ -1,15 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Modal,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-    ViewStyle,
+  ActivityIndicator,
+  Alert,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  ViewStyle,
 } from 'react-native';
 import { useWallet } from '../../context/WalletContext';
 import { useAppTheme } from '../../theme/use-app-theme';
@@ -38,11 +38,19 @@ export function RechargeButton({ variant = 'primary', size = 'medium' }: Recharg
     try {
       const result = await addBalanceToWallet(amount);
       if (result.success) {
-        Alert.alert('Success', `₹${amount} added to your wallet!`);
+        Alert.alert(
+          'Payment processing...',
+          'Payment response received. Wallet will update after Razorpay webhook verification.'
+        );
         setRechargeAmount('');
         setModalVisible(false);
       } else {
-        Alert.alert('Error', result.errorMessage || 'Failed to add balance');
+        const message = result.errorMessage || 'Failed to start recharge flow';
+        if (message.toLowerCase().includes('cancel')) {
+          Alert.alert('Payment Cancelled', message);
+        } else {
+          Alert.alert('Error', message);
+        }
       }
     } finally {
       setRecharging(false);

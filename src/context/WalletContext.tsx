@@ -1,11 +1,12 @@
 import { getAuth } from 'firebase/auth';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { startRazorpayRecharge } from '../services/razorpayCheckoutService';
 import {
-    calculateDeductionPreview,
-    checkBalanceBeforeBatch,
-    COST_PER_CALL,
-    subscribeToTransactions,
-    subscribeToWallet,
+  calculateDeductionPreview,
+  checkBalanceBeforeBatch,
+  COST_PER_CALL,
+  subscribeToTransactions,
+  subscribeToWallet,
 } from '../services/walletService';
 import { Wallet, WalletOperationResult, WalletTransaction } from '../types/batch';
 import { useAuth } from './AuthContext';
@@ -99,9 +100,16 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       };
     }
 
+    const result = await startRazorpayRecharge(amount);
+    if (!result.success) {
+      return {
+        success: false,
+        errorMessage: result.errorMessage || 'Failed to start Razorpay checkout.',
+      };
+    }
+
     return {
-      success: false,
-      errorMessage: 'Wallet top-ups are handled by automation.',
+      success: true,
     };
   };
 

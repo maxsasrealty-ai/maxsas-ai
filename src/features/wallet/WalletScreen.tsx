@@ -2,14 +2,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { PricingModal } from '../../components/pricing/PricingModal';
 import { AppCard } from '../../components/ui/AppCard';
@@ -24,9 +25,10 @@ import { TransactionHistory } from './';
 export default function WalletScreen() {
   const { colors } = useAppTheme();
   const { pricing } = usePricing();
-  const { wallet, availableBalance, loading, transactions } = useWallet();
+  const { wallet, availableBalance, loading, transactions, addBalanceToWallet } = useWallet();
   const [rechargeAmount, setRechargeAmount] = useState('');
   const [recharging, setRecharging] = useState(false);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
   const isDev = __DEV__;
 
@@ -66,7 +68,27 @@ export default function WalletScreen() {
       return;
     }
 
-    Alert.alert('Info', 'Wallet top-ups are handled by automation.');
+    setRecharging(true);
+    const result = await addBalanceToWallet(amount);
+    setRecharging(false);
+
+    if (!result.success) {
+      const message = result.errorMessage || 'Unable to start recharge flow.';
+      if (message.toLowerCase().includes('cancel')) {
+        Alert.alert('Payment Cancelled', message);
+      } else {
+        Alert.alert('Recharge Failed', message);
+      }
+      return;
+    }
+
+    setPaymentProcessing(true);
+    setRechargeAmount('');
+    Alert.alert(
+      'Payment processing...',
+      'We received your payment response. Wallet balance will update after webhook verification.'
+    );
+    setTimeout(() => setPaymentProcessing(false), 8000);
   };
 
   const handleAddTestBalance = async (amount: number) => {
@@ -252,6 +274,16 @@ export default function WalletScreen() {
               )}
             </TouchableOpacity>
           </View>
+          {paymentProcessing && (
+            <Text style={[styles.processingText, { color: colors.info }]}>
+              Payment processing... Wallet will update after Razorpay webhook settlement.
+            </Text>
+          )}
+          {Platform.OS !== 'web' && (
+            <Text style={[styles.processingText, { color: colors.textMuted }]}>
+              Web checkout flow is enabled for Razorpay test payments.
+            </Text>
+          )}
         </AppCard>
 
         {/* Transaction History */}
@@ -552,5 +584,10 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '700',
     fontSize: 16,
+  },
+  processingText: {
+    marginTop: 10,
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
