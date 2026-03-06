@@ -1,4 +1,6 @@
 import { randomUUID } from 'crypto';
+import { applicationDefault, cert, getApps, initializeApp } from 'firebase-admin/app';
+import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 
 type SupportedPlatform = 'android' | 'ios' | 'web';
 
@@ -8,6 +10,41 @@ function toNumber(value: unknown): number {
   if (typeof value === 'number') return value;
   if (typeof value === 'string') return Number(value);
   return NaN;
+}
+
+function getPrivateKeyFromEnv(): string | null {
+  const raw = process.env.FIREBASE_PRIVATE_KEY;
+  if (!raw) return null;
+  return raw.replace(/\\n/g, '\n');
+}
+
+function getOrInitAdminApp() {
+  if (getApps().length > 0) {
+    return getApps()[0];
+  }
+
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = getPrivateKeyFromEnv();
+
+  if (projectId && clientEmail && privateKey) {
+    return initializeApp({
+      credential: cert({
+        projectId,
+        clientEmail,
+        privateKey,
+      }),
+    });
+  }
+
+  return initializeApp({
+    credential: applicationDefault(),
+    ...(projectId ? { projectId } : {}),
+  });
+}
+
+function getAdminDb() {
+  return getFirestore(getOrInitAdminApp());
 }
 
 export default async function handler(req: any, res: any) {
@@ -60,6 +97,7 @@ export default async function handler(req: any, res: any) {
     const rawAmount = toNumber(payload.amount);
     const currency = String(payload.currency || 'INR').toUpperCase();
     const platform = String(payload.platform || '').toLowerCase();
+    const userId = String(payload.userId || 'unknown');
 
     if (!Number.isFinite(rawAmount) || rawAmount <= 0) {
       return res.status(400).json({
@@ -87,6 +125,27 @@ export default async function handler(req: any, res: any) {
     }
 
     const intentId = `pi_${Date.now()}_${randomUUID().slice(0, 8)}`;
+    const db = getAdminDb();
+    const intentRef = db.collection('paymentIntents').doc(intentId);
+
+    await intentRef.set({
+      intentId,
+      userId,
+      amount: rawAmount,
+      currency: 'INR',
+      status: 'created',
+      razorpayOrderId: null,
+      createdAt: FieldValue.serverTimestamp(),
+      platform,
+    });
+
+    console.log('[CREATE_ORDER] intent_created', {
+      intentId,
+      userId,
+      amount: rawAmount,
+      currency: 'INR',
+      platform,
+    });
 
     const razorpayModule = await import('razorpay');
     const RazorpayCtor = (razorpayModule as any).default ?? razorpayModule;
@@ -108,6 +167,14 @@ export default async function handler(req: any, res: any) {
         currency: 'INR',
         receipt: `rcpt_${Date.now()}`,
       });
+
+      await intentRef.set(
+        {
+          razorpayOrderId: order.id,
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
     } catch (err: any) {
       console.error('[CREATE_ORDER] razorpay_full_error', {
         message: err?.message,
