@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import { applicationDefault, cert, getApps, initializeApp } from 'firebase-admin/app';
+import { getAuth as getAdminAuth } from 'firebase-admin/auth';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 
 function toNumber(value: unknown): number {
@@ -41,6 +42,17 @@ function getOrInitAdminApp() {
 
 function getAdminDb() {
   return getFirestore(getOrInitAdminApp());
+}
+
+function getBearerTokenFromRequest(req: any): string {
+  const rawHeader = req?.headers?.authorization || req?.headers?.Authorization;
+  const header = typeof rawHeader === 'string' ? rawHeader.trim() : '';
+  if (!header) {
+    return '';
+  }
+
+  const match = /^Bearer\s+(.+)$/i.exec(header);
+  return match?.[1]?.trim() || '';
 }
 
 export default async function handler(req: any, res: any) {
@@ -90,33 +102,65 @@ export default async function handler(req: any, res: any) {
       payload = req.body ?? {};
     }
 
-    const { amount, userId } = payload ?? {};
+    const { amount } = payload ?? {};
+    const idToken = getBearerTokenFromRequest(req);
 
     console.log('[CREATE_ORDER] payload', {
       hasAmount: amount !== undefined,
       amount,
-      userId,
+      hasAuthorizationHeader: !!idToken,
     });
 
     const rawAmount = toNumber(amount);
-    const normalizedUserId = typeof userId === 'string' ? userId.trim() : '';
-
-    if (!normalizedUserId) {
+    if (!idToken) {
       console.error('[CREATE_ORDER] error', {
-        reason: 'missing_user_id',
+        reason: 'missing_firebase_id_token',
       });
-      return res.status(400).json({
-        error: 'userId is required.',
+      return res.status(401).json({
+        error: 'Missing Firebase ID token in Authorization header.',
       });
     }
 
-    if (!Number.isFinite(rawAmount) || rawAmount <= 0) {
+    let normalizedUserId = '';
+    try {
+      const decodedToken = await getAdminAuth(getOrInitAdminApp()).verifyIdToken(idToken);
+      normalizedUserId = decodedToken.uid;
+    } catch (error) {
+      console.error('[CREATE_ORDER] error', {
+        reason: 'invalid_firebase_id_token',
+        message: error instanceof Error ? error.message : 'token_verification_failed',
+      });
+      return res.status(401).json({
+        error: 'Invalid or expired Firebase ID token.',
+      });
+    }
+
+    if (!normalizedUserId) {
+      console.error('[CREATE_ORDER] error', {
+        reason: 'missing_uid_in_verified_token',
+      });
+      return res.status(401).json({
+        error: 'Authenticated user id could not be determined.',
+      });
+    }
+
+    if (!Number.isInteger(rawAmount)) {
       console.error('[CREATE_ORDER] error', {
         reason: 'invalid_amount',
         amount,
       });
       return res.status(400).json({
-        error: 'Invalid amount. Amount must be a positive number.',
+        error: 'Invalid amount. Amount must be an integer number of rupees.',
+      });
+    }
+
+    if (rawAmount < 10 || rawAmount > 100000) {
+      console.error('[CREATE_ORDER] error', {
+        reason: 'amount_out_of_range',
+        amount: rawAmount,
+      });
+      return res.status(400).json({
+        error: 'Invalid amount. Amount must be between 10 and 100000 rupees.',
       });
     }
 
@@ -168,8 +212,10 @@ export default async function handler(req: any, res: any) {
         intentId,
         userId: normalizedUserId,
         amount: rawAmount,
+        amountInPaise,
         currency: 'INR',
         status: 'created',
+        credited: false,
         razorpayOrderId: order.id,
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),

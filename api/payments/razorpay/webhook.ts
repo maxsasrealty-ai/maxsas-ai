@@ -303,6 +303,7 @@ export default async function handler(req: any, res: any) {
           intentRef,
           {
             status: 'credited',
+            credited: true,
             razorpayPaymentId: paymentId || intentData.razorpayPaymentId || null,
             razorpayOrderId: orderId || intentData.razorpayOrderId || null,
             creditedAt: intentData.creditedAt || FieldValue.serverTimestamp(),
@@ -348,7 +349,10 @@ export default async function handler(req: any, res: any) {
         transactionId: `recharge_${intentId}`,
         userId,
         type: 'recharge',
+        source: 'razorpay',
         amount,
+        razorpayPaymentId: paymentId || null,
+        razorpayOrderId: orderId || null,
         paymentId: paymentId || null,
         orderId: orderId || null,
         previousBalance,
@@ -361,6 +365,7 @@ export default async function handler(req: any, res: any) {
         intentRef,
         {
           status: 'credited',
+          credited: true,
           razorpayPaymentId: paymentId || null,
           razorpayOrderId: orderId || null,
           creditedAt: FieldValue.serverTimestamp(),

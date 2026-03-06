@@ -239,7 +239,10 @@ describe('Razorpay webhook settlement', () => {
     const rechargeTxn = fakeDb.getDoc('wallets/user_1/transactions/recharge_pi_1');
     expect(rechargeTxn).toMatchObject({
       type: 'recharge',
+      source: 'razorpay',
       amount: 500,
+      razorpayPaymentId: 'pay_123',
+      razorpayOrderId: 'order_123',
       paymentId: 'pay_123',
       orderId: 'order_123',
       createdAt: '__SERVER_TIMESTAMP__',
@@ -247,6 +250,7 @@ describe('Razorpay webhook settlement', () => {
 
     const intentAfterFirst = fakeDb.getDoc('paymentIntents/pi_1');
     expect(intentAfterFirst?.status).toBe('credited');
+    expect(intentAfterFirst?.credited).toBe(true);
     expect(intentAfterFirst?.razorpayPaymentId).toBe('pay_123');
     expect(intentAfterFirst?.razorpayOrderId).toBe('order_123');
 

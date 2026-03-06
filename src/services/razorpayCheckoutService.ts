@@ -86,23 +86,21 @@ async function createOrder(amount: number): Promise<CreateOrderResponse> {
     console.error('[RECHARGE] user not authenticated');
     throw new Error('User must be authenticated to create a recharge order.');
   }
-
-  const amountInPaise = amount * 100;
+  const idToken = await user.getIdToken();
 
   console.log('[RECHARGE] create_order_request', {
-    userId: user.uid,
     amount,
   });
 
   const payload = {
-    amount: amountInPaise,
-    userId: user.uid,
+    amount,
   };
 
   const response = await fetch(getApiUrl('/api/payments/razorpay/create-order'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      Authorization: `Bearer ${idToken}`,
     },
     body: JSON.stringify(payload),
   });
