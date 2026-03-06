@@ -2,10 +2,6 @@ import { randomUUID } from 'crypto';
 import { applicationDefault, cert, getApps, initializeApp } from 'firebase-admin/app';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 
-type SupportedPlatform = 'android' | 'ios' | 'web';
-
-const SUPPORTED_PLATFORMS: SupportedPlatform[] = ['android', 'ios', 'web'];
-
 function toNumber(value: unknown): number {
   if (typeof value === 'number') return value;
   if (typeof value === 'string') return Number(value);
@@ -96,61 +92,56 @@ export default async function handler(req: any, res: any) {
 
     const { amount, userId } = payload ?? {};
 
+    console.log('[CREATE_ORDER] payload', {
+      hasAmount: amount !== undefined,
+      amount,
+      userId,
+    });
+
     const rawAmount = toNumber(amount);
-    const currency = String(payload.currency || 'INR').toUpperCase();
-    const platform = String(payload.platform || '').toLowerCase();
     const normalizedUserId = typeof userId === 'string' ? userId.trim() : '';
 
     if (!normalizedUserId) {
+      console.error('[CREATE_ORDER] error', {
+        reason: 'missing_user_id',
+      });
       return res.status(400).json({
         error: 'userId is required.',
       });
     }
 
     if (!Number.isFinite(rawAmount) || rawAmount <= 0) {
+      console.error('[CREATE_ORDER] error', {
+        reason: 'invalid_amount',
+        amount,
+      });
       return res.status(400).json({
         error: 'Invalid amount. Amount must be a positive number.',
       });
     }
 
-    if (!SUPPORTED_PLATFORMS.includes(platform as SupportedPlatform)) {
-      return res.status(400).json({
-        error: 'Invalid platform. Supported values: android, ios, web.',
-      });
-    }
-
-    if (currency !== 'INR') {
-      return res.status(400).json({
-        error: 'Invalid currency. Only INR is supported.',
-      });
-    }
-
     const amountInPaise = Math.round(rawAmount * 100);
     if (!Number.isInteger(amountInPaise) || amountInPaise <= 0) {
+      console.error('[CREATE_ORDER] error', {
+        reason: 'invalid_amount_after_conversion',
+        amount: rawAmount,
+        amountInPaise,
+      });
       return res.status(400).json({
         error: 'Invalid amount after paise conversion.',
       });
     }
 
+    console.log('[CREATE_ORDER] validation_passed', {
+      userId: normalizedUserId,
+      amountInRupees: rawAmount,
+      amountInPaise,
+      currency: 'INR',
+    });
+
     const intentId = `pi_${Date.now()}_${randomUUID().slice(0, 8)}`;
     const db = getAdminDb();
     const intentRef = db.collection('paymentIntents').doc(intentId);
-
-    await intentRef.set({
-      intentId,
-      userId: normalizedUserId,
-      amount: rawAmount,
-      currency: 'INR',
-      status: 'created',
-      razorpayOrderId: null,
-      createdAt: FieldValue.serverTimestamp(),
-      platform,
-    });
-
-    console.log('[CREATE_ORDER] intent_created', {
-      intentId,
-      userId: normalizedUserId,
-    });
 
     const razorpayModule = await import('razorpay');
     const RazorpayCtor = (razorpayModule as any).default ?? razorpayModule;
@@ -173,15 +164,19 @@ export default async function handler(req: any, res: any) {
         receipt: `rcpt_${Date.now()}`,
       });
 
-      await intentRef.set(
-        {
-          razorpayOrderId: order.id,
-          updatedAt: FieldValue.serverTimestamp(),
-        },
-        { merge: true }
-      );
+      await intentRef.set({
+        intentId,
+        userId: normalizedUserId,
+        amount: rawAmount,
+        currency: 'INR',
+        status: 'created',
+        razorpayOrderId: order.id,
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
     } catch (err: any) {
-      console.error('[CREATE_ORDER] razorpay_full_error', {
+      console.error('[CREATE_ORDER] error', {
+        reason: 'razorpay_order_create_failed',
         message: err?.message,
         description: err?.error?.description,
         code: err?.error?.code,
@@ -195,7 +190,12 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    console.log('[CREATE_ORDER] order_created', order?.id || null);
+    console.log('[CREATE_ORDER] order_created', {
+      intentId,
+      orderId: order?.id || null,
+      amount: order?.amount || null,
+      userId: normalizedUserId,
+    });
 
     return res.status(200).json({
       intentId,
