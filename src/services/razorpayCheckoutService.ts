@@ -1,6 +1,5 @@
+import { getAuth } from 'firebase/auth';
 import { Platform } from 'react-native';
-
-type SupportedPlatform = 'android' | 'ios' | 'web';
 
 type CreateOrderResponse = {
   intentId: string;
@@ -29,14 +28,6 @@ declare global {
       on: (event: string, callback: (payload: any) => void) => void;
     };
   }
-}
-
-function getPlatform(): SupportedPlatform {
-  if (Platform.OS === 'android' || Platform.OS === 'ios' || Platform.OS === 'web') {
-    return Platform.OS;
-  }
-
-  return 'web';
 }
 
 function getApiUrl(path: string): string {
@@ -88,10 +79,23 @@ async function loadRazorpayScript(): Promise<void> {
 }
 
 async function createOrder(amount: number): Promise<CreateOrderResponse> {
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  if (!user) {
+    throw new Error('User must be authenticated to create a recharge order.');
+  }
+
+  const amountInPaise = amount * 100;
+
+  console.log('[RECHARGE] create_order_request', {
+    userId: user.uid,
+    amount: amountInPaise,
+  });
+
   const payload = {
-    amount,
-    currency: 'INR',
-    platform: getPlatform(),
+    amount: amountInPaise,
+    userId: user.uid,
   };
 
   const response = await fetch(getApiUrl('/api/payments/razorpay/create-order'), {
@@ -104,10 +108,11 @@ async function createOrder(amount: number): Promise<CreateOrderResponse> {
 
   const body = (await response.json().catch(() => ({}))) as Partial<CreateOrderResponse> & {
     error?: string;
+    message?: string;
   };
 
   if (!response.ok) {
-    throw new Error(body.error || 'Failed to create Razorpay order.');
+    throw new Error(body.message || body.error || 'Failed to create Razorpay order.');
   }
 
   if (!body.intentId || !body.orderId || !body.amount || !body.currency || !body.keyId) {
