@@ -108,18 +108,18 @@ export default async function handler(req: any, res: any) {
         currency: 'INR',
         receipt: `rcpt_${Date.now()}`,
       });
-    } catch (orderError) {
-      console.error('[CREATE_ORDER] error', {
-        reason: 'razorpay_order_create_failed',
-        message:
-          orderError instanceof Error ? orderError.message : 'Unknown Razorpay order creation error',
+    } catch (err: any) {
+      console.error('[CREATE_ORDER] razorpay_full_error', {
+        message: err?.message,
+        description: err?.error?.description,
+        code: err?.error?.code,
+        field: err?.error?.field,
+        raw: err,
       });
 
       return res.status(502).json({
-        error:
-          orderError instanceof Error
-            ? orderError.message
-            : 'Failed to create Razorpay order',
+        error: 'razorpay_order_create_failed',
+        message: err?.error?.description || err?.message || 'razorpay_order_error',
       });
     }
 
