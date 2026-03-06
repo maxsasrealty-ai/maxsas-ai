@@ -96,23 +96,17 @@ export default async function handler(req: any, res: any) {
       key_secret: keySecret,
     });
 
-    console.log('[CREATE_ORDER] order_creation_attempt', {
-      intentId,
-      currency,
+    console.log('[CREATE_ORDER] creating_razorpay_order', {
       amountInPaise,
-      platform,
+      currency: 'INR',
     });
 
     let order: any;
     try {
       order = await razorpay.orders.create({
         amount: amountInPaise,
-        currency,
-        receipt: intentId,
-        notes: {
-          intentId,
-          platform,
-        },
+        currency: 'INR',
+        receipt: `rcpt_${Date.now()}`,
       });
     } catch (orderError) {
       console.error('[CREATE_ORDER] error', {
@@ -129,12 +123,7 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    console.log('[CREATE_ORDER] order_created', {
-      intentId,
-      orderId: order?.id || null,
-      amount: order?.amount || null,
-      currency: order?.currency || null,
-    });
+    console.log('[CREATE_ORDER] order_created', order?.id || null);
 
     return res.status(200).json({
       intentId,
