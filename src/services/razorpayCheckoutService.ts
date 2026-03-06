@@ -134,6 +134,8 @@ async function openWebCheckout(order: CreateOrderResponse): Promise<RechargeResu
     };
   }
 
+  const RazorpayCheckout = window.Razorpay;
+
   return await new Promise<RechargeResult>((resolve) => {
     let resolved = false;
 
@@ -176,7 +178,7 @@ async function openWebCheckout(order: CreateOrderResponse): Promise<RechargeResu
       },
     };
 
-    const checkout = new window.Razorpay(options);
+    const checkout = new RazorpayCheckout(options);
     checkout.on('payment.failed', (eventPayload: any) => {
       const reason = String(eventPayload?.error?.description || eventPayload?.error?.reason || 'Payment failed.');
       finalize({
