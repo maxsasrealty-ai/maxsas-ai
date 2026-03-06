@@ -1,4 +1,4 @@
-import { getAuth } from 'firebase/auth';
+import { getAuth } from "firebase/auth";
 import { Platform } from 'react-native';
 
 type CreateOrderResponse = {
@@ -83,6 +83,7 @@ async function createOrder(amount: number): Promise<CreateOrderResponse> {
   const user = auth.currentUser;
 
   if (!user) {
+    console.error('[RECHARGE] user not authenticated');
     throw new Error('User must be authenticated to create a recharge order.');
   }
 
@@ -90,7 +91,7 @@ async function createOrder(amount: number): Promise<CreateOrderResponse> {
 
   console.log('[RECHARGE] create_order_request', {
     userId: user.uid,
-    amount: amountInPaise,
+    amount,
   });
 
   const payload = {
@@ -158,7 +159,7 @@ async function openWebCheckout(order: CreateOrderResponse): Promise<RechargeResu
       order_id: order.orderId,
       amount: order.amount,
       currency: order.currency,
-      name: 'Maxsas AI',
+      name: 'Maxsas Realty AI',
       description: 'AI Calling Wallet Recharge',
       handler: (response: RazorpaySuccessResponse) => {
         console.log('[RAZORPAY_CHECKOUT] payment_success', {
