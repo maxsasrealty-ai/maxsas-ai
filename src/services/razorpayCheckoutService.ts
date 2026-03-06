@@ -90,13 +90,17 @@ async function createOrder(amount: number): Promise<CreateOrderResponse> {
 
   console.log('[RECHARGE] create_order_request', {
     amount,
+    tokenLength: idToken?.length || 0,
   });
 
   const payload = {
     amount,
   };
 
-  const response = await fetch(getApiUrl('/api/payments/razorpay/create-order'), {
+  const apiUrl = getApiUrl('/api/payments/razorpay/create-order');
+  console.log('[RECHARGE] api_endpoint', { apiUrl });
+
+  const response = await fetch(apiUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -105,10 +109,21 @@ async function createOrder(amount: number): Promise<CreateOrderResponse> {
     body: JSON.stringify(payload),
   });
 
+  console.log('[RECHARGE] response_status', {
+    status: response.status,
+    statusText: response.statusText,
+  });
+
   const body = (await response.json().catch(() => ({}))) as Partial<CreateOrderResponse> & {
     error?: string;
     message?: string;
   };
+
+  console.log('[RECHARGE] response_body', {
+    hasOrderId: !!body.orderId,
+    error: body.error,
+    message: body.message,
+  });
 
   if (!response.ok) {
     throw new Error(body.message || body.error || 'Failed to create Razorpay order.');

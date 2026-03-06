@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { applicationDefault, cert, getApps, initializeApp } from 'firebase-admin/app';
-import { getAuth as getAdminAuth } from 'firebase-admin/auth';
+import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 
 function toNumber(value: unknown): number {
@@ -123,12 +123,19 @@ export default async function handler(req: any, res: any) {
 
     let normalizedUserId = '';
     try {
-      const decodedToken = await getAdminAuth(getOrInitAdminApp()).verifyIdToken(idToken);
+      console.log('[CREATE_ORDER] verifying_token', {
+        tokenPrefix: idToken.substring(0, 20) + '...',
+      });
+      const decodedToken = await getAuth(getOrInitAdminApp()).verifyIdToken(idToken);
       normalizedUserId = decodedToken.uid;
+      console.log('[CREATE_ORDER] token_verified', {
+        userId: normalizedUserId,
+      });
     } catch (error) {
       console.error('[CREATE_ORDER] error', {
         reason: 'invalid_firebase_id_token',
         message: error instanceof Error ? error.message : 'token_verification_failed',
+        stack: error instanceof Error ? error.stack : undefined,
       });
       return res.status(401).json({
         error: 'Invalid or expired Firebase ID token.',

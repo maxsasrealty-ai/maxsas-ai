@@ -490,7 +490,6 @@ export const BatchDashboard: React.FC = () => {
             ? [
                 { label: 'Batch', value: `#${selectedBatchForCall.batchId.substring(0, 8)}` },
                 { label: 'Leads', value: `${selectedBatchForCall.totalContacts}` },
-                { label: 'Cost', value: `₹${(selectedBatchForCall.totalContacts * costPerCall).toLocaleString()}` },
               ]
             : []
         }

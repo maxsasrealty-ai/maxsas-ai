@@ -1792,7 +1792,6 @@ export const BatchDetailScreen: React.FC = () => {
           summaryItems={[
             { label: 'Batch', value: `#${batch?.batchId?.slice(0, 8) || '-'}` },
             { label: 'Leads', value: `${batch?.totalContacts || 0}` },
-            { label: 'Cost', value: `₹${getDeductionPreview(batch?.totalContacts || 0).toLocaleString()}` },
           ]}
         />
 
