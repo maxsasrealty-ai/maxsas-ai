@@ -94,10 +94,18 @@ export default async function handler(req: any, res: any) {
       payload = req.body ?? {};
     }
 
-    const rawAmount = toNumber(payload.amount);
+    const { amount, userId } = payload ?? {};
+
+    const rawAmount = toNumber(amount);
     const currency = String(payload.currency || 'INR').toUpperCase();
     const platform = String(payload.platform || '').toLowerCase();
-    const userId = String(payload.userId || 'unknown');
+    const normalizedUserId = typeof userId === 'string' ? userId.trim() : '';
+
+    if (!normalizedUserId) {
+      return res.status(400).json({
+        error: 'userId is required.',
+      });
+    }
 
     if (!Number.isFinite(rawAmount) || rawAmount <= 0) {
       return res.status(400).json({
@@ -130,7 +138,7 @@ export default async function handler(req: any, res: any) {
 
     await intentRef.set({
       intentId,
-      userId,
+      userId: normalizedUserId,
       amount: rawAmount,
       currency: 'INR',
       status: 'created',
@@ -141,10 +149,7 @@ export default async function handler(req: any, res: any) {
 
     console.log('[CREATE_ORDER] intent_created', {
       intentId,
-      userId,
-      amount: rawAmount,
-      currency: 'INR',
-      platform,
+      userId: normalizedUserId,
     });
 
     const razorpayModule = await import('razorpay');
