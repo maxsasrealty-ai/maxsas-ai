@@ -41,11 +41,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await sendWebEmailVerification(authUser);
   };
 
-  const isPasswordUser = (authUser: any) => {
-    const providers = Array.isArray(authUser?.providerData) ? authUser.providerData : [];
-    return providers.some((provider: any) => provider?.providerId === 'password');
-  };
-
   useEffect(() => {
     const unsub = auth.onAuthStateChanged((firebaseUser: User | null) => {
       const syncAuthState = async () => {
@@ -59,13 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         try {
           await reloadUser(firebaseUser);
-
-          if (isPasswordUser(firebaseUser) && firebaseUser.emailVerified === false) {
-            await auth.signOut();
-            setUser(null);
-          } else {
-            setUser(firebaseUser);
-          }
+          setUser(firebaseUser);
         } catch (error) {
           console.error('Auth state sync failed:', error);
           setUser(firebaseUser);
@@ -135,6 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       await setDoc(doc(db, 'users', user.uid), userData);
+      await auth.signOut();
       return userCredential;
     } finally {
       setLoading(false);
