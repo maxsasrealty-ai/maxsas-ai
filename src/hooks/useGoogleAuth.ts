@@ -1,4 +1,6 @@
+import * as AuthSession from 'expo-auth-session';
 import * as Google from 'expo-auth-session/providers/google';
+import Constants from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
 import { GoogleAuthProvider, getAuth, signInWithCredential } from 'firebase/auth';
 import { useEffect, useMemo, useState } from 'react';
@@ -22,6 +24,18 @@ export const useGoogleAuth = (): UseGoogleAuthResult => {
   const webClientId = process.env.EXPO_PUBLIC_WEB_CLIENT_ID;
   const androidClientId = process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID;
   const iosClientId = process.env.EXPO_PUBLIC_IOS_CLIENT_ID;
+  const isExpoGo = Constants.appOwnership === 'expo';
+  const useProxy = Platform.OS !== 'web' && isExpoGo;
+
+  const redirectUri = useMemo(
+    () =>
+      AuthSession.makeRedirectUri({
+        scheme: 'maxsasai',
+        path: 'oauthredirect',
+        useProxy,
+      }),
+    [useProxy]
+  );
 
   // Check if Google auth is properly configured
   const isConfigured = !!(
@@ -39,6 +53,7 @@ export const useGoogleAuth = (): UseGoogleAuthResult => {
           webClientId: webClientId || undefined,
           androidClientId: androidClientId || undefined,
           iosClientId: iosClientId || undefined,
+          redirectUri,
           selectAccount: true,
         }
       );
@@ -51,7 +66,12 @@ export const useGoogleAuth = (): UseGoogleAuthResult => {
     const signInWithGoogle = async () => {
       if (response.type !== 'success') {
         if (response.type !== 'dismiss' && response.type !== 'cancel') {
-          setError('Google sign-in was not successful. Please try again.');
+          const authError = response.params?.error;
+          if (authError === 'redirect_uri_mismatch') {
+            setError(`Google OAuth redirect mismatch. Add this redirect URI in Google Cloud OAuth client: ${redirectUri}`);
+          } else {
+            setError('Google sign-in was not successful. Please try again.');
+          }
           console.error('Google login error: auth session failed', response);
         }
         return;
@@ -99,7 +119,7 @@ export const useGoogleAuth = (): UseGoogleAuthResult => {
         Platform.OS === 'web'
           ? {}
           : {
-              useProxy: true,
+              useProxy,
             }
       );
     } catch (promptError) {
@@ -114,7 +134,7 @@ export const useGoogleAuth = (): UseGoogleAuthResult => {
       request,
       loading,
       error: !isConfigured
-        ? 'Google Sign-In not configured. Set EXPO_PUBLIC_EXPO_CLIENT_ID and platform client IDs in .env.'
+        ? 'Google Sign-In not configured. Set EXPO_PUBLIC_EXPO_CLIENT_ID, EXPO_PUBLIC_WEB_CLIENT_ID, EXPO_PUBLIC_ANDROID_CLIENT_ID, and EXPO_PUBLIC_IOS_CLIENT_ID in .env.'
         : error,
       isConfigured,
     }),

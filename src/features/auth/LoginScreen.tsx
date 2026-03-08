@@ -21,12 +21,14 @@ import {
 } from 'react-native';
 
 const LoginScreen = () => {
-  const { login, loading, user } = useAuth();
+  const { login, resendVerification, loading, user } = useAuth();
   const { colors } = useAppTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
+  const [showResendVerification, setShowResendVerification] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
   const { promptAsync, request, loading: googleLoading, error: googleError, isConfigured: isGoogleConfigured } = useGoogleAuth();
@@ -60,15 +62,43 @@ const LoginScreen = () => {
       return;
     }
     setError('');
+    setInfo('');
+    setShowResendVerification(false);
     try {
       await login(email, password);
     } catch (e: any) {
       const friendlyMessage =
-        e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password'
+        e.code === 'auth/email-not-verified'
+          ? 'Please verify your email before logging in.'
+          : e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password'
           ? 'Invalid credentials. Please try again.'
           : 'An unexpected error occurred.';
       setError(friendlyMessage);
+      if (e.code === 'auth/email-not-verified') {
+        setShowResendVerification(true);
+      }
       console.error('Login failed:', e);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!email || !password) {
+      setError('Please enter your email and password to resend verification email.');
+      return;
+    }
+
+    setError('');
+    setInfo('');
+    try {
+      await resendVerification(email, password);
+      setInfo('Verification email sent. Please check your Gmail.');
+    } catch (e: any) {
+      if (e.code === 'auth/email-already-verified') {
+        setInfo('Your email is already verified. You can log in now.');
+      } else {
+        setError('Unable to resend verification email. Please try again.');
+      }
+      console.error('Resend verification failed:', e);
     }
   };
 
@@ -137,8 +167,19 @@ const LoginScreen = () => {
             </TouchableOpacity>
 
             {error ? <Text style={[styles.errorText, { color: colors.danger }]}>{error}</Text> : null}
+            {info ? <Text style={[styles.infoText, { color: colors.accent }]}>{info}</Text> : null}
 
             <AppButton title="Login" onPress={handleLogin} loading={loading} />
+            {showResendVerification ? (
+              <View style={styles.resendButtonContainer}>
+                <AppButton
+                  title="Resend Verification Email"
+                  variant="ghost"
+                  onPress={handleResendVerification}
+                  disabled={loading}
+                />
+              </View>
+            ) : null}
             {isGoogleConfigured && (
               <View style={styles.googleButtonContainer}>
                 <AppButton
@@ -280,6 +321,15 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 14,
     fontWeight: '600',
+  },
+  infoText: {
+    textAlign: 'center',
+    marginTop: 12,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  resendButtonContainer: {
+    marginTop: 8,
   },
   googleButtonContainer: {
     marginTop: 12,

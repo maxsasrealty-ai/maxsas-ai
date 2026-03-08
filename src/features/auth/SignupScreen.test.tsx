@@ -67,7 +67,7 @@ describe('SignupScreen', () => {
     expect(router.replace).not.toHaveBeenCalled();
   });
 
-  it('calls signup and navigates to tabs when signup is successful', async () => {
+  it('calls signup and navigates to login when signup is successful', async () => {
     mockSignup.mockResolvedValueOnce({} as any); // Simulate successful signup
     const { getByPlaceholderText, getAllByPlaceholderText, getAllByText } = render(<SignupScreen />);
     const emailInput = getByPlaceholderText('you@example.com');
@@ -85,7 +85,7 @@ describe('SignupScreen', () => {
     });
 
     await waitFor(() => {
-        expect(router.replace).toHaveBeenCalledWith('/');
+      expect(router.replace).toHaveBeenCalledWith('/login');
     });
   });
 
