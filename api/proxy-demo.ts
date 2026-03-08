@@ -1,4 +1,4 @@
-const DEMO_CALL_UPSTREAM_URL = 'http://165.22.222.202:5678/webhook/ringg-init';
+const DEMO_CALL_UPSTREAM_URL = 'https://165.22.222.202:5678/webhook/ringg-init';
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {

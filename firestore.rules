@@ -4,15 +4,16 @@ service cloud.firestore {
 
     // ===== HELPER FUNCTIONS =====
     function isAuthenticated() {
-      return request.auth != null;
+      return request.auth.uid != null;
     }
 
     function isCurrentUser(userId) {
-      return request.auth != null && request.auth.uid == userId;
+      return request.auth.uid != null && request.auth.uid == userId;
     }
 
     function isAutomation() {
-      return request.auth == null;
+      // Automation writes must go through Admin SDK and bypass rules.
+      return false;
     }
 
     function isGuestDemoUserId(userId) {
@@ -25,7 +26,7 @@ service cloud.firestore {
     }
 
     function isBatchOwner(batchId) {
-      return request.auth != null &&
+      return request.auth.uid != null &&
         get(/databases/$(database)/documents/batches/$(batchId)).data.userId
         == request.auth.uid;
     }
