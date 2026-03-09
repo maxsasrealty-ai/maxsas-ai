@@ -1551,7 +1551,6 @@ const Footer = () => (
             { label: 'Privacy Policy', href: '/privacy-policy' },
             { label: 'Terms and Conditions', href: '/terms-and-conditions' },
             { label: 'Refund Policy', href: '/refund-policy' },
-            { label: 'Return Policy', href: '/return-policy' },
           ],
         },
       ].map((col) => (

@@ -1,12 +1,12 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack, router, useSegments } from 'expo-router';
+import { Redirect, Stack, usePathname, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useMemo, useEffect } from 'react';
+import { useMemo } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useAuth, AuthProvider } from '@/src/context/AuthContext';
+import { AuthProvider, useAuth } from '@/src/context/AuthContext';
 import { BatchProvider } from '@/src/context/BatchContext';
 import { WalletProvider } from '@/src/context/WalletContext';
 import { useAppTheme } from '@/src/theme/use-app-theme';
@@ -14,18 +14,8 @@ import { useAppTheme } from '@/src/theme/use-app-theme';
 function RootLayoutNav() {
   const { authLoaded, user } = useAuth();
   const segments = useSegments();
-
-  useEffect(() => {
-    if (!authLoaded) return;
-
-    const inTabsGroup = segments[0] === '(tabs)';
-
-    if (user && !inTabsGroup) {
-      router.replace('/(tabs)/');
-    } else if (!user && inTabsGroup) {
-      router.replace('/');
-    }
-  }, [user, segments, authLoaded]);
+  const pathname = usePathname();
+  const rootRoute = segments[0] ?? '';
 
   const { colors, typography } = useAppTheme();
   const stackScreenOptions = useMemo(
@@ -46,6 +36,23 @@ function RootLayoutNav() {
     }),
     [colors.background, colors.card, colors.text, typography.body]
   );
+  
+  if (!authLoaded) {
+    return null;
+  }
+
+  const inTabsGroup = rootRoute === '(tabs)';
+  const publicRoutesForAllUsers = new Set(['privacy-policy', 'refund-policy', 'terms-and-conditions']);
+  const onHomeRoute = pathname === '/';
+  const onAllowedPublicRoute = onHomeRoute || publicRoutesForAllUsers.has(rootRoute);
+
+  if (user && !inTabsGroup && !onAllowedPublicRoute) {
+    return <Redirect href="/(tabs)" />;
+  }
+
+  if (!user && inTabsGroup) {
+    return <Redirect href="/" />;
+  }
 
   return (
     <Stack screenOptions={stackScreenOptions}>
@@ -75,7 +82,6 @@ function RootLayoutNav() {
       <Stack.Screen name="terms-and-conditions" options={{ title: 'Terms and Conditions' }} />
       <Stack.Screen name="refund-policy" options={{ title: 'Refund Policy' }} />
       <Stack.Screen name="privacy-policy" options={{ title: 'Privacy Policy' }} />
-      <Stack.Screen name="return-policy" options={{ title: 'Return Policy' }} />
       <Stack.Screen name="lead/[id]" options={{ title: 'Lead Details' }} />
       <Stack.Screen
         name="modal"
@@ -99,7 +105,7 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const { colors, isDark, typography } = useAppTheme();
+  const { colors, isDark } = useAppTheme();
 
   const navigationTheme = useMemo(
     () => ({

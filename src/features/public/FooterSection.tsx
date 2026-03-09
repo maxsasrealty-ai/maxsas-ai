@@ -24,6 +24,19 @@ export function FooterSection() {
           <Text style={styles.link}>Signup</Text>
         </Pressable>
       </View>
+
+      <Text style={styles.legalHeading}>Legal</Text>
+      <View style={styles.legalLinks}>
+        <Pressable onPress={() => router.push('/terms-and-conditions')}>
+          <Text style={styles.legalLink}>Terms and Conditions</Text>
+        </Pressable>
+        <Pressable onPress={() => router.push('/refund-policy')}>
+          <Text style={styles.legalLink}>Refund Policy</Text>
+        </Pressable>
+        <Pressable onPress={() => router.push('/privacy-policy')}>
+          <Text style={styles.legalLink}>Privacy Policy</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -85,6 +98,23 @@ const styles = StyleSheet.create({
   link: {
     color: '#4F8CFF',
     fontSize: 14,
+    fontWeight: '700',
+  },
+  legalHeading: {
+    marginTop: 12,
+    color: '#0B1F3A',
+    fontSize: 12,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  legalLinks: {
+    marginTop: 8,
+    gap: 8,
+  },
+  legalLink: {
+    color: '#4F8CFF',
+    fontSize: 13,
     fontWeight: '700',
   },
 });

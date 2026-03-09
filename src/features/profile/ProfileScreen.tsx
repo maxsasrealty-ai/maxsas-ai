@@ -8,7 +8,7 @@ import { useAppTheme } from '@/src/theme/use-app-theme';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 type FloatingInputFieldProps = {
   label: string;
@@ -228,7 +228,14 @@ export default function ProfileScreen() {
     setLoggingOut(true);
     try {
       await logout();
+    } catch (logoutError) {
+      console.error('Logout failed, forcing redirect to landing page:', logoutError);
     } finally {
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        window.location.replace('/');
+      } else {
+        router.replace('/');
+      }
       setLoggingOut(false);
     }
   };
@@ -461,21 +468,6 @@ export default function ProfileScreen() {
                 onPress={() => router.push('/privacy-policy')}
               >
                 <Text style={[styles.policyLinkTitle, { color: colors.text }]}>Privacy Policy</Text>
-                <Feather name="chevron-right" size={16} color={colors.textMuted} />
-              </Pressable>
-
-              <Pressable
-                style={({ pressed }) => [
-                  styles.policyLinkRow,
-                  {
-                    borderColor: colors.border,
-                    backgroundColor: colors.card,
-                    opacity: pressed ? 0.9 : 1,
-                  },
-                ]}
-                onPress={() => router.push('/return-policy')}
-              >
-                <Text style={[styles.policyLinkTitle, { color: colors.text }]}>Return Policy (No returns supported)</Text>
                 <Feather name="chevron-right" size={16} color={colors.textMuted} />
               </Pressable>
             </View>

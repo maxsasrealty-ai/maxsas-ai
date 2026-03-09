@@ -6,11 +6,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { getBatchDetail as fetchBatchDetail, saveBatchToFirebase, subscribeToBatches } from '../services/batchService';
 import { subscribeToLeadsForUser } from '../services/leadService';
 import {
-  Batch,
-  BatchContextType,
-  BatchDraft,
-  BatchSource,
-  ExtractedContact,
+    Batch,
+    BatchContextType,
+    BatchDraft,
+    BatchSource,
+    ExtractedContact,
 } from '../types/batch';
 
 export const BatchContext = createContext<BatchContextType | undefined>(undefined);
@@ -157,14 +157,7 @@ export const BatchProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const uniqueLocalDrafts = localDrafts.filter(b => !firebaseBatchIds.has(b.batchId));
     
     const combined = [...uniqueLocalDrafts, ...derivedFirebaseBatches];
-    
-    console.log('🔄 BatchContext: Merging batches');
-    console.log('  - Local drafts:', localDrafts.length);
-    console.log('  - Firebase batches:', firebaseBatches.length);
-    console.log('  - Derived Firebase batches:', derivedFirebaseBatches.length);
-    console.log('  - Unique local drafts:', uniqueLocalDrafts.length);
-    console.log('  - Total combined:', combined.length);
-    
+
     setAllBatches(combined);
   }, [firebaseBatches, leadStatsByBatch, localDrafts]);
 

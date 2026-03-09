@@ -92,7 +92,7 @@ describe('LoginScreen', () => {
     expect(router.replace).not.toHaveBeenCalled();
   });
 
-  it('calls login and navigates through root gate when login is successful', async () => {
+  it('calls login and navigates to tabs when login is successful', async () => {
     mockLogin.mockResolvedValueOnce({} as any); // Simulate successful login
     const { getByPlaceholderText, getByText, rerender } = render(<LoginScreen />);
     const emailInput = getByPlaceholderText('you@example.com');
@@ -117,7 +117,7 @@ describe('LoginScreen', () => {
     rerender(<LoginScreen />);
 
     await waitFor(() => {
-      expect(router.replace).toHaveBeenCalledWith('/');
+      expect(router.replace).toHaveBeenCalledWith('/(tabs)');
     });
   });
 

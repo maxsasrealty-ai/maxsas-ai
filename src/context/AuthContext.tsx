@@ -82,6 +82,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
+    // Optimistically clear local auth state first so route guards can move to public pages immediately.
+    setUser(null);
+    setAuthLoaded(true);
     await auth.signOut();
   };
 
