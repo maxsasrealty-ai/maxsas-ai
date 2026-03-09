@@ -42,11 +42,10 @@ function RootLayoutNav() {
   }
 
   const inTabsGroup = rootRoute === '(tabs)';
-  const publicRoutesForAllUsers = new Set(['privacy-policy', 'refund-policy', 'terms-and-conditions']);
-  const onHomeRoute = pathname === '/';
-  const onAllowedPublicRoute = onHomeRoute || publicRoutesForAllUsers.has(rootRoute);
+  const inAuthGroup = pathname.startsWith('/(auth)') || pathname === '/login' || pathname === '/signup';
+  const onLandingRoute = pathname === '/';
 
-  if (user && !inTabsGroup && !onAllowedPublicRoute) {
+  if (user && (inAuthGroup || onLandingRoute)) {
     return <Redirect href="/(tabs)" />;
   }
 
