@@ -1,20 +1,29 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Firestore Security Rules - Quick Deployment Guide
 
-## 📋 Overview
+## ðŸ“‹ Overview
 
 The updated `firestore.rules` file includes enhanced security rules with the following protections:
 
-✅ **Authentication Required** - All operations require user login
-✅ **Data Ownership** - Users only access their own data (userId field)
-✅ **Referential Integrity** - Leads can only exist if parent batch exists
-✅ **Batch Ownership** - Leads must reference batches owned by the same user
-✅ **Immutable Fields** - IDs and timestamps cannot be modified
-✅ **Status Validation** - Only valid status values allowed
-✅ **Automation Service** - Special role for backend automation
+âœ… **Authentication Required** - All operations require user login
+âœ… **Data Ownership** - Users only access their own data (userId field)
+âœ… **Referential Integrity** - Leads can only exist if parent batch exists
+âœ… **Batch Ownership** - Leads must reference batches owned by the same user
+âœ… **Immutable Fields** - IDs and timestamps cannot be modified
+âœ… **Status Validation** - Only valid status values allowed
+âœ… **Automation Service** - Special role for backend automation
 
 ---
 
-## 🚀 Deployment Steps
+## ðŸš€ Deployment Steps
 
 ### Step 1: Local Testing (Firebase Emulator)
 
@@ -26,7 +35,7 @@ firebase emulators:start
 npm test -- FIRESTORE_SECURITY_RULES_TESTS.ts
 
 # Expected output:
-# ✅ 14/14 tests passed (100%)
+# âœ… 14/14 tests passed (100%)
 ```
 
 ### Step 2: Deploy to Firebase
@@ -46,24 +55,24 @@ firebase apps:display --project=maxsas-realty
 
 1. Open [Firebase Console](https://console.firebase.google.com)
 2. Select project: **maxsas-realty**
-3. Go to: **Firestore Database** → **Rules** tab
+3. Go to: **Firestore Database** â†’ **Rules** tab
 4. Should see deployment timestamp and line count
 5. Check for any security warnings
 
 ---
 
-## 🔑 Key Security Rules
+## ðŸ”‘ Key Security Rules
 
 | Resource | Create | Read | Update | Delete |
 |----------|--------|------|--------|--------|
-| **batches/{batchId}** | ✅ User | ✅ User + Automation | ✅ User + Automation | ✅ User |
-| **leads/{leadId}** | ✅ User* | ✅ User + Automation | ✅ User + Automation | ✅ User |
+| **batches/{batchId}** | âœ… User | âœ… User + Automation | âœ… User + Automation | âœ… User |
+| **leads/{leadId}** | âœ… User* | âœ… User + Automation | âœ… User + Automation | âœ… User |
 
 \* Requires: batch exists, batch owned by user, valid phone
 
 ---
 
-## ⚙️ Configuration Checklist
+## âš™ï¸ Configuration Checklist
 
 - [ ] Local emulator testing passed (all 14 tests)
 - [ ] Deployed to Firebase
@@ -75,7 +84,7 @@ firebase apps:display --project=maxsas-realty
 
 ---
 
-## 🔐 Authentication & Custom Claims
+## ðŸ” Authentication & Custom Claims
 
 ### For Automation Service (Backend)
 
@@ -84,7 +93,7 @@ The automation service needs special access to read/update batches and leads.
 **Setup in Firebase Console:**
 
 1. **Create Service Account**
-   - Firebase Project Settings → Service Accounts
+   - Firebase Project Settings â†’ Service Accounts
    - Click "Generate new private key"
    - Save JSON file securely
 
@@ -119,80 +128,80 @@ const token = await admin.auth().createCustomToken(automationUid, {
 
 ---
 
-## 📊 Security Rules Structure
+## ðŸ“Š Security Rules Structure
 
 ### Helper Functions (Top of Rules)
 
 ```firestore
-✅ isAuthenticated()        // Check if user logged in
-✅ isCurrentUser(userId)    // Check if user owns data
-✅ isAutomation()           // Check if automation service
-✅ isBatchOwner(batchId)    // Check batch ownership
-✅ batchExists(batchId)     // Check batch exists
-✅ isValidBatchStatus()     // Validate enum values
+âœ… isAuthenticated()        // Check if user logged in
+âœ… isCurrentUser(userId)    // Check if user owns data
+âœ… isAutomation()           // Check if automation service
+âœ… isBatchOwner(batchId)    // Check batch ownership
+âœ… batchExists(batchId)     // Check batch exists
+âœ… isValidBatchStatus()     // Validate enum values
 ```
 
 ### BATCHES Collection Rules
 
 **Create Validation:**
-- User authenticated ✅
-- userId matches auth.uid ✅
-- batchId field matches document ID ✅
-- Status in ['running', 'scheduled', 'completed'] ✅
-- Action in ['call_now', 'schedule'] ✅
-- Source in ['manual', 'csv', 'clipboard', 'image'] ✅
-- totalContacts > 0 and ≤ 10,000 ✅
-- createdAt timestamp provided ✅
+- User authenticated âœ…
+- userId matches auth.uid âœ…
+- batchId field matches document ID âœ…
+- Status in ['running', 'scheduled', 'completed'] âœ…
+- Action in ['call_now', 'schedule'] âœ…
+- Source in ['manual', 'csv', 'clipboard', 'image'] âœ…
+- totalContacts > 0 and â‰¤ 10,000 âœ…
+- createdAt timestamp provided âœ…
 
 **Read Policy:**
-- User owns batch OR has automation role ✅
+- User owns batch OR has automation role âœ…
 
 **Update Policy:**
-- Immutable fields protected (userId, batchId, createdAt) ✅
-- Status must be valid ✅
+- Immutable fields protected (userId, batchId, createdAt) âœ…
+- Status must be valid âœ…
 
 **Delete Policy:**
-- User owns batch ✅
+- User owns batch âœ…
 
 ### LEADS Collection Rules
 
 **Create Validation (Most Restrictive):**
-- User authenticated ✅
-- userId matches auth.uid ✅
-- Batch MUST exist ✅
-- Batch MUST be owned by user ✅
-- Phone not null/empty ✅
-- leadId matches document ID ✅
-- Status = 'queued' (initial only) ✅
-- createdAt timestamp provided ✅
+- User authenticated âœ…
+- userId matches auth.uid âœ…
+- Batch MUST exist âœ…
+- Batch MUST be owned by user âœ…
+- Phone not null/empty âœ…
+- leadId matches document ID âœ…
+- Status = 'queued' (initial only) âœ…
+- createdAt timestamp provided âœ…
 
 **Read/Update/Delete:**
-- Similar to batches ✅
+- Similar to batches âœ…
 
 ---
 
-## 🧪 Test Coverage
+## ðŸ§ª Test Coverage
 
 ### 14 Test Cases Validate:
 
-1. ✅ **CREATE BATCH** - Valid batch
-2. ❌ **CREATE BATCH** - Invalid userId
-3. ❌ **CREATE BATCH** - Invalid status
-4. ❌ **CREATE BATCH** - Zero contacts
-5. ✅ **CREATE LEAD** - Valid (batch exists)
-6. ❌ **CREATE LEAD** - Batch doesn't exist (orphaned lead)
-7. ❌ **CREATE LEAD** - Batch belongs to different user
-8. ❌ **CREATE LEAD** - Missing phone
-9. ✅ **READ BATCH** - Own batch
-10. ❌ **READ BATCH** - Other user's batch
-11. ✅ **READ LEAD** - Own leads
-12. ✅ **UPDATE BATCH** - Status change
-13. ❌ **UPDATE BATCH** - Change userId (immutable)
-14. ✅ **DELETE BATCH** - Own batch
+1. âœ… **CREATE BATCH** - Valid batch
+2. âŒ **CREATE BATCH** - Invalid userId
+3. âŒ **CREATE BATCH** - Invalid status
+4. âŒ **CREATE BATCH** - Zero contacts
+5. âœ… **CREATE LEAD** - Valid (batch exists)
+6. âŒ **CREATE LEAD** - Batch doesn't exist (orphaned lead)
+7. âŒ **CREATE LEAD** - Batch belongs to different user
+8. âŒ **CREATE LEAD** - Missing phone
+9. âœ… **READ BATCH** - Own batch
+10. âŒ **READ BATCH** - Other user's batch
+11. âœ… **READ LEAD** - Own leads
+12. âœ… **UPDATE BATCH** - Status change
+13. âŒ **UPDATE BATCH** - Change userId (immutable)
+14. âœ… **DELETE BATCH** - Own batch
 
 ---
 
-## 🚨 Common Issues & Solutions
+## ðŸš¨ Common Issues & Solutions
 
 ### Issue: "Permission denied" on lead creation
 
@@ -202,11 +211,11 @@ const token = await admin.auth().createCustomToken(automationUid, {
 
 **Solution:**
 ```typescript
-// ✅ Correct: Create batch first, then leads
+// âœ… Correct: Create batch first, then leads
 const batch = await createBatch(...);
 const leads = await createLeads(batch.batchId, ...);
 
-// ❌ Wrong: Trying to create leads without batch
+// âŒ Wrong: Trying to create leads without batch
 const orphanedLead = await createLead(batchId, ...); // FAILS
 ```
 
@@ -217,10 +226,10 @@ const orphanedLead = await createLead(batchId, ...); // FAILS
 
 **Solution:**
 ```typescript
-// ✅ Correct: Only update allowed fields
+// âœ… Correct: Only update allowed fields
 await batch.update({ status: 'completed' });
 
-// ❌ Wrong: Cannot change immutable fields
+// âŒ Wrong: Cannot change immutable fields
 await batch.update({ batchId: 'new-id' });      // FAILS
 await batch.update({ userId: 'new-user' });     // FAILS
 await batch.update({ createdAt: newTime });     // FAILS
@@ -241,7 +250,7 @@ await admin.auth().setCustomUserClaims(automationUid, {
 
 ---
 
-## 📈 Monitoring & Logging
+## ðŸ“ˆ Monitoring & Logging
 
 ### Check Deployment Status
 
@@ -256,7 +265,7 @@ firebase firestore:inspect
 ### Monitor Violations
 
 In Firebase Console:
-- Go to **Firestore → Usage**
+- Go to **Firestore â†’ Usage**
 - Check **Operations** tab
 - Look for **Failed writes** or **Denied reads**
 
@@ -269,7 +278,7 @@ firebase firestore:indexes --project=maxsas-realty
 
 ---
 
-## 🔄 Rules Update Workflow
+## ðŸ”„ Rules Update Workflow
 
 When updating rules:
 
@@ -282,7 +291,7 @@ When updating rules:
 
 ---
 
-## ✅ Production Checklist
+## âœ… Production Checklist
 
 Before marking as complete:
 
@@ -299,7 +308,7 @@ Before marking as complete:
 
 ---
 
-## 📞 Support & Troubleshooting
+## ðŸ“ž Support & Troubleshooting
 
 ### Firebase Documentation
 - [Firestore Security Rules](https://firebase.google.com/docs/firestore/security/start)
@@ -313,18 +322,20 @@ Before marking as complete:
 
 ---
 
-## 📝 Summary
+## ðŸ“ Summary
 
 **File**: `firestore.rules`
 **Tests**: `FIRESTORE_SECURITY_RULES_TESTS.ts`
 **Documentation**: `FIRESTORE_SECURITY_RULES.md`
 
 **Key Features:**
-- ✅ User authentication required
-- ✅ Data ownership enforced (userId field)
-- ✅ Referential integrity maintained
-- ✅ Immutable field protection
-- ✅ Status validation
-- ✅ Automation service support
-- ✅ 14 comprehensive test cases
-- ✅ Clear documentation
+- âœ… User authentication required
+- âœ… Data ownership enforced (userId field)
+- âœ… Referential integrity maintained
+- âœ… Immutable field protection
+- âœ… Status validation
+- âœ… Automation service support
+- âœ… 14 comprehensive test cases
+- âœ… Clear documentation
+
+

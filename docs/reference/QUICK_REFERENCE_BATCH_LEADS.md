@@ -1,3 +1,12 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Quick Reference: Batch & Lead Management
 
 ## Common Operations
@@ -370,7 +379,7 @@ try {
 ### Log Batch Creation
 
 ```typescript
-console.log('📦 Batch created:', {
+console.log('ðŸ“¦ Batch created:', {
   batchId: batch.batchId,
   contacts: batch.contacts.length,
   status: batch.status,
@@ -383,16 +392,16 @@ console.log('📦 Batch created:', {
 ### Log Firebase Write
 
 ```typescript
-console.log('🔥 Saving to Firebase:');
+console.log('ðŸ”¥ Saving to Firebase:');
 console.log('  Batch: ', batchId);
 console.log('  Contacts: ', contacts.length);
 console.log('  Action: ', action);
 
 try {
   await saveBatchToFirebase(batch, action, scheduleAt);
-  console.log('✅ Save successful');
+  console.log('âœ… Save successful');
 } catch (error) {
-  console.error('❌ Save failed:', error);
+  console.error('âŒ Save failed:', error);
 }
 ```
 
@@ -413,15 +422,15 @@ try {
 
 ---
 
-## Common Mistakes ❌ → ✅
+## Common Mistakes âŒ â†’ âœ…
 
-### ❌ Storing Draft Contacts in Firestore
+### âŒ Storing Draft Contacts in Firestore
 ```typescript
 // WRONG - This will fail
 await saveBatchToFirebase(contacts, 'csv');
 ```
 
-### ✅ Correct Way
+### âœ… Correct Way
 ```typescript
 // RIGHT - Local first, Firebase only on action
 const batch = createLocalBatch(contacts, 'csv');
@@ -431,7 +440,7 @@ await saveBatchToFirebase(batch.batchId, 'call_now');
 
 ---
 
-### ❌ Updating Batch Document for Each Lead
+### âŒ Updating Batch Document for Each Lead
 ```typescript
 // WRONG - Inefficient
 for (const lead of leads) {
@@ -439,7 +448,7 @@ for (const lead of leads) {
 }
 ```
 
-### ✅ Correct Way
+### âœ… Correct Way
 ```typescript
 // RIGHT - Update leads individually
 for (const lead of leads) {
@@ -449,16 +458,16 @@ for (const lead of leads) {
 
 ---
 
-### ❌ Embedding Leads in Batch
+### âŒ Embedding Leads in Batch
 ```typescript
 // WRONG - This architecture doesn't use this pattern
 {
   batchId: '123',
-  leads: [{ phone: '1234' }, { phone: '5678' }]  // ❌
+  leads: [{ phone: '1234' }, { phone: '5678' }]  // âŒ
 }
 ```
 
-### ✅ Correct Way
+### âœ… Correct Way
 ```typescript
 // RIGHT - Separate documents
 // Batch document:
@@ -496,7 +505,7 @@ await saveBatchToFirebase(oldBatch, 'call_now');
 
 ## Performance Tips
 
-### ✅ DO: Query specific leads by batchId
+### âœ… DO: Query specific leads by batchId
 ```typescript
 const q = query(
   collection(db, 'leads'),
@@ -505,7 +514,7 @@ const q = query(
 );
 ```
 
-### ❌ DON'T: Fetch all leads then filter locally
+### âŒ DON'T: Fetch all leads then filter locally
 ```typescript
 const allLeads = await getLeadsForUser();
 const filtered = allLeads.filter(l => l.batchId === 'abc123');
@@ -513,13 +522,13 @@ const filtered = allLeads.filter(l => l.batchId === 'abc123');
 
 ---
 
-### ✅ DO: Use indexes for complex queries
+### âœ… DO: Use indexes for complex queries
 ```
 Collection: leads
 Fields: batchId (Ascending), status (Ascending)
 ```
 
-### ❌ DON'T: Query without proper indexes
+### âŒ DON'T: Query without proper indexes
 ```typescript
 // Make sure Firebase has created the composite index
 ```
@@ -528,8 +537,10 @@ Fields: batchId (Ascending), status (Ascending)
 
 ## Resources
 
-- 📖 BATCH_ARCHITECTURE_GUIDE.md - Complete architecture docs
-- 📋 IMPLEMENTATION_STATUS.md - What was changed
-- 🔍 firestore.rules - Security rules
-- 💾 src/services/batchService.ts - Batch operations
-- 👤 src/services/leadService.ts - Lead operations
+- ðŸ“– BATCH_ARCHITECTURE_GUIDE.md - Complete architecture docs
+- ðŸ“‹ IMPLEMENTATION_STATUS.md - What was changed
+- ðŸ” firestore.rules - Security rules
+- ðŸ’¾ src/services/batchService.ts - Batch operations
+- ðŸ‘¤ src/services/leadService.ts - Lead operations
+
+

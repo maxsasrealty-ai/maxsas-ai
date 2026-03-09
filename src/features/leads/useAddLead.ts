@@ -1,3 +1,4 @@
+import { useAuth } from '@/src/context/AuthContext';
 import { useBatch } from '@/src/context/BatchContext';
 import { formatPhoneForDisplay, validatePhoneWithMessage } from '@/src/lib/phoneExtractor';
 import { router } from 'expo-router';
@@ -15,6 +16,7 @@ const validatePhone = validatePhoneWithMessage;
 
 export function useAddLead() {
   const { createLocalBatch } = useBatch();
+  const { requireAuth } = useAuth();
   const [phone, setPhone] = useState('+91');
   const [leads, setLeads] = useState<Lead[]>([]);
   const [reviewMode, setReviewMode] = useState(false);
@@ -66,40 +68,42 @@ export function useAddLead() {
   };
 
   const handleConfirm = async () => {
-    if (leads.length === 0) {
-      Alert.alert('No leads', 'Please add at least one lead.');
-      return;
-    }
+    requireAuth(async () => {
+      if (leads.length === 0) {
+        Alert.alert('No leads', 'Please add at least one lead.');
+        return;
+      }
 
-    try {
-      // Convert leads to contacts format
-      const contacts = leads.map((lead) => ({
-        phone: lead.phoneRaw,
-        name: lead.name,
-      }));
+      try {
+        // Convert leads to contacts format
+        const contacts = leads.map((lead) => ({
+          phone: lead.phoneRaw,
+          name: lead.name,
+        }));
 
-      // Create batch in local state (NO Firebase write)
-      const batch = createLocalBatch(contacts, 'manual', {
-        fileName: 'Manual Entry',
-        uploadedFrom: 'AddLeadScreen',
-        extractionType: 'manual',
-      });
+        // Create batch in local state (NO Firebase write)
+        const batch = createLocalBatch(contacts, 'manual', {
+          fileName: 'Manual Entry',
+          uploadedFrom: 'AddLeadScreen',
+          extractionType: 'manual',
+        });
 
-      console.log('✅ Batch created locally:', batch.batchId);
+        console.log('✅ Batch created locally:', batch.batchId);
 
-      // Reset state
-      setReviewMode(false);
-      setLeads([]);
+        // Reset state
+        setReviewMode(false);
+        setLeads([]);
 
-      // Redirect to batch dashboard with success message
-      router.replace({
-        pathname: '/batch-dashboard',
-        params: { successMessage: 'Batch created successfully' },
-      });
-    } catch (error) {
-      console.error('Error creating batch:', error);
-      Alert.alert('Error', 'Could not create batch. Please try again.');
-    }
+        // Redirect to batch dashboard with success message
+        router.replace({
+          pathname: '/batch-dashboard',
+          params: { successMessage: 'Batch created successfully' },
+        });
+      } catch (error) {
+        console.error('Error creating batch:', error);
+        Alert.alert('Error', 'Could not create batch. Please try again.');
+      }
+    });
   };
 
   return {

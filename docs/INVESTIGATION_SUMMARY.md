@@ -1,14 +1,23 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Investigation Summary - UI Sync Issue (RESOLVED)
 
 **Project:** Maxsas AI Real Estate Caller  
 **Date:** February 23, 2026  
-**Status:** ✅ RESOLVED (Frontend fix applied)  
+**Status:** âœ… RESOLVED (Frontend fix applied)  
 **Files Modified:** 1  
 **Documentation Created:** 4
 
 ---
 
-## 🎯 Problem Statement
+## ðŸŽ¯ Problem Statement
 
 **Dashboard Behavior Mismatch:**
 - Firestore indicated: Lead marked as `failed_retryable` with `aiDisposition: "user_no_response"`
@@ -18,7 +27,7 @@
 
 ---
 
-## 🔍 Root Cause
+## ðŸ” Root Cause
 
 **Location:** [src/features/leads/BatchDetailScreen.tsx](src/features/leads/BatchDetailScreen.tsx#L248-L250)
 
@@ -28,13 +37,13 @@ return (lead.retryCount || 0) > 0 || !!lead.nextRetryAt;
 ```
 
 **Your Test Case:**
-- Lead had `status: "failed_retryable"` ✅
-- But `retryCount: 0` and `nextRetryAt: null` ❌
-- Filter returned FALSE → Lead not displayed
+- Lead had `status: "failed_retryable"` âœ…
+- But `retryCount: 0` and `nextRetryAt: null` âŒ
+- Filter returned FALSE â†’ Lead not displayed
 
 ---
 
-## ✅ Solution Implemented
+## âœ… Solution Implemented
 
 ### Frontend Fix (APPLIED)
 
@@ -58,14 +67,14 @@ if (leadFilter === 'retrying') {
 }
 ```
 
-**Impact:** Immediate ✅
+**Impact:** Immediate âœ…
 - Leads with `status: "failed_retryable"` now appear in "Show Retrying" tab
 - No other changes needed to test
 - Real-time sync continues to work
 
 ---
 
-## 📋 Investigation Findings
+## ðŸ“‹ Investigation Findings
 
 ### Q1: Frontend Filtering
 
@@ -73,13 +82,13 @@ if (leadFilter === 'retrying') {
 
 - Primary: `retryCount > 0` (must be integer > 0)
 - Secondary: `nextRetryAt` exists (must be non-null Timestamp)
-- ~~Tertiary (now fixed): `status === 'failed_retryable'` ✅
+- ~~Tertiary (now fixed): `status === 'failed_retryable'` âœ…
 
 **Fields NOT checked:**
-- ❌ `aiDisposition` (only for display)
-- ❌ `attempts` (only for "Action Required" count)
-- ❌ `callStatus` (used elsewhere)
-- ❌ `lastAttemptAt` (only for display)
+- âŒ `aiDisposition` (only for display)
+- âŒ `attempts` (only for "Action Required" count)
+- âŒ `callStatus` (used elsewhere)
+- âŒ `lastAttemptAt` (only for display)
 
 ---
 
@@ -89,14 +98,14 @@ if (leadFilter === 'retrying') {
 
 Progress calculation:
 ```
-Percentage = (completed leads) / (total leads) × 100
-           = 0 / 1 × 100
+Percentage = (completed leads) / (total leads) Ã— 100
+           = 0 / 1 Ã— 100
            = 0%
 ```
 
 **Why 0 completed?** Lead with `status: "failed_retryable"` doesn't equal `status: "completed"`
 
-**This is mathematically correct** but semantically confusing. The progress bar doesn't know about batch-level `failedCount` — it calculates from individual lead `status` values.
+**This is mathematically correct** but semantically confusing. The progress bar doesn't know about batch-level `failedCount` â€” it calculates from individual lead `status` values.
 
 **Not a bug** - working as designed.
 
@@ -112,15 +121,15 @@ Percentage = (completed leads) / (total leads) × 100
 // From src/services/leadService.ts
 const q = query(
   collection(db, 'leads'),
-  where('batchId', '==', batchId)  // ← ONLY filter
+  where('batchId', '==', batchId)  // â† ONLY filter
 );
 ```
 
 **Scope Details:**
-- ✅ Fetches ALL leads for batch (no status pre-filtering)
-- ✅ Includes all statuses: queued, calling, completed, failed_retryable
-- ✅ Frontend applies tab filters in memory
-- ✅ Real-time listener catches all status changes
+- âœ… Fetches ALL leads for batch (no status pre-filtering)
+- âœ… Includes all statuses: queued, calling, completed, failed_retryable
+- âœ… Frontend applies tab filters in memory
+- âœ… Real-time listener catches all status changes
 
 ---
 
@@ -133,21 +142,21 @@ const q = query(
 - `retryCount > 0` **OR**
 - `nextRetryAt` is not null
 
-**No mandatory field changes** — status alone is sufficient.
+**No mandatory field changes** â€” status alone is sufficient.
 
 ---
 
-## 📊 Complete State Analysis
+## ðŸ“Š Complete State Analysis
 
 ### Before Fix (BROKEN)
 
 ```firestore
 Lead: {
-  status: "failed_retryable",  ✅
-  aiDisposition: "user_no_response",  ✅
-  attempts: 1,  ✅
-  retryCount: 0,  ❌ (Filter fails here)
-  nextRetryAt: null,  ❌ (Filter fails here)
+  status: "failed_retryable",  âœ…
+  aiDisposition: "user_no_response",  âœ…
+  attempts: 1,  âœ…
+  retryCount: 0,  âŒ (Filter fails here)
+  nextRetryAt: null,  âŒ (Filter fails here)
 }
 ```
 
@@ -155,8 +164,8 @@ Lead: {
 ```
 status === 'failed_retryable'?  [NOT CHECKED - OLD CODE]
 retryCount > 0?  0 > 0 = FALSE
-nextRetryAt?  null → FALSE
-Result: FALSE || FALSE = FALSE → Lead not shown ❌
+nextRetryAt?  null â†’ FALSE
+Result: FALSE || FALSE = FALSE â†’ Lead not shown âŒ
 ```
 
 ### After Fix (WORKING)
@@ -165,16 +174,16 @@ Result: FALSE || FALSE = FALSE → Lead not shown ❌
 
 **Filter Logic:**
 ```
-status === 'failed_retryable'?  "failed_retryable" === "failed_retryable" = TRUE ✅
+status === 'failed_retryable'?  "failed_retryable" === "failed_retryable" = TRUE âœ…
 (short-circuit - doesn't need to check other conditions)
-Result: TRUE → Lead IS shown ✅
+Result: TRUE â†’ Lead IS shown âœ…
 ```
 
 ---
 
-## 🔄 Real-Time Sync Status
+## ðŸ”„ Real-Time Sync Status
 
-✅ **Working Perfectly**
+âœ… **Working Perfectly**
 - Subscription query only filters `batchId` (no status pre-filtering)
 - All leads fetched from Firestore
 - Real-time listener updates in 1-2 seconds
@@ -184,12 +193,12 @@ No sync issues found.
 
 ---
 
-## 📈 Next Steps (Optional)
+## ðŸ“ˆ Next Steps (Optional)
 
 ### Phase 1: Testing (NOW)
 1. Navigate to batch detail with failed_retryable lead
 2. Click "Show Retrying" tab
-3. Lead should appear ✅
+3. Lead should appear âœ…
 
 ### Phase 2: Backend Integration (RECOMMENDED)
 
@@ -212,7 +221,7 @@ n8n should also set when marking as `failed_retryable`:
 
 ---
 
-## 📚 Documentation Created
+## ðŸ“š Documentation Created
 
 1. **[DEBUGGING_UI_SYNC_ISSUE.md](DEBUGGING_UI_SYNC_ISSUE.md)** (14 KB)
    - Detailed root cause analysis
@@ -239,33 +248,33 @@ n8n should also set when marking as `failed_retryable`:
 
 ---
 
-## 🎯 Key Takeaways
+## ðŸŽ¯ Key Takeaways
 
 | Aspect | Finding | Status |
 |--------|---------|--------|
-| Real-time Sync | Working perfectly (1-2 sec latency) | ✅ |
-| Frontend Filter | Missing status check | ✅ FIXED |
-| Data Fetching | No pre-filtering (correct design) | ✅ |
-| Batch Scope | Only batchId (simple, correct) | ✅ |
-| Backend State | Missing retry metadata (improvement) | ⚠️ |
-| Display Logic | Correct calculation, semantic issue | ✅ |
+| Real-time Sync | Working perfectly (1-2 sec latency) | âœ… |
+| Frontend Filter | Missing status check | âœ… FIXED |
+| Data Fetching | No pre-filtering (correct design) | âœ… |
+| Batch Scope | Only batchId (simple, correct) | âœ… |
+| Backend State | Missing retry metadata (improvement) | âš ï¸ |
+| Display Logic | Correct calculation, semantic issue | âœ… |
 
 ---
 
-## 🚀 Implementation Status
+## ðŸš€ Implementation Status
 
-### ✅ COMPLETED
+### âœ… COMPLETED
 - Frontend filter updated
 - Status check added to "Show Retrying" tab
 - Code committed to repository
 - Real-time behavior verified working
 
-### ⏳ PENDING
+### â³ PENDING
 - Manual testing with actual workflow
 - n8n integration for retry metadata
 - Retry system automation (Phase 2)
 
-### 📝 DOCUMENTED
+### ðŸ“ DOCUMENTED
 - Root cause analysis complete
 - All 4 investigation questions answered
 - Implementation guide created
@@ -274,7 +283,7 @@ n8n should also set when marking as `failed_retryable`:
 
 ---
 
-## 🔧 Quick Reference
+## ðŸ”§ Quick Reference
 
 **Problem:** Lead with `status: "failed_retryable"` doesn't appear in "Show Retrying" tab
 
@@ -287,11 +296,11 @@ n8n should also set when marking as `failed_retryable`:
 **Verification:**
 1. Open batch with failed_retryable lead
 2. Click "Show Retrying" tab
-3. Lead appears ✅
+3. Lead appears âœ…
 
 ---
 
-## 📞 Support
+## ðŸ“ž Support
 
 For questions about:
 - **Root cause:** See [DEBUGGING_UI_SYNC_ISSUE.md](DEBUGGING_UI_SYNC_ISSUE.md)
@@ -301,8 +310,10 @@ For questions about:
 
 ---
 
-## ✨ Summary
+## âœ¨ Summary
 
-The investigation identified a simple but critical bug in the "Show Retrying" filter logic. By adding a single status check, leads marked as `failed_retryable` now appear correctly in the dashboard. The real-time sync system was working perfectly throughout — it was only the frontend filter that needed adjustment.
+The investigation identified a simple but critical bug in the "Show Retrying" filter logic. By adding a single status check, leads marked as `failed_retryable` now appear correctly in the dashboard. The real-time sync system was working perfectly throughout â€” it was only the frontend filter that needed adjustment.
 
-**Status: RESOLVED ✅**
+**Status: RESOLVED âœ…**
+
+

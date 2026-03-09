@@ -5,6 +5,7 @@
 
 import { AppHeader } from '@/src/components/ui/AppHeader';
 import { ScreenContainer } from '@/src/components/ui/ScreenContainer';
+import { useAuth } from '@/src/context/AuthContext';
 import { scheduleFollowUp } from '@/src/lib/leadService';
 import { useAppTheme } from '@/src/theme/use-app-theme';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -21,6 +22,7 @@ import {
 
 export default function FollowUpScheduleScreen() {
   const { colors } = useAppTheme();
+  const { requireAuth } = useAuth();
   const router = useRouter();
   const { leadId, phone } = useLocalSearchParams<{ leadId: string; phone: string }>();
 
@@ -38,23 +40,25 @@ export default function FollowUpScheduleScreen() {
   }
 
   const handleSchedule = async () => {
-    if (!followUpNotes.trim()) {
-      Alert.alert('Required', 'Please add a note for the follow-up');
-      return;
-    }
+    requireAuth(async () => {
+      if (!followUpNotes.trim()) {
+        Alert.alert('Required', 'Please add a note for the follow-up');
+        return;
+      }
 
-    try {
-      setLoading(true);
-      await scheduleFollowUp(leadId, selectedDate, followUpNotes);
-      Alert.alert('Success', 'Follow-up scheduled successfully', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to schedule follow-up. Please try again.');
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
+      try {
+        setLoading(true);
+        await scheduleFollowUp(leadId, selectedDate, followUpNotes);
+        Alert.alert('Success', 'Follow-up scheduled successfully', [
+          { text: 'OK', onPress: () => router.back() },
+        ]);
+      } catch (error) {
+        Alert.alert('Error', 'Failed to schedule follow-up. Please try again.');
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    });
   };
 
   const handleDateChange = (days: number) => {

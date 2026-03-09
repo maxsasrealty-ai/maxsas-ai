@@ -1,7 +1,16 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Schedule Call Implementation - Summary
 
 **Date**: February 19, 2026  
-**Status**: ✅ Complete - Ready for deployment  
+**Status**: âœ… Complete - Ready for deployment  
 **Author**: GitHub Copilot  
 
 ---
@@ -9,7 +18,7 @@
 ## Overview
 
 Complete production-grade implementation for **"Schedule Call"** functionality with:
-- Atomic batch state transitions (scheduled → running)
+- Atomic batch state transitions (scheduled â†’ running)
 - Race condition prevention via Firestore atomic updates
 - n8n-based cron scheduler
 - Zero interference with existing "Call Now" functionality
@@ -24,7 +33,7 @@ Complete production-grade implementation for **"Schedule Call"** functionality w
 
 **Changes**:
 - Protected scheduled batches from user modification
-- Only automation (n8n) can transition scheduled → running
+- Only automation (n8n) can transition scheduled â†’ running
 - Added `startedAt` field protection for automated transitions
 - Prevents status drift through Firestore rule enforcement
 
@@ -102,7 +111,7 @@ Every 30 seconds:
 
 **Coverage**:
 - Executive summary of changes
-- 3-phase batch lifecycle (Draft → Scheduled/Running → Completed)
+- 3-phase batch lifecycle (Draft â†’ Scheduled/Running â†’ Completed)
 - Race condition prevention strategies:
   - Solution 1: Atomic Firestore updates (Recommended)
   - Solution 2: Distributed lock pattern (Additional)
@@ -142,14 +151,14 @@ Every 30 seconds:
 - **Line Count**: +32 lines
 - **Change Type**: Enhancement
 - **Impact**: Database-level enforcement of schedule transitions
-- **Backward Compatible**: ✓ Yes (more restrictive but doesn't break)
+- **Backward Compatible**: âœ“ Yes (more restrictive but doesn't break)
 
 #### 2. src/services/batchService.ts
 - **Lines Modified**: 80-120 (saveBatchToFirebase function)
 - **Line Count**: +45 lines
 - **Change Type**: Validation
 - **Impact**: Prevents invalid schedule times client-side
-- **Backward Compatible**: ✓ Yes (only adds validation)
+- **Backward Compatible**: âœ“ Yes (only adds validation)
 
 ### New Documentation Files (3)
 
@@ -176,48 +185,48 @@ Every 30 seconds:
 ## Architecture: 3-Phase Batch Lifecycle
 
 ```
-┌─────────────────────────────────────────────────┐
-│ PHASE 1: DRAFT                                  │
-│ • Local only (React Context)                    │
-│ • No Firebase writes                            │
-│ • User adds/edits contacts                      │
-└─────────────────────────────────────────────────┘
-              │
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ PHASE 1: DRAFT                                  â”‚
+â”‚ â€¢ Local only (React Context)                    â”‚
+â”‚ â€¢ No Firebase writes                            â”‚
+â”‚ â€¢ User adds/edits contacts                      â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+              â”‚
          User selects action
-              │
-     ┌────────┴────────┐
-     │                 │
-     ▼                 ▼
-┌─────────────────┐ ┌──────────────────┐
-│ "Call Now"      │ │ "Schedule"       │
-├─────────────────┤ ├──────────────────┤
-│ PHASE 2A:       │ │ PHASE 2B:        │
-│ status=running  │ │ status=scheduled │
-│ startedAt=NOW   │ │ scheduleAt=TIME  │
-│ runningCount=N  │ │ runningCount=0   │
-│ Immediate       │ │                  │
-│ dispatch        │ │ Wait for time... │
-└────────┬────────┘ └────────┬─────────┘
-         │                   │
-         │          scheduleAt <= now
-         │          [n8n cron 30s]
-         │                   │
-         │          ┌────────▼────────┐
-         │          │ PHASE 2.5:      │
-         │          │ Transition      │
-         │          │ status→running  │
-         │          │ startedAt=now   │
-         │          └────────┬────────┘
-         │                   │
-         └───────────┬───────┘
-                     │
-                ▼
-    ┌────────────────────────────┐
-    │ PHASE 3: COMPLETION        │
-    │ All leads processed        │
-    │ status=completed/failed    │
-    │ completedAt=timestamp      │
-    └────────────────────────────┘
+              â”‚
+     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”
+     â”‚                 â”‚
+     â–¼                 â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â” â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ "Call Now"      â”‚ â”‚ "Schedule"       â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤ â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚ PHASE 2A:       â”‚ â”‚ PHASE 2B:        â”‚
+â”‚ status=running  â”‚ â”‚ status=scheduled â”‚
+â”‚ startedAt=NOW   â”‚ â”‚ scheduleAt=TIME  â”‚
+â”‚ runningCount=N  â”‚ â”‚ runningCount=0   â”‚
+â”‚ Immediate       â”‚ â”‚                  â”‚
+â”‚ dispatch        â”‚ â”‚ Wait for time... â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”˜ â””â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+         â”‚                   â”‚
+         â”‚          scheduleAt <= now
+         â”‚          [n8n cron 30s]
+         â”‚                   â”‚
+         â”‚          â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â–¼â”€â”€â”€â”€â”€â”€â”€â”€â”
+         â”‚          â”‚ PHASE 2.5:      â”‚
+         â”‚          â”‚ Transition      â”‚
+         â”‚          â”‚ statusâ†’running  â”‚
+         â”‚          â”‚ startedAt=now   â”‚
+         â”‚          â””â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+         â”‚                   â”‚
+         â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”˜
+                     â”‚
+                â–¼
+    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+    â”‚ PHASE 3: COMPLETION        â”‚
+    â”‚ All leads processed        â”‚
+    â”‚ status=completed/failed    â”‚
+    â”‚ completedAt=timestamp      â”‚
+    â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ---
@@ -267,13 +276,13 @@ npm test -- scheduleBatch.validation.test.ts
 
 ### Integration Tests
 ```
-✓ Create scheduled batch (scheduleAt = future)
-✓ Prevent past schedule times
-✓ Prevent extreme future times
-✓ n8n transitions batch at correct time
-✓ No duplicate transitions
-✓ Transitioned batch processes normally
-✓ Global concurrency works for all batches
+âœ“ Create scheduled batch (scheduleAt = future)
+âœ“ Prevent past schedule times
+âœ“ Prevent extreme future times
+âœ“ n8n transitions batch at correct time
+âœ“ No duplicate transitions
+âœ“ Transitioned batch processes normally
+âœ“ Global concurrency works for all batches
 ```
 
 ### Manual Testing (See docs for detailed scenarios)
@@ -323,12 +332,12 @@ Day 7: Switch to 30-sec cron production
 
 ## Backward Compatibility
 
-✓ Existing "Call Now" functionality unchanged  
-✓ Batch schema extensible (new fields optional)  
-✓ Dispatcher processes batches identically  
-✓ Dashboard can show both statuses  
-✓ No breaking changes to APIs  
-✓ No migration needed for existing data  
+âœ“ Existing "Call Now" functionality unchanged  
+âœ“ Batch schema extensible (new fields optional)  
+âœ“ Dispatcher processes batches identically  
+âœ“ Dashboard can show both statuses  
+âœ“ No breaking changes to APIs  
+âœ“ No migration needed for existing data  
 
 ---
 
@@ -360,11 +369,11 @@ Alert if:
 
 | File | Type | Status | Lines |
 |------|------|--------|-------|
-| firestore.rules | Modified | ✅ Done | +32 |
-| src/services/batchService.ts | Modified | ✅ Done | +45 |
-| SCHEDULE_CALL_IMPLEMENTATION.md | New | ✅ Done | 700+ |
-| N8N_BATCH_SCHEDULER_SETUP.md | New | ✅ Done | 650+ |
-| SCHEDULE_CALL_QUICKSTART.md | New | ✅ Done | 450+ |
+| firestore.rules | Modified | âœ… Done | +32 |
+| src/services/batchService.ts | Modified | âœ… Done | +45 |
+| SCHEDULE_CALL_IMPLEMENTATION.md | New | âœ… Done | 700+ |
+| N8N_BATCH_SCHEDULER_SETUP.md | New | âœ… Done | 650+ |
+| SCHEDULE_CALL_QUICKSTART.md | New | âœ… Done | 450+ |
 
 **Total Changes**: 2 files modified, 3 comprehensive guides created
 
@@ -372,7 +381,7 @@ Alert if:
 
 ## What's NOT Changed (Intentionally)
 
-❌ No changes to:
+âŒ No changes to:
 - UI components (already has schedule modal)
 - BatchContext (already handles schedule)
 - Lead processing logic
@@ -387,22 +396,22 @@ This keeps the change scope tight and minimizes risk.
 ## Success Metrics
 
 ### Immediate (Day 1)
-- ✓ Firestore rules deployed successfully
-- ✓ No breaking errors in logs
-- ✓ Users can create scheduled batches
+- âœ“ Firestore rules deployed successfully
+- âœ“ No breaking errors in logs
+- âœ“ Users can create scheduled batches
 
 ### Short-term (Week 1)
-- ✓ n8n scheduler running
-- ✓ Batches transitioning at scheduled time
-- ✓ Dispatcher processing transitioned batches
-- ✓ Zero duplicate transitions
-- ✓ Error rate < 0.1%
+- âœ“ n8n scheduler running
+- âœ“ Batches transitioning at scheduled time
+- âœ“ Dispatcher processing transitioned batches
+- âœ“ Zero duplicate transitions
+- âœ“ Error rate < 0.1%
 
 ### Long-term (Month 1)
-- ✓ Monitoring alerts configured
-- ✓ Team familiar with operation
-- ✓ No customer incidents
-- ✓ 99.9%+ success rate
+- âœ“ Monitoring alerts configured
+- âœ“ Team familiar with operation
+- âœ“ No customer incidents
+- âœ“ 99.9%+ success rate
 
 ---
 
@@ -432,16 +441,16 @@ See full runbook in SCHEDULE_CALL_QUICKSTART.md
 Your project now includes:
 
 1. SCHEDULE_CALL_IMPLEMENTATION.md
-   └─ For: Architecture, design decisions, detailed strategy
-   └─ Read when: Understanding the full picture
+   â””â”€ For: Architecture, design decisions, detailed strategy
+   â””â”€ Read when: Understanding the full picture
 
 2. N8N_BATCH_SCHEDULER_SETUP.md
-   └─ For: Actually setting up n8n workflow
-   └─ Read when: Creating the scheduler workflow
+   â””â”€ For: Actually setting up n8n workflow
+   â””â”€ Read when: Creating the scheduler workflow
 
 3. SCHEDULE_CALL_QUICKSTART.md
-   └─ For: Deployment steps, testing, monitoring
-   └─ Read when: Deploying to production
+   â””â”€ For: Deployment steps, testing, monitoring
+   â””â”€ Read when: Deploying to production
 
 Code changes:
 - firestore.rules: Database-level enforcement
@@ -496,7 +505,7 @@ See FAQ in SCHEDULE_CALL_IMPLEMENTATION.md for more.
 - [x] Support runbook included
 - [x] All documentation cross-linked
 
-**✅ Ready for Deployment**
+**âœ… Ready for Deployment**
 
 ---
 
@@ -505,4 +514,6 @@ See FAQ in SCHEDULE_CALL_IMPLEMENTATION.md for more.
 **Deployment Timeline**: 17 days (with load testing and validation phases)  
 **Risk Level**: Low (atomic operations, backward compatible)  
 **Team Impact**: High value, manageable complexity
+
+
 

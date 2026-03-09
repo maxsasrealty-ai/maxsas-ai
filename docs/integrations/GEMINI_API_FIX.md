@@ -1,7 +1,16 @@
-# 🔧 AI Image Extraction - Bug Fix Report
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
+# ðŸ”§ AI Image Extraction - Bug Fix Report
 
 ## Problem Statement
-**Issue:** Phone numbers were not extracting from images uploaded via the "🤖 AI Image Extraction" feature.
+**Issue:** Phone numbers were not extracting from images uploaded via the "ðŸ¤– AI Image Extraction" feature.
 
 **Symptoms:**
 - User selects image from gallery
@@ -12,7 +21,7 @@
 
 ## Root Cause Analysis
 
-### The Issue: ❌ Wrong Gemini API Model
+### The Issue: âŒ Wrong Gemini API Model
 
 The code was using an **outdated/unavailable Gemini model**:
 
@@ -29,7 +38,7 @@ private apiEndpoint = 'https://generativelanguage.googleapis.com/v1beta/models/g
 
 The model `gemini-1.5-flash` was not available in the v1beta API version.
 
-## Solution: ✅ Updated to Latest Model
+## Solution: âœ… Updated to Latest Model
 
 Changed to use the **latest available Gemini model**:
 
@@ -39,12 +48,12 @@ private apiEndpoint = 'https://generativelanguage.googleapis.com/v1/models/gemin
 ```
 
 **Available Models (as of Feb 2026):**
-- ✅ `gemini-2.5-flash` (Latest, recommended)
-- ✅ `gemini-2.5-pro`
-- ✅ `gemini-2.0-flash`
-- ✅ `gemini-2.0-flash-lite`
-- ❌ `gemini-1.5-flash` (Not available)
-- ❌ `gemini-1.5-pro` (Not available)
+- âœ… `gemini-2.5-flash` (Latest, recommended)
+- âœ… `gemini-2.5-pro`
+- âœ… `gemini-2.0-flash`
+- âœ… `gemini-2.0-flash-lite`
+- âŒ `gemini-1.5-flash` (Not available)
+- âŒ `gemini-1.5-pro` (Not available)
 
 ## Files Modified
 
@@ -60,27 +69,27 @@ private apiEndpoint = 'https://generativelanguage.googleapis.com/v1/models/gemin
 
 ## Testing
 
-### API Connection Test ✅
+### API Connection Test âœ…
 ```
 Response Status: 200 OK
-✅ API Response Successful!
+âœ… API Response Successful!
 ```
 
 ### Extraction Flow
 Before fix:
 ```
-Image selected → API Error (404) → No numbers extracted
+Image selected â†’ API Error (404) â†’ No numbers extracted
 ```
 
 After fix:
 ```
-Image selected → API Success (200) → Numbers extracted → Show in preview
+Image selected â†’ API Success (200) â†’ Numbers extracted â†’ Show in preview
 ```
 
 ## How to Verify the Fix
 
 1. **Open Leads section** in app
-2. **Tap "Add Lead"** → **Select "🤖 AI Image Extraction"**
+2. **Tap "Add Lead"** â†’ **Select "ðŸ¤– AI Image Extraction"**
 3. **Choose image** from gallery (e.g., contacts screenshot)
 4. **Wait 2-6 seconds** for processing
 5. **Expected Result:** Phone numbers appear with confidence scores
@@ -111,30 +120,30 @@ The code was built with an older model version that is no longer available throu
 ## Technical Details
 
 ### Gemini 2.5 Flash Advantages
-- ✅ Latest model with better vision capabilities
-- ✅ Improved OCR accuracy
-- ✅ Faster processing (2-4 seconds)
-- ✅ Better JSON response parsing
-- ✅ More reliable phone number extraction
+- âœ… Latest model with better vision capabilities
+- âœ… Improved OCR accuracy
+- âœ… Faster processing (2-4 seconds)
+- âœ… Better JSON response parsing
+- âœ… More reliable phone number extraction
 
 ### API Endpoints Comparison
 
 | Model | Endpoint | Status |
 |-------|----------|--------|
-| gemini-1.5-flash | v1beta/models/gemini-1.5-flash | ❌ 404 |
-| gemini-1.5-pro | v1beta/models/gemini-1.5-pro | ❌ 404 |
-| gemini-2.0-flash | v1/models/gemini-2.0-flash | ✅ 200 |
-| gemini-2.5-flash | v1/models/gemini-2.5-flash | ✅ 200 (Latest) |
+| gemini-1.5-flash | v1beta/models/gemini-1.5-flash | âŒ 404 |
+| gemini-1.5-pro | v1beta/models/gemini-1.5-pro | âŒ 404 |
+| gemini-2.0-flash | v1/models/gemini-2.0-flash | âœ… 200 |
+| gemini-2.5-flash | v1/models/gemini-2.5-flash | âœ… 200 (Latest) |
 
 ## What to Expect After Fix
 
-✅ **Immediate Impact:**
+âœ… **Immediate Impact:**
 - Images now extract phone numbers successfully
 - Preview screen shows found numbers
 - Confidence scores display correctly
 - Save button works and creates leads in Firebase
 
-✅ **User Experience:**
+âœ… **User Experience:**
 - Faster extraction (2-4 seconds vs timeout before)
 - Better accuracy with newer AI model
 - Clear error messages if something fails
@@ -167,7 +176,9 @@ The code was built with an older model version that is no longer available throu
 
 ---
 
-**Status:** ✅ FIXED & TESTED  
+**Status:** âœ… FIXED & TESTED  
 **Date:** February 3, 2026  
 **Model Used:** gemini-2.5-flash  
 **API Version:** v1
+
+

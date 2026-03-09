@@ -21,6 +21,7 @@ import {
 import { AppButton } from '@/src/components/ui/AppButton';
 import { AppHeader } from '@/src/components/ui/AppHeader';
 import { ScreenContainer } from '@/src/components/ui/ScreenContainer';
+import { useAuth } from '@/src/context/AuthContext';
 import { useBatch } from '@/src/context/BatchContext';
 import type { ExtractedLead } from '@/src/lib/phoneExtractor';
 import { extractPhoneNumbers, formatPhoneForDisplay } from '@/src/lib/phoneExtractor';
@@ -29,6 +30,7 @@ import { useAppTheme } from '@/src/theme/use-app-theme';
 export default function PasteLeadsScreen() {
   const { colors } = useAppTheme();
   const { createLocalBatch } = useBatch();
+  const { requireAuth } = useAuth();
   const [pastedText, setPastedText] = useState('');
   const [extractedLeads, setExtractedLeads] = useState<ExtractedLead[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -67,37 +69,39 @@ export default function PasteLeadsScreen() {
   };
 
   const handleProceedToReview = async () => {
-    Keyboard.dismiss();
+    requireAuth(async () => {
+      Keyboard.dismiss();
 
-    if (extractedLeads.length === 0) {
-      Alert.alert('No leads', 'No phone numbers extracted.');
-      return;
-    }
+      if (extractedLeads.length === 0) {
+        Alert.alert('No leads', 'No phone numbers extracted.');
+        return;
+      }
 
-    try {
-      // Convert leads to contacts format
-      const contacts = extractedLeads.map((lead) => ({
-        phone: lead.phone,
-      }));
+      try {
+        // Convert leads to contacts format
+        const contacts = extractedLeads.map((lead) => ({
+          phone: lead.phone,
+        }));
 
-      // Create batch in local state (NO Firebase write)
-      const batch = createLocalBatch(contacts, 'clipboard', {
-        fileName: 'Clipboard Paste',
-        uploadedFrom: 'PasteLeadsScreen',
-        extractionType: 'manual',
-      });
+        // Create batch in local state (NO Firebase write)
+        const batch = createLocalBatch(contacts, 'clipboard', {
+          fileName: 'Clipboard Paste',
+          uploadedFrom: 'PasteLeadsScreen',
+          extractionType: 'manual',
+        });
 
-      console.log('✅ Batch created locally:', batch.batchId);
+        console.log('✅ Batch created locally:', batch.batchId);
 
-      // Redirect to dashboard with success message
-      router.replace({
-        pathname: '/batch-dashboard',
-        params: { successMessage: 'Batch created successfully' },
-      });
-    } catch (error) {
-      console.error('Error creating batch:', error);
-      Alert.alert('Error', 'Failed to create batch. Please try again.');
-    }
+        // Redirect to dashboard with success message
+        router.replace({
+          pathname: '/batch-dashboard',
+          params: { successMessage: 'Batch created successfully' },
+        });
+      } catch (error) {
+        console.error('Error creating batch:', error);
+        Alert.alert('Error', 'Failed to create batch. Please try again.');
+      }
+    });
   };
 
   if (showPreview && extractedLeads.length > 0) {

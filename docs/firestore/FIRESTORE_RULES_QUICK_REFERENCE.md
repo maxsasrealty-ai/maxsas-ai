@@ -1,208 +1,217 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Firestore Security Rules - Quick Reference Card
 
-## 🔐 Core Principle
+## ðŸ” Core Principle
 **"Only authenticated users can access their own data"**
 
 ---
 
-## ✅ BATCHES Collection Rules
+## âœ… BATCHES Collection Rules
 
 ### CREATE Batch
 ```
 Conditions Required:
-✅ User authenticated (request.auth != null)
-✅ userId == auth.uid (ownership)
-✅ batchId field == document ID
-✅ status in ['running', 'scheduled', 'completed']
-✅ action in ['call_now', 'schedule']
-✅ source in ['manual', 'csv', 'clipboard', 'image']
-✅ totalContacts > 0 and ≤ 10,000
-✅ createdAt timestamp provided
+âœ… User authenticated (request.auth != null)
+âœ… userId == auth.uid (ownership)
+âœ… batchId field == document ID
+âœ… status in ['running', 'scheduled', 'completed']
+âœ… action in ['call_now', 'schedule']
+âœ… source in ['manual', 'csv', 'clipboard', 'image']
+âœ… totalContacts > 0 and â‰¤ 10,000
+âœ… createdAt timestamp provided
 
 Example:
 {
   batchId: 'batch-123',
-  userId: 'user-abc',          ← Must match current user
-  status: 'running',           ← Must be valid
-  action: 'call_now',          ← Must be valid
-  source: 'clipboard',         ← Must be valid
-  totalContacts: 45,           ← Must be > 0, ≤ 10,000
+  userId: 'user-abc',          â† Must match current user
+  status: 'running',           â† Must be valid
+  action: 'call_now',          â† Must be valid
+  source: 'clipboard',         â† Must be valid
+  totalContacts: 45,           â† Must be > 0, â‰¤ 10,000
   createdAt: firebase.Timestamp.now()
 }
 ```
 
 ### READ Batch
 ```
-✅ User owns batch (userId == auth.uid)
+âœ… User owns batch (userId == auth.uid)
   OR
-✅ User has automation role (request.auth.token.role == 'automation')
+âœ… User has automation role (request.auth.token.role == 'automation')
 ```
 
 ### UPDATE Batch
 ```
 Allowed:
-✅ Change 'status' to valid value
-✅ User owns batch OR has automation role
+âœ… Change 'status' to valid value
+âœ… User owns batch OR has automation role
 
 IMMUTABLE (Cannot change):
-❌ userId
-❌ batchId
-❌ createdAt
+âŒ userId
+âŒ batchId
+âŒ createdAt
 ```
 
 ### DELETE Batch
 ```
-✅ User owns batch (userId == auth.uid)
+âœ… User owns batch (userId == auth.uid)
 ```
 
 ---
 
-## ✅ LEADS Collection Rules
+## âœ… LEADS Collection Rules
 
-### CREATE Lead ⚠️ MOST RESTRICTIVE
+### CREATE Lead âš ï¸ MOST RESTRICTIVE
 ```
 Conditions Required:
-✅ User authenticated
-✅ userId == auth.uid
-✅ batchId != null
-✅ Batch document MUST EXIST
-  ► exists(/databases/.../batches/{batchId})
-✅ Batch MUST belong to user
-  ► get(.../batches/{batchId}).data.userId == auth.uid
-✅ phone != null and phone != ''
-✅ leadId field == document ID
-✅ status == 'queued' (initial status only)
-✅ createdAt timestamp provided
+âœ… User authenticated
+âœ… userId == auth.uid
+âœ… batchId != null
+âœ… Batch document MUST EXIST
+  â–º exists(/databases/.../batches/{batchId})
+âœ… Batch MUST belong to user
+  â–º get(.../batches/{batchId}).data.userId == auth.uid
+âœ… phone != null and phone != ''
+âœ… leadId field == document ID
+âœ… status == 'queued' (initial status only)
+âœ… createdAt timestamp provided
 
 CRITICAL: If batch doesn't exist OR batch owner != user
-         → CREATE FAILS
+         â†’ CREATE FAILS
 
 Example:
 {
   leadId: 'lead-456',
-  batchId: 'batch-123',              ← Batch MUST exist
-  userId: 'user-abc',                ← Must match auth.uid
-  phone: '+1-555-1234',              ← Cannot be empty
+  batchId: 'batch-123',              â† Batch MUST exist
+  userId: 'user-abc',                â† Must match auth.uid
+  phone: '+1-555-1234',              â† Cannot be empty
   name: 'John Doe',
-  status: 'queued',                  ← Initial status only
+  status: 'queued',                  â† Initial status only
   createdAt: firebase.Timestamp.now()
 }
 ```
 
 ### READ Lead
 ```
-✅ User owns lead (userId == auth.uid)
+âœ… User owns lead (userId == auth.uid)
   OR
-✅ User has automation role
+âœ… User has automation role
 ```
 
 ### UPDATE Lead
 ```
 Allowed:
-✅ Change 'status' to valid value (queued → calling → completed)
-✅ User owns lead OR has automation role
+âœ… Change 'status' to valid value (queued â†’ calling â†’ completed)
+âœ… User owns lead OR has automation role
 
 IMMUTABLE (Cannot change):
-❌ leadId
-❌ batchId
-❌ userId
-❌ createdAt
+âŒ leadId
+âŒ batchId
+âŒ userId
+âŒ createdAt
 ```
 
 ### DELETE Lead
 ```
-✅ User owns lead (userId == auth.uid)
+âœ… User owns lead (userId == auth.uid)
 ```
 
 ---
 
-## 🚨 Security Checks Summary
+## ðŸš¨ Security Checks Summary
 
 | Check | Batch Create | Lead Create |
 |-------|---|---|
-| Authenticated | ✅ | ✅ |
-| userId matches auth.uid | ✅ | ✅ |
-| Valid enum values | ✅ | ✅ |
-| Batch exists | N/A | ✅ CRITICAL |
-| Batch owned by user | N/A | ✅ CRITICAL |
-| Phone not empty | N/A | ✅ |
-| Timestamp provided | ✅ | ✅ |
+| Authenticated | âœ… | âœ… |
+| userId matches auth.uid | âœ… | âœ… |
+| Valid enum values | âœ… | âœ… |
+| Batch exists | N/A | âœ… CRITICAL |
+| Batch owned by user | N/A | âœ… CRITICAL |
+| Phone not empty | N/A | âœ… |
+| Timestamp provided | âœ… | âœ… |
 
 ---
 
-## ❌ What Gets REJECTED
+## âŒ What Gets REJECTED
 
 ### Batch Rejection Cases
 ```
-❌ userid: 'different-user'        // Ownership violation
-❌ status: 'draft'                 // Invalid status
-❌ totalContacts: 0                // Must be > 0
-❌ createdAt: null                 // Missing timestamp
-❌ action: 'invalid'               // Invalid action
-❌ Unauthenticated (no token)      // No auth
+âŒ userid: 'different-user'        // Ownership violation
+âŒ status: 'draft'                 // Invalid status
+âŒ totalContacts: 0                // Must be > 0
+âŒ createdAt: null                 // Missing timestamp
+âŒ action: 'invalid'               // Invalid action
+âŒ Unauthenticated (no token)      // No auth
 ```
 
 ### Lead Rejection Cases
 ```
-❌ batchId: 'nonexistent-batch'    // Batch doesn't exist
-❌ batchId: (batch of user2)       // Wrong owner
-❌ phone: null or ''               // Invalid phone
-❌ userId: 'different-user'        // Ownership violation
-❌ Unauthenticated (no token)      // No auth
-❌ status: 'calling'               // Only 'queued' on create
+âŒ batchId: 'nonexistent-batch'    // Batch doesn't exist
+âŒ batchId: (batch of user2)       // Wrong owner
+âŒ phone: null or ''               // Invalid phone
+âŒ userId: 'different-user'        // Ownership violation
+âŒ Unauthenticated (no token)      // No auth
+âŒ status: 'calling'               // Only 'queued' on create
 ```
 
 ---
 
-## 🔄 Typical Workflow
+## ðŸ”„ Typical Workflow
 
 ### User Calls "Call Now" Button
 ```
-1. BatchDetailScreen → saveBatchToFirebase()
-   └─ Passes: batch object + 'call_now' action
+1. BatchDetailScreen â†’ saveBatchToFirebase()
+   â””â”€ Passes: batch object + 'call_now' action
    
-2. BatchContext → saveBatchToFirebaseHandler()
-   └─ Validates all 5 checks
-   └─ Calls service layer
+2. BatchContext â†’ saveBatchToFirebaseHandler()
+   â””â”€ Validates all 5 checks
+   â””â”€ Calls service layer
    
-3. batchService → saveBatchToFirebase()
-   └─ Creates batch document
-      └─ Firestore Rules validate:
-         ✅ User owns batch
-         ✅ Valid status/action
-         ✅ Valid contacts count
-         ✅ BATCH CREATED ✅
+3. batchService â†’ saveBatchToFirebase()
+   â””â”€ Creates batch document
+      â””â”€ Firestore Rules validate:
+         âœ… User owns batch
+         âœ… Valid status/action
+         âœ… Valid contacts count
+         âœ… BATCH CREATED âœ…
    
-   └─ Creates lead documents (one per contact)
-      └─ Firestore Rules validate:
-         ✅ Batch exists (just created)
-         ✅ Batch owned by user (just created)
-         ✅ Phone valid
-         ✅ LEADS CREATED ✅
+   â””â”€ Creates lead documents (one per contact)
+      â””â”€ Firestore Rules validate:
+         âœ… Batch exists (just created)
+         âœ… Batch owned by user (just created)
+         âœ… Phone valid
+         âœ… LEADS CREATED âœ…
 
-4. BatchContext → Updates local state
-   └─ currentBatch status = 'running'
+4. BatchContext â†’ Updates local state
+   â””â”€ currentBatch status = 'running'
 ```
 
 ### Data Flow
 ```
 UI Layer (BatchDetailScreen)
-    ↓
+    â†“
 Context Layer (BatchContext)
-    ↓ [5 validation checks]
-    ↓
+    â†“ [5 validation checks]
+    â†“
 Service Layer (batchService)
-    ↓ [creates batch + leads]
-    ↓
+    â†“ [creates batch + leads]
+    â†“
 Firestore Rules
-    ↓ [validates ownership + integrity]
-    ↓
-✅ SUCCESS: Batch + Leads saved
+    â†“ [validates ownership + integrity]
+    â†“
+âœ… SUCCESS: Batch + Leads saved
 ```
 
 ---
 
-## 🛡️ Defense Layers
+## ðŸ›¡ï¸ Defense Layers
 
 ### Layer 1: UI Validation (BatchDetailScreen)
 - Basic type checking
@@ -210,7 +219,7 @@ Firestore Rules
 - User feedback with alerts
 
 ### Layer 2: Context Validation (BatchContext)
-- **STRICT 5-CHECK VALIDATION** ← Most important
+- **STRICT 5-CHECK VALIDATION** â† Most important
 - Checks: batchId, contacts array, contact phones
 - Shows detailed alerts on failure
 - Prevents bad data from reaching service
@@ -229,7 +238,7 @@ Firestore Rules
 
 ---
 
-## 🔑 Key Functions in Rules
+## ðŸ”‘ Key Functions in Rules
 
 ### Helper Functions
 ```firestore
@@ -251,7 +260,7 @@ isBatchOwner(request.resource.data.batchId)       // Batch MUST be owned by user
 
 ---
 
-## 📊 Status Values
+## ðŸ“Š Status Values
 
 ### Batch Status
 Valid values: `'running'` | `'scheduled'` | `'completed'`
@@ -279,7 +288,7 @@ Valid values: `'manual'` | `'csv'` | `'clipboard'` | `'image'`
 
 ---
 
-## ✅ Deployment Checklist
+## âœ… Deployment Checklist
 
 1. **Local Testing**
    - [ ] All 14 tests pass in emulator
@@ -303,7 +312,7 @@ Valid values: `'manual'` | `'csv'` | `'clipboard'` | `'image'`
 
 ---
 
-## 🆘 Troubleshooting
+## ðŸ†˜ Troubleshooting
 
 | Problem | Solution |
 |---------|----------|
@@ -315,12 +324,14 @@ Valid values: `'manual'` | `'csv'` | `'clipboard'` | `'image'`
 
 ---
 
-## 📝 Summary
+## ðŸ“ Summary
 
 **Batches**: Owner authentication + valid data
-**Leads**: Owner auth + batch existence + batch ownership ✅
+**Leads**: Owner auth + batch existence + batch ownership âœ…
 **Automation**: Special role with full access
 **Immutable**: IDs, timestamps cannot change
 **Enums**: Status, action, source must be valid values
 
 **Golden Rule**: User can only access data where `userId == auth.uid`
+
+

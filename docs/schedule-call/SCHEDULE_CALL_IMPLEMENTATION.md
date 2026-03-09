@@ -1,3 +1,12 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Schedule Call Functionality - Complete Implementation Guide
 
 ## Executive Summary
@@ -12,15 +21,15 @@ This document provides production-grade implementation for "Schedule Call" funct
 
 ## Current State Analysis
 
-### ✅ What's Already Done
+### âœ… What's Already Done
 1. **UI Layer**: Schedule button & modal in BatchDetailScreen.tsx
 2. **Batch Creation**: saveBatchToFirebase() supports action='schedule' with scheduleAt
 3. **Database Schema**: Firestore rules allow 'scheduled' status
 4. **Batch Fields**: scheduleAt, startedAt already in schema
 5. **Concurrency Fields**: lockOwner, lockExpiresAt, priority exist
 
-### ❌ What's Missing
-1. **n8n Scheduler Workflow**: No cron-based dispatcher for scheduled → running transition
+### âŒ What's Missing
+1. **n8n Scheduler Workflow**: No cron-based dispatcher for scheduled â†’ running transition
 2. **Atomic Transition Logic**: No transactional batch state change
 3. **Double-process Prevention**: No lock mechanism during transition
 4. **Scheduler Documentation**: No clear n8n workflow setup guide
@@ -30,63 +39,63 @@ This document provides production-grade implementation for "Schedule Call" funct
 ## Architecture Decision: 3-Phase Batch Lifecycle
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│         3-PHASE BATCH PROCESSING MODEL                      │
-├─────────────────────────────────────────────────────────────┤
-│                                                                │
-│ PHASE 1: DRAFT [LOCAL ONLY]                                  │
-│ ─────────────────────────────────                            │
-│  • User adds contacts (CSV, image, clipboard)               │
-│  • Stored in React Context only                             │
-│  • UI: Batch Dashboard shows "DRAFT"                        │
-│                                                                │
-│     ┌─────────────────────┬──────────────────────┐           │
-│     │ User clicks         │ User clicks          │           │
-│     │ "Call Now"          │ "Schedule"           │           │
-│     └────────┬────────────┴──────────┬───────────┘           │
-│              ▼                       ▼                        │
-│  ┌───────────────────┐    ┌────────────────────┐            │
-│  │ PHASE 2A: RUNNING │    │ PHASE 2B: SCHEDULED│            │
-│  │ [IMMEDIATE]       │    │ [DELAYED]          │            │
-│  ├───────────────────┤    ├────────────────────┤            │
-│  │ status: running   │    │ status: scheduled  │            │
-│  │ startedAt: NOW    │    │ scheduleAt: FUTURE │            │
-│  │ runningCount: N   │    │ runningCount: 0    │            │
-│  │ Dispatcher picks  │    │ Cron checks every  │            │
-│  │ immediately       │    │ N seconds          │            │
-│  └────────┬──────────┘    └──────────┬─────────┘            │
-│           │                          │                       │
-│           │ When scheduleAt <= now   │                       │
-│           │ [n8n Cron: every 30s]    │                       │
-│           │           ┌──────────────┘                       │
-│           │           ▼                                       │
-│           │    ┌─────────────────────┐                      │
-│           └───►│ PHASE 2.5: TRANSITION│                      │
-│                │ [ATOMIC]            │                      │
-│                ├─────────────────────┤                      │
-│                │ 1. Check: status=   │                      │
-│                │    scheduled        │                      │
-│                │ 2. Lock: atomic     │                      │
-│                │    transition       │                      │
-│                │ 3. Update: status→  │                      │
-│                │    running, set     │                      │
-│                │    startedAt        │                      │
-│                │ 4. Return: batch    │                      │
-│                │    to dispatcher    │                      │
-│                └────────┬────────────┘                       │
-│                         ▼                                    │
-│              Now both follow same path                       │
-│              ↓                                                │
-│  ┌─────────────────────────────────────┐                   │
-│  │ PHASE 3: COMPLETION                 │                   │
-│  ├─────────────────────────────────────┤                   │
-│  │ All calls completed/failed          │                   │
-│  │ status: completed or failed         │                   │
-│  │ completedAt: NOW                    │                   │
-│  │ UI: Result shown in dashboard       │                   │
-│  └─────────────────────────────────────┘                   │
-│                                                                │
-└─────────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚         3-PHASE BATCH PROCESSING MODEL                      â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚                                                                â”‚
+â”‚ PHASE 1: DRAFT [LOCAL ONLY]                                  â”‚
+â”‚ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€                            â”‚
+â”‚  â€¢ User adds contacts (CSV, image, clipboard)               â”‚
+â”‚  â€¢ Stored in React Context only                             â”‚
+â”‚  â€¢ UI: Batch Dashboard shows "DRAFT"                        â”‚
+â”‚                                                                â”‚
+â”‚     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”           â”‚
+â”‚     â”‚ User clicks         â”‚ User clicks          â”‚           â”‚
+â”‚     â”‚ "Call Now"          â”‚ "Schedule"           â”‚           â”‚
+â”‚     â””â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜           â”‚
+â”‚              â–¼                       â–¼                        â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”            â”‚
+â”‚  â”‚ PHASE 2A: RUNNING â”‚    â”‚ PHASE 2B: SCHEDULEDâ”‚            â”‚
+â”‚  â”‚ [IMMEDIATE]       â”‚    â”‚ [DELAYED]          â”‚            â”‚
+â”‚  â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤    â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤            â”‚
+â”‚  â”‚ status: running   â”‚    â”‚ status: scheduled  â”‚            â”‚
+â”‚  â”‚ startedAt: NOW    â”‚    â”‚ scheduleAt: FUTURE â”‚            â”‚
+â”‚  â”‚ runningCount: N   â”‚    â”‚ runningCount: 0    â”‚            â”‚
+â”‚  â”‚ Dispatcher picks  â”‚    â”‚ Cron checks every  â”‚            â”‚
+â”‚  â”‚ immediately       â”‚    â”‚ N seconds          â”‚            â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜    â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜            â”‚
+â”‚           â”‚                          â”‚                       â”‚
+â”‚           â”‚ When scheduleAt <= now   â”‚                       â”‚
+â”‚           â”‚ [n8n Cron: every 30s]    â”‚                       â”‚
+â”‚           â”‚           â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                       â”‚
+â”‚           â”‚           â–¼                                       â”‚
+â”‚           â”‚    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                      â”‚
+â”‚           â””â”€â”€â”€â–ºâ”‚ PHASE 2.5: TRANSITIONâ”‚                      â”‚
+â”‚                â”‚ [ATOMIC]            â”‚                      â”‚
+â”‚                â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤                      â”‚
+â”‚                â”‚ 1. Check: status=   â”‚                      â”‚
+â”‚                â”‚    scheduled        â”‚                      â”‚
+â”‚                â”‚ 2. Lock: atomic     â”‚                      â”‚
+â”‚                â”‚    transition       â”‚                      â”‚
+â”‚                â”‚ 3. Update: statusâ†’  â”‚                      â”‚
+â”‚                â”‚    running, set     â”‚                      â”‚
+â”‚                â”‚    startedAt        â”‚                      â”‚
+â”‚                â”‚ 4. Return: batch    â”‚                      â”‚
+â”‚                â”‚    to dispatcher    â”‚                      â”‚
+â”‚                â””â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                       â”‚
+â”‚                         â–¼                                    â”‚
+â”‚              Now both follow same path                       â”‚
+â”‚              â†“                                                â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                   â”‚
+â”‚  â”‚ PHASE 3: COMPLETION                 â”‚                   â”‚
+â”‚  â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤                   â”‚
+â”‚  â”‚ All calls completed/failed          â”‚                   â”‚
+â”‚  â”‚ status: completed or failed         â”‚                   â”‚
+â”‚  â”‚ completedAt: NOW                    â”‚                   â”‚
+â”‚  â”‚ UI: Result shown in dashboard       â”‚                   â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                   â”‚
+â”‚                                                                â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ---
@@ -95,7 +104,7 @@ This document provides production-grade implementation for "Schedule Call" funct
 
 ### Current State
 Firestore rules already support 'scheduled' status validation. However, we need to add:
-1. **Transition Rule**: Only automation can move scheduled → running
+1. **Transition Rule**: Only automation can move scheduled â†’ running
 2. **Timestamp Validation**: scheduleAt MUST be in future when creating scheduled batch
 3. **Field Protection**: Only automation can set startedAt
 
@@ -308,9 +317,9 @@ Log Format:
 
 ### Problem: Multiple Cron Triggers
 When multiple n8n instances or cron triggers run simultaneously, they could:
-1. ✗ Both pick same batch
-2. ✗ Both update it
-3. ✗ Duplicate processing
+1. âœ— Both pick same batch
+2. âœ— Both update it
+3. âœ— Duplicate processing
 
 ### Solution 1: Atomic Firestore Updates (Recommended)
 ```firestore
@@ -490,7 +499,7 @@ describe('n8n Batch Scheduler', () => {
 - [x] Existing 'running' batches from "Call Now" unaffected
 - [x] Existing batch schema supports scheduleAt field
 - [x] Concurrency model (lockOwner, lastDispatchedAt) unchanged
-- [x] Dispatcher receives both now-running and scheduled→running batches identically
+- [x] Dispatcher receives both now-running and scheduledâ†’running batches identically
 - [x] Dashboard can filter by status and scheduleAt
 - [x] Lead processing logic same regardless of batch origin
 
@@ -603,7 +612,7 @@ sum:duplicate_schedule_attempts{env:prod}
 **A**: Scheduler will retry on next cycle (30 sec). Meanwhile, batch stays 'scheduled' - not lost. No race condition since update is guarded by Firestore precondition.
 
 ### Q: Can user modify scheduled batch?
-**A**: Yes - they can delete batch or view stats. But they cannot change status directly (only automation can move scheduled→running).
+**A**: Yes - they can delete batch or view stats. But they cannot change status directly (only automation can move scheduledâ†’running).
 
 ### Q: How does this interact with global concurrency?
 **A**: Once batch transitions to 'running', dispatcher processes it normally. Global concurrency control (activeCalls) applies to all running batches equally.
@@ -629,9 +638,11 @@ sum:duplicate_schedule_attempts{env:prod}
 
 ## Next Steps
 
-1. **Deploy Firestore Rules** → Validate in production
-2. **Create n8n Workflow** → Test in staging
-3. **Validation Testing** → End-to-end with scheduled batches
-4. **Monitor & Alert** → Track metrics in Datadog
-5. **Document for Team** → API page, runbook, monitoring guide
+1. **Deploy Firestore Rules** â†’ Validate in production
+2. **Create n8n Workflow** â†’ Test in staging
+3. **Validation Testing** â†’ End-to-end with scheduled batches
+4. **Monitor & Alert** â†’ Track metrics in Datadog
+5. **Document for Team** â†’ API page, runbook, monitoring guide
+
+
 

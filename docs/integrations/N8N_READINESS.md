@@ -1,4 +1,13 @@
-# 🚀 N8N AUTOMATION READINESS GUIDE
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
+# ðŸš€ N8N AUTOMATION READINESS GUIDE
 
 ## Overview
 
@@ -6,7 +15,7 @@ Your Maxsas AI Real Estate app is now **fully prepared for n8n automation** inte
 
 ---
 
-## PHASE 1 ✅ DATABASE STRUCTURE
+## PHASE 1 âœ… DATABASE STRUCTURE
 
 ### Standardized Firestore Lead Schema
 
@@ -73,22 +82,22 @@ await addLeadWithSchema(
 
 ---
 
-## PHASE 2 ✅ DASHBOARD IMPROVEMENTS
+## PHASE 2 âœ… DASHBOARD IMPROVEMENTS
 
 ### Real-time Statistics Display
 
 **Component**: `src/components/ui/DashboardStats.tsx`
 
 Displays 9 key metrics in a horizontal scroll:
-- ✅ Total Leads
-- ✅ New Leads (status: new)
-- ✅ Pending Automation (intakeStatus: pending)
-- ✅ Interested Leads
-- ✅ Not Interested Leads
-- ✅ Follow-up Leads
-- ✅ Scheduled Leads
-- ✅ Closed Leads
-- ✅ Follow-ups Due Today
+- âœ… Total Leads
+- âœ… New Leads (status: new)
+- âœ… Pending Automation (intakeStatus: pending)
+- âœ… Interested Leads
+- âœ… Not Interested Leads
+- âœ… Follow-up Leads
+- âœ… Scheduled Leads
+- âœ… Closed Leads
+- âœ… Follow-ups Due Today
 
 **Status Messages**:
 - "3 new leads added"
@@ -105,7 +114,7 @@ import { DashboardStats } from '@/src/components/ui/DashboardStats';
 
 ---
 
-## PHASE 3 ✅ FOLLOW-UP SYSTEM
+## PHASE 3 âœ… FOLLOW-UP SYSTEM
 
 ### Follow-up Scheduling Screen
 
@@ -113,10 +122,10 @@ import { DashboardStats } from '@/src/components/ui/DashboardStats';
 **Route**: `/follow-up-schedule?leadId=...&phone=...`
 
 **Features**:
-- 📅 Quick date selection (Yesterday, Today, Tomorrow, +1d, +3d, +7d)
-- 🕐 Time picker (9:00, 11:00, 14:00, 16:00, 18:00)
-- 📝 Follow-up notes (custom reason)
-- ✅ Automatic history tracking
+- ðŸ“… Quick date selection (Yesterday, Today, Tomorrow, +1d, +3d, +7d)
+- ðŸ• Time picker (9:00, 11:00, 14:00, 16:00, 18:00)
+- ðŸ“ Follow-up notes (custom reason)
+- âœ… Automatic history tracking
 
 **Usage**:
 ```typescript
@@ -132,22 +141,22 @@ router.push({
 **Route**: `/scheduled-follow-ups`
 
 **Features**:
-- 📋 Lists all scheduled follow-ups sorted by date
-- ⏰ Time remaining/overdue indicator
-- 👍 Mark as Interested button
-- ✅ Mark as Completed button
-- 🔄 Pull-to-refresh
+- ðŸ“‹ Lists all scheduled follow-ups sorted by date
+- â° Time remaining/overdue indicator
+- ðŸ‘ Mark as Interested button
+- âœ… Mark as Completed button
+- ðŸ”„ Pull-to-refresh
 
 ### Lead Status Actions
 
 Quick action buttons on Lead Dashboard:
-- 👍 **Interested**: Marks lead as interested
-- 📅 **Follow-up**: Marks status as follow_up
-- ⏱ **Schedule**: Opens follow-up scheduler
+- ðŸ‘ **Interested**: Marks lead as interested
+- ðŸ“… **Follow-up**: Marks status as follow_up
+- â± **Schedule**: Opens follow-up scheduler
 
 ---
 
-## PHASE 4 ✅ ACTIVITY HISTORY
+## PHASE 4 âœ… ACTIVITY HISTORY
 
 ### History Tracking System
 
@@ -204,20 +213,20 @@ await triggerAutomation(leadId);
 
 ---
 
-## PHASE 5 ✅ UI/UX INTEGRATION
+## PHASE 5 âœ… UI/UX INTEGRATION
 
 ### Updated Lead Dashboard
 
 **File**: `src/features/leads/LeadsScreen.tsx`
 
 **New Features**:
-- ✅ Dashboard stats at top (real-time counters)
-- ✅ Tabs for 5 statuses (New, Interested, Not Interested, Follow-up, Closed)
-- ✅ Phone number as primary display (instead of name)
-- ✅ Source badge (📌 manual/csv/image)
-- ✅ Quick status buttons (Interested, Follow-up, Schedule)
-- ✅ Automation status indicator (⏳ Awaiting / ✓ Actioned)
-- ✅ Pull-to-refresh functionality
+- âœ… Dashboard stats at top (real-time counters)
+- âœ… Tabs for 5 statuses (New, Interested, Not Interested, Follow-up, Closed)
+- âœ… Phone number as primary display (instead of name)
+- âœ… Source badge (ðŸ“Œ manual/csv/image)
+- âœ… Quick status buttons (Interested, Follow-up, Schedule)
+- âœ… Automation status indicator (â³ Awaiting / âœ“ Actioned)
+- âœ… Pull-to-refresh functionality
 
 ### New Routes Created
 
@@ -226,10 +235,10 @@ await triggerAutomation(leadId);
 
 ### No Breaking Changes
 
-✅ All existing imports, routes, and screens work as before
-✅ ImageImportScreen still saves with schema
-✅ CSV/Clipboard imports use schema
-✅ All Firebase rules unchanged
+âœ… All existing imports, routes, and screens work as before
+âœ… ImageImportScreen still saves with schema
+âœ… CSV/Clipboard imports use schema
+âœ… All Firebase rules unchanged
 
 ---
 
@@ -333,23 +342,23 @@ where('followUpRequired', '==', true)
 
 ### Manual Testing Checklist
 
-- [ ] Add a lead manually → Check it has all schema fields
-- [ ] Upload image → Check source is "image"
-- [ ] Import CSV → Check source is "csv"
-- [ ] Mark as interested → Check history has entry
-- [ ] Schedule follow-up → Check scheduleAt timestamp
-- [ ] Check dashboard stats → Verify counts
-- [ ] View scheduled follow-ups → Sort by date works
-- [ ] Try quick status buttons → History updates
-- [ ] Open DevTools → Check Firebase console
+- [ ] Add a lead manually â†’ Check it has all schema fields
+- [ ] Upload image â†’ Check source is "image"
+- [ ] Import CSV â†’ Check source is "csv"
+- [ ] Mark as interested â†’ Check history has entry
+- [ ] Schedule follow-up â†’ Check scheduleAt timestamp
+- [ ] Check dashboard stats â†’ Verify counts
+- [ ] View scheduled follow-ups â†’ Sort by date works
+- [ ] Try quick status buttons â†’ History updates
+- [ ] Open DevTools â†’ Check Firebase console
 
 ### Firebase Rules Validation
 
 Current rules already support:
-- ✅ User isolation (userId field)
-- ✅ Timestamp validation
-- ✅ Required fields enforcement
-- ✅ Schema validation
+- âœ… User isolation (userId field)
+- âœ… Timestamp validation
+- âœ… Required fields enforcement
+- âœ… Schema validation
 
 No changes needed for n8n integration!
 
@@ -382,11 +391,11 @@ export const migrateLeadSchema = async (leadId: string) => {
 
 ## NEXT STEPS FOR N8N
 
-1. ✅ **Current**: App ready for n8n
-2. 🔄 **Design**: N8N workflows (call scheduling, email, etc.)
-3. 🔄 **Configure**: Webhook endpoints in Firebase
-4. 🔄 **Test**: Trigger workflows manually
-5. 🔄 **Deploy**: Connect to production
+1. âœ… **Current**: App ready for n8n
+2. ðŸ”„ **Design**: N8N workflows (call scheduling, email, etc.)
+3. ðŸ”„ **Configure**: Webhook endpoints in Firebase
+4. ðŸ”„ **Test**: Trigger workflows manually
+5. ðŸ”„ **Deploy**: Connect to production
 
 ---
 
@@ -411,13 +420,15 @@ A: Extend getDashboardStats() function in leadService.ts
 
 ---
 
-## 🎉 YOU'RE ALL SET!
+## ðŸŽ‰ YOU'RE ALL SET!
 
 Your app is:
-- ✅ Fully normalized
-- ✅ Automation-ready
-- ✅ History-tracked
-- ✅ Dashboard-enabled
-- ✅ N8N-compatible
+- âœ… Fully normalized
+- âœ… Automation-ready
+- âœ… History-tracked
+- âœ… Dashboard-enabled
+- âœ… N8N-compatible
 
-Ready to connect to n8n! 🚀
+Ready to connect to n8n! ðŸš€
+
+

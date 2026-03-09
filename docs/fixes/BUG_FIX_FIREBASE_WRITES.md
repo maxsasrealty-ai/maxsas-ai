@@ -1,10 +1,19 @@
-# 🐛 Bug Fix: Firebase Write Failure
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
+# ðŸ› Bug Fix: Firebase Write Failure
 
 **Issue**: When user clicked "Call Now" or "Schedule", only batch ID appeared in console but NO Firebase writes happened.
 
 **Root Causes Found**:
 
-## 1. Missing `userId` in Lead Documents ❌
+## 1. Missing `userId` in Lead Documents âŒ
 
 **Problem**: 
 - leadService was creating lead documents WITHOUT `userId` field
@@ -24,14 +33,14 @@ const leadData: Lead = {
   batchId,
   phone: contact.phone,
   status: 'queued',
-  // ❌ Missing userId!
+  // âŒ Missing userId!
 }
 
 // AFTER
 const leadData: Lead = {
   leadId,
   batchId,
-  userId,  // ✅ Added!
+  userId,  // âœ… Added!
   phone: contact.phone,
   status: 'queued',
 }
@@ -39,7 +48,7 @@ const leadData: Lead = {
 
 ---
 
-## 2. Insufficient Error Logging ❌
+## 2. Insufficient Error Logging âŒ
 
 **Problem**:
 - No detailed error messages showed what went wrong
@@ -53,18 +62,18 @@ const leadData: Lead = {
 
 **New Logs**:
 ```
-🔐 Lead creation - User ID: user-123
-📱 Creating leads for batch: abc123
-👥 Number of contacts: 6
-📌 Lead 1/6: 9876543211
+ðŸ” Lead creation - User ID: user-123
+ðŸ“± Creating leads for batch: abc123
+ðŸ‘¥ Number of contacts: 6
+ðŸ“Œ Lead 1/6: 9876543211
 ...
-💾 Committing 6 lead documents to Firestore...
-✅ All 6 leads created successfully!
+ðŸ’¾ Committing 6 lead documents to Firestore...
+âœ… All 6 leads created successfully!
 ```
 
 ---
 
-## 3. Type System Issues ❌
+## 3. Type System Issues âŒ
 
 **Problem**:
 - BatchDraft and Batch types were conflicting
@@ -80,14 +89,14 @@ const leadData: Lead = {
 
 ---
 
-## 4. Firestore Rules Corrections ✅
+## 4. Firestore Rules Corrections âœ…
 
 **Updated Rules** for leads collection:
 
 ```javascript
 match /leads/{leadId} {
   allow create: if request.auth != null
-    && request.resource.data.userId == request.auth.uid  // ✅ Now required
+    && request.resource.data.userId == request.auth.uid  // âœ… Now required
     && request.resource.data.batchId != null
     && request.resource.data.phone != null
     && request.resource.data.leadId == leadId
@@ -101,7 +110,7 @@ match /leads/{leadId} {
     (request.auth.uid == resource.data.userId || isAutomation())
     && request.resource.data.leadId == resource.data.leadId
     && request.resource.data.batchId == resource.data.batchId
-    && request.resource.data.userId == resource.data.userId;  // ✅ Immutable
+    && request.resource.data.userId == resource.data.userId;  // âœ… Immutable
   
   allow delete: if request.auth != null && 
     request.auth.uid == resource.data.userId;
@@ -113,40 +122,40 @@ match /leads/{leadId} {
 ## Files Updated
 
 ### 1. **src/services/leadService.ts**
-- ✅ Added `userId: string` to Lead interface
-- ✅ Added userId when creating lead documents
-- ✅ Enhanced error logging with details
-- ✅ Added per-contact logging
-- ✅ Better error messages
+- âœ… Added `userId: string` to Lead interface
+- âœ… Added userId when creating lead documents
+- âœ… Enhanced error logging with details
+- âœ… Added per-contact logging
+- âœ… Better error messages
 
 ### 2. **src/services/batchService.ts**
-- ✅ Added null/undefined checks
-- ✅ Better error logging
-- ✅ Confirmation logs for batch creation
-- ✅ More detailed error reporting
+- âœ… Added null/undefined checks
+- âœ… Better error logging
+- âœ… Confirmation logs for batch creation
+- âœ… More detailed error reporting
 
 ### 3. **src/types/batch.ts**
-- ✅ Added userId to Lead interface
-- ✅ Fixed BatchStatus to include 'draft'
-- ✅ Proper Batch vs BatchDraft distinction
-- ✅ Updated BatchContextType
+- âœ… Added userId to Lead interface
+- âœ… Fixed BatchStatus to include 'draft'
+- âœ… Proper Batch vs BatchDraft distinction
+- âœ… Updated BatchContextType
 
 ### 4. **src/context/BatchContext.tsx**
-- ✅ Updated state types to Batch | BatchDraft
-- ✅ Fixed createLocalBatch return type
-- ✅ Added validation for contacts array
-- ✅ Better error checking
+- âœ… Updated state types to Batch | BatchDraft
+- âœ… Fixed createLocalBatch return type
+- âœ… Added validation for contacts array
+- âœ… Better error checking
 
 ### 5. **src/features/leads/BatchDetailScreen.tsx**
-- ✅ Import BatchDraft type
-- ✅ Allow state to be Batch | BatchDraft
-- ✅ Updated imports for type safety
+- âœ… Import BatchDraft type
+- âœ… Allow state to be Batch | BatchDraft
+- âœ… Updated imports for type safety
 
 ### 6. **firestore.rules**
-- ✅ Updated leads create rule to require userId
-- ✅ Fixed read rule logic
-- ✅ Ensured userId immutability on update
-- ✅ Better security checks
+- âœ… Updated leads create rule to require userId
+- âœ… Fixed read rule logic
+- âœ… Ensured userId immutability on update
+- âœ… Better security checks
 
 ---
 
@@ -168,18 +177,18 @@ firebase deploy --only firestore:rules
 
 ```
 User clicks "Call Now" with 6 contacts
-    ↓
-✅ Console logs show: Saving batch...
-    ↓
-✅ Firebase creates 1 batch document
-    ↓
-✅ Firebase creates 6 lead documents with userId
-    ↓
-✅ Console shows: All 6 leads created successfully!
-    ↓
-✅ Batch status changes to "RUNNING"
-    ↓
-✅ In Firebase Console:
+    â†“
+âœ… Console logs show: Saving batch...
+    â†“
+âœ… Firebase creates 1 batch document
+    â†“
+âœ… Firebase creates 6 lead documents with userId
+    â†“
+âœ… Console shows: All 6 leads created successfully!
+    â†“
+âœ… Batch status changes to "RUNNING"
+    â†“
+âœ… In Firebase Console:
    - batches/{batchId}: 1 document
    - leads/{leadId1-6}: 6 documents with userId
 ```
@@ -191,23 +200,23 @@ User clicks "Call Now" with 6 contacts
 ### 1. Check Console Logs
 When you click "Call Now", you should see:
 ```
-🔐 Auth check - User ID: user-123
-📦 Batch to save: {...}
-📝 Creating batch document: {...}
-✅ Batch document created successfully!
-👥 Creating 6 separate lead documents...
-🔐 Lead creation - User ID: user-123
-📱 Creating 6 lead documents for batch: abc123
-📌 Lead 1/6: 9876543211
-📌 Lead 2/6: 8888837040
+ðŸ” Auth check - User ID: user-123
+ðŸ“¦ Batch to save: {...}
+ðŸ“ Creating batch document: {...}
+âœ… Batch document created successfully!
+ðŸ‘¥ Creating 6 separate lead documents...
+ðŸ” Lead creation - User ID: user-123
+ðŸ“± Creating 6 lead documents for batch: abc123
+ðŸ“Œ Lead 1/6: 9876543211
+ðŸ“Œ Lead 2/6: 8888837040
 ... (up to 6)
-💾 Committing 6 lead documents to Firestore...
-✅ All 6 leads created successfully!
-✅ Batch and all leads saved successfully to Firebase!
+ðŸ’¾ Committing 6 lead documents to Firestore...
+âœ… All 6 leads created successfully!
+âœ… Batch and all leads saved successfully to Firebase!
 ```
 
 ### 2. Check Firestore Console
-Go to Firebase Console → Firestore → Collections:
+Go to Firebase Console â†’ Firestore â†’ Collections:
 
 **batches collection**:
 - Should see your batch document with:
@@ -253,13 +262,15 @@ Go to Firebase Console → Firestore → Collections:
 - Type system issues
 
 **What's fixed**:
-- ✅ userId now included on all leads
-- ✅ Firestore rules updated to match
-- ✅ Detailed error logging at every step
-- ✅ Type safety throughout
-- ✅ Can create and read lead documents
-- ✅ Firebase writes now succeed
+- âœ… userId now included on all leads
+- âœ… Firestore rules updated to match
+- âœ… Detailed error logging at every step
+- âœ… Type safety throughout
+- âœ… Can create and read lead documents
+- âœ… Firebase writes now succeed
 
-**Status**: ✅ READY TO TEST
+**Status**: âœ… READY TO TEST
 
 Deploy firestore.rules and test the "Call Now" flow!
+
+

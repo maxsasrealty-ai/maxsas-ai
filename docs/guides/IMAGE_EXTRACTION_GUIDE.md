@@ -1,34 +1,43 @@
-# 🤖 AI Image Extraction Feature - Complete Documentation
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
+# ðŸ¤– AI Image Extraction Feature - Complete Documentation
 
 ## Overview
 
 This feature allows users to upload images (screenshots, business cards, documents) and automatically extract Indian phone numbers using **Google Gemini Vision API**.
 
 The extracted numbers are:
-- ✅ Validated (10 digits, starting with 6-9)
-- ✅ Deduplicated automatically
-- ✅ Shown with confidence scores
-- ✅ Ready to save to Firebase
+- âœ… Validated (10 digits, starting with 6-9)
+- âœ… Deduplicated automatically
+- âœ… Shown with confidence scores
+- âœ… Ready to save to Firebase
 
 ---
 
-## 📁 File Structure
+## ðŸ“ File Structure
 
 ```
 src/
-├── services/
-│   └── geminiExtractor.ts          # Gemini API integration
-├── features/leads/
-│   └── ImageImportScreen.tsx       # UI for image selection & extraction
-└── app/
-    └── image-import.tsx            # Route configuration
+â”œâ”€â”€ services/
+â”‚   â””â”€â”€ geminiExtractor.ts          # Gemini API integration
+â”œâ”€â”€ features/leads/
+â”‚   â””â”€â”€ ImageImportScreen.tsx       # UI for image selection & extraction
+â””â”€â”€ app/
+    â””â”€â”€ image-import.tsx            # Route configuration
     
 .env.local                          # Environment variables (API key)
 ```
 
 ---
 
-## 🔧 Setup & Configuration
+## ðŸ”§ Setup & Configuration
 
 ### 1. Get Gemini API Key
 
@@ -46,13 +55,13 @@ EXPO_PUBLIC_GEMINI_API_KEY=your_api_key_here
 ```
 
 **Important Security Notes:**
-- ✅ Never commit `.env.local` to git
-- ✅ Add to `.gitignore`:
+- âœ… Never commit `.env.local` to git
+- âœ… Add to `.gitignore`:
   ```
   .env*
   !.env.example
   ```
-- ✅ Use `.env.example` for documentation:
+- âœ… Use `.env.example` for documentation:
   ```
   EXPO_PUBLIC_GEMINI_API_KEY=your_api_key_here_replace_me
   ```
@@ -66,27 +75,27 @@ npx expo install expo-image-picker
 
 ---
 
-## 🎯 How It Works
+## ðŸŽ¯ How It Works
 
 ### User Flow
 
 ```
-User taps "🤖 AI Image Extraction"
-        ↓
+User taps "ðŸ¤– AI Image Extraction"
+        â†“
 Select image from gallery
-        ↓
+        â†“
 Image converted to base64
-        ↓
+        â†“
 Sent to Gemini Vision API with OCR prompt
-        ↓
+        â†“
 Gemini extracts phone numbers from image
-        ↓
+        â†“
 Validated & deduplicated (6-9 start only)
-        ↓
+        â†“
 Show preview with confidence scores
-        ↓
+        â†“
 User can delete/modify numbers
-        ↓
+        â†“
 Save to Firebase
 ```
 
@@ -94,29 +103,29 @@ Save to Firebase
 
 ```
 Gallery
-   ↓
+   â†“
 ImagePicker
-   ↓ (base64)
+   â†“ (base64)
 ImageImportScreen
-   ↓
+   â†“
 GeminiPhoneExtractor
-   ↓ (API call)
+   â†“ (API call)
 Gemini Vision API
-   ↓ (JSON response)
+   â†“ (JSON response)
 validatePhoneNumbers()
-   ↓
+   â†“
 deduplicatePhonesFromImage()
-   ↓
+   â†“
 Lead List (with confidence)
-   ↓
+   â†“
 FirebaseaddLead()
-   ↓
+   â†“
 Firebase Realtime Database
 ```
 
 ---
 
-## 💻 API Integration Details
+## ðŸ’» API Integration Details
 
 ### Gemini Request
 
@@ -159,14 +168,14 @@ POST /v1beta/models/gemini-1.5-flash:generateContent?key=YOUR_KEY
 ### Phone Validation
 
 Extracted numbers must meet:
-- ✅ Exactly 10 digits
-- ✅ First digit: 6, 7, 8, or 9 (Indian mobile standard)
-- ✅ No special characters or formatting
-- ✅ Not an emergency number
+- âœ… Exactly 10 digits
+- âœ… First digit: 6, 7, 8, or 9 (Indian mobile standard)
+- âœ… No special characters or formatting
+- âœ… Not an emergency number
 
 ---
 
-## 🚀 Usage Examples
+## ðŸš€ Usage Examples
 
 ### Basic Usage - In Component
 
@@ -197,17 +206,17 @@ if (result.success) {
 // Navigate to image extraction
 router.push({ pathname: '/image-import' });
 
-// User selects image → AI extraction → Save to Firebase
+// User selects image â†’ AI extraction â†’ Save to Firebase
 // Fully handled in ImageImportScreen component
 ```
 
 ---
 
-## 🧪 Testing
+## ðŸ§ª Testing
 
 ### Test Cases
 
-#### ✅ Valid Scenarios
+#### âœ… Valid Scenarios
 
 1. **Screenshot with phone numbers**
    - Image: Screenshot of contact list
@@ -225,7 +234,7 @@ router.push({ pathname: '/image-import' });
    - Image: Low quality photo
    - Expected: Numbers extracted with lower confidence score
 
-#### ❌ Error Scenarios
+#### âŒ Error Scenarios
 
 1. **No numbers in image**
    - Input: Random photo
@@ -258,36 +267,36 @@ eas build --platform ios --profile preview
 
 ---
 
-## 🛡️ Security Best Practices
+## ðŸ›¡ï¸ Security Best Practices
 
-### ✅ Do's
+### âœ… Do's
 
-- ✅ Store API key in `.env.local`
-- ✅ Use environment variables only
-- ✅ Never hardcode keys in components
-- ✅ Validate all user inputs
-- ✅ Log errors for debugging
-- ✅ Add `.env*` to `.gitignore`
+- âœ… Store API key in `.env.local`
+- âœ… Use environment variables only
+- âœ… Never hardcode keys in components
+- âœ… Validate all user inputs
+- âœ… Log errors for debugging
+- âœ… Add `.env*` to `.gitignore`
 
-### ❌ Don'ts
+### âŒ Don'ts
 
-- ❌ Never commit `.env.local` to git
-- ❌ Never expose API key in client code
-- ❌ Don't skip phone number validation
-- ❌ Don't log sensitive data
-- ❌ Don't trust API responses blindly
+- âŒ Never commit `.env.local` to git
+- âŒ Never expose API key in client code
+- âŒ Don't skip phone number validation
+- âŒ Don't log sensitive data
+- âŒ Don't trust API responses blindly
 
 ---
 
-## 📊 Performance Considerations
+## ðŸ“Š Performance Considerations
 
 ### Image Size Limits
 
 | Size | Processing Time | Quality |
 |------|-----------------|---------|
-| < 1 MB | ~2-4s | ✅ Optimal |
-| 1-5 MB | ~4-6s | ⚠️ Good |
-| > 5 MB | ~6-10s | ⚠️ Slow |
+| < 1 MB | ~2-4s | âœ… Optimal |
+| 1-5 MB | ~4-6s | âš ï¸ Good |
+| > 5 MB | ~6-10s | âš ï¸ Slow |
 
 ### Optimization Tips
 
@@ -314,7 +323,7 @@ const generationConfig = {
 
 ---
 
-## 🐛 Troubleshooting
+## ðŸ› Troubleshooting
 
 ### Problem: "API key not configured"
 
@@ -354,7 +363,7 @@ if (result.debugInfo) {
 ```typescript
 // Already handled in ImageImportScreen
 // But ensure permissions are granted:
-// Settings → Permissions → Photos/Media
+// Settings â†’ Permissions â†’ Photos/Media
 ```
 
 ### Problem: Slow extraction (>10 seconds)
@@ -367,7 +376,7 @@ if (result.debugInfo) {
 
 ---
 
-## 📈 Monitoring & Analytics
+## ðŸ“ˆ Monitoring & Analytics
 
 ### Suggested Metrics to Track
 
@@ -401,7 +410,7 @@ const trackExtraction = (result: GeminiExtractionResult) => {
 
 ---
 
-## 🔄 Updating & Maintenance
+## ðŸ”„ Updating & Maintenance
 
 ### Check for API Updates
 
@@ -417,13 +426,13 @@ https://ai.google.dev/docs/quickstart
 
 | Component | Min Version | Tested |
 |-----------|-------------|--------|
-| React Native | 0.71 | ✅ 0.73 |
-| Expo | 50.0 | ✅ 50.0+ |
-| Gemini API | v1beta | ✅ v1beta |
+| React Native | 0.71 | âœ… 0.73 |
+| Expo | 50.0 | âœ… 50.0+ |
+| Gemini API | v1beta | âœ… v1beta |
 
 ---
 
-## 📚 References
+## ðŸ“š References
 
 - [Google Gemini API Docs](https://ai.google.dev/)
 - [Vision Capabilities](https://ai.google.dev/tutorials/vision_quickstart)
@@ -432,25 +441,25 @@ https://ai.google.dev/docs/quickstart
 
 ---
 
-## 🎓 Next Steps
+## ðŸŽ“ Next Steps
 
-1. ✅ Complete setup with `.env.local`
-2. ✅ Test with sample images
-3. ✅ Monitor extraction quality
-4. ✅ Collect user feedback
-5. ✅ Optimize confidence thresholds
-6. ✅ Implement analytics tracking
+1. âœ… Complete setup with `.env.local`
+2. âœ… Test with sample images
+3. âœ… Monitor extraction quality
+4. âœ… Collect user feedback
+5. âœ… Optimize confidence thresholds
+6. âœ… Implement analytics tracking
 
 ---
 
-## 📞 Support & Debugging
+## ðŸ“ž Support & Debugging
 
 ### Enable Debug Logs
 
 ```typescript
 // In geminiExtractor.ts, logs are already included:
-console.log('🤖 Sending image to Gemini API...');
-console.log('📊 Extraction Result:', result);
+console.log('ðŸ¤– Sending image to Gemini API...');
+console.log('ðŸ“Š Extraction Result:', result);
 
 // Check browser console (Web)
 // Check logcat (Android)
@@ -460,15 +469,15 @@ console.log('📊 Extraction Result:', result);
 ### Report Issues
 
 Include:
-- 📱 Device/Platform (Android/iOS/Web)
-- 🖼️ Image used (if possible)
-- 📋 Console logs
-- ⏱️ Processing time
-- 🔑 API key validity (not the key itself!)
+- ðŸ“± Device/Platform (Android/iOS/Web)
+- ðŸ–¼ï¸ Image used (if possible)
+- ðŸ“‹ Console logs
+- â±ï¸ Processing time
+- ðŸ”‘ API key validity (not the key itself!)
 
 ---
 
-## ✨ Feature Requests
+## âœ¨ Feature Requests
 
 Potential enhancements:
 - [ ] Batch image processing
@@ -482,5 +491,7 @@ Potential enhancements:
 ---
 
 **Last Updated:** February 3, 2026  
-**Status:** ✅ Production Ready  
+**Status:** âœ… Production Ready  
 **Tested On:** Android, iOS, Web (Expo)
+
+

@@ -2,20 +2,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { PricingModal } from '../../components/pricing/PricingModal';
 import { AppCard } from '../../components/ui/AppCard';
 import { AppSection } from '../../components/ui/AppSection';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
+import { useAuth } from '../../context/AuthContext';
 import { useWallet } from '../../context/WalletContext';
 import { usePricing } from '../../hooks/usePricing';
 import { addTestBalance } from '../../services/walletService';
@@ -24,6 +25,7 @@ import { TransactionHistory } from './';
 
 export default function WalletScreen() {
   const { colors } = useAppTheme();
+  const { requireAuth } = useAuth();
   const { pricing } = usePricing();
   const { wallet, availableBalance, loading, transactions, addBalanceToWallet } = useWallet();
   const [rechargeAmount, setRechargeAmount] = useState('');
@@ -63,50 +65,54 @@ export default function WalletScreen() {
   };
 
   const handleRecharge = async (amount: number) => {
-    if (amount <= 0) {
-      Alert.alert('Invalid Amount', 'Please enter a valid amount');
-      return;
-    }
-
-    setRecharging(true);
-    const result = await addBalanceToWallet(amount);
-    setRecharging(false);
-
-    if (!result.success) {
-      const message = result.errorMessage || 'Unable to start recharge flow.';
-      if (message.toLowerCase().includes('cancel')) {
-        Alert.alert('Payment Cancelled', message);
-      } else {
-        Alert.alert('Recharge Failed', message);
+    requireAuth(async () => {
+      if (amount <= 0) {
+        Alert.alert('Invalid Amount', 'Please enter a valid amount');
+        return;
       }
-      return;
-    }
 
-    setPaymentProcessing(true);
-    setRechargeAmount('');
-    Alert.alert(
-      'Payment processing...',
-      'We received your payment response. Wallet balance will update after webhook verification.'
-    );
-    setTimeout(() => setPaymentProcessing(false), 8000);
+      setRecharging(true);
+      const result = await addBalanceToWallet(amount);
+      setRecharging(false);
+
+      if (!result.success) {
+        const message = result.errorMessage || 'Unable to start recharge flow.';
+        if (message.toLowerCase().includes('cancel')) {
+          Alert.alert('Payment Cancelled', message);
+        } else {
+          Alert.alert('Recharge Failed', message);
+        }
+        return;
+      }
+
+      setPaymentProcessing(true);
+      setRechargeAmount('');
+      Alert.alert(
+        'Payment processing...',
+        'We received your payment response. Wallet balance will update after webhook verification.'
+      );
+      setTimeout(() => setPaymentProcessing(false), 8000);
+    });
   };
 
   const handleAddTestBalance = async (amount: number) => {
-    if (amount <= 0) {
-      Alert.alert('Invalid Amount', 'Please enter a valid amount');
-      return;
-    }
+    requireAuth(async () => {
+      if (amount <= 0) {
+        Alert.alert('Invalid Amount', 'Please enter a valid amount');
+        return;
+      }
 
-    setRecharging(true);
-    const result = await addTestBalance(amount);
-    setRecharging(false);
+      setRecharging(true);
+      const result = await addTestBalance(amount);
+      setRecharging(false);
 
-    if (!result.success) {
-      Alert.alert('Recharge Failed', result.errorMessage || 'Failed to add test balance');
-      return;
-    }
+      if (!result.success) {
+        Alert.alert('Recharge Failed', result.errorMessage || 'Failed to add test balance');
+        return;
+      }
 
-    Alert.alert('Success', `Added ₹${amount} to wallet.`);
+      Alert.alert('Success', `Added ₹${amount} to wallet.`);
+    });
   };
 
   if (loading) {

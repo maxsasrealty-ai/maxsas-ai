@@ -1,26 +1,35 @@
-# 🧪 UI REGRESSION TEST - QUICK REFERENCE
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
+# ðŸ§ª UI REGRESSION TEST - QUICK REFERENCE
 
 ## Pre-Test Checklist
 - [ ] Device/Emulator started and running
 - [ ] App compiled successfully (`npm start` or `expo start`)
 - [ ] Logged into test account (test@example.com / password)
 - [ ] Network connectivity working
-- [ ] Initial wallet balance ≥ ₹5000
+- [ ] Initial wallet balance â‰¥ â‚¹5000
 - [ ] Chrome DevTools open (for web) or logcat (for Android)
 - [ ] Console visible for test logs
 
 ---
 
-## Test Suite 1: Batch Creation (4 Sources) ⏱️ ~15 min
+## Test Suite 1: Batch Creation (4 Sources) â±ï¸ ~15 min
 
-### ✅ TC-1.1: Manual Entry
+### âœ… TC-1.1: Manual Entry
 ```
-Home → "Add Lead" or "Upload Leads"
+Home â†’ "Add Lead" or "Upload Leads"
 Enter:
   +91-9876543210
   +91-9876543211
   +91-9876543212
-Save → Batch Dashboard
+Save â†’ Batch Dashboard
 ```
 **Verify:**
 - [ ] Batch appears in dashboard
@@ -30,9 +39,9 @@ Save → Batch Dashboard
 
 ---
 
-### ✅ TC-1.2: CSV Upload
+### âœ… TC-1.2: CSV Upload
 ```
-Home → "Upload Leads" → CSV
+Home â†’ "Upload Leads" â†’ CSV
 Upload file with:
   phone,name,email
   +91-9876543213,John Doe,john@example.com
@@ -48,9 +57,9 @@ Upload file with:
 
 ---
 
-### ✅ TC-1.3: Paste Leads
+### âœ… TC-1.3: Paste Leads
 ```
-Home → "Paste Leads"
+Home â†’ "Paste Leads"
 Paste:
   9876543217
   9876543218
@@ -64,9 +73,9 @@ Save as batch
 
 ---
 
-### ✅ TC-1.4: Image/OCR
+### âœ… TC-1.4: Image/OCR
 ```
-Home → "Image Import"
+Home â†’ "Image Import"
 Select image with phone numbers or take photo
 Review extracted numbers
 Save as batch
@@ -78,11 +87,11 @@ Save as batch
 
 ---
 
-## Test Suite 2: Dashboard Verification ⏱️ ~10 min
+## Test Suite 2: Dashboard Verification â±ï¸ ~10 min
 
-### ✅ TC-2.1: All Batches Visible
+### âœ… TC-2.1: All Batches Visible
 ```
-Dashboard → View all created batches
+Dashboard â†’ View all created batches
 ```
 **Check:**
 - [ ] Manual batch visible (3 contacts, "draft")
@@ -93,9 +102,9 @@ Dashboard → View all created batches
 
 ---
 
-### ✅ TC-2.2: Individual Batch Details
+### âœ… TC-2.2: Individual Batch Details
 ```
-Dashboard → Click CSV batch (4 contacts)
+Dashboard â†’ Click CSV batch (4 contacts)
 ```
 **Verify:**
 - [ ] Header shows "Batch Details"
@@ -107,16 +116,16 @@ Dashboard → Click CSV batch (4 contacts)
 
 ---
 
-## Test Suite 3: Wallet Integration ⏱️ ~10 min
+## Test Suite 3: Wallet Integration â±ï¸ ~10 min
 
-### ✅ TC-3.1: Wallet Balance Check
+### âœ… TC-3.1: Wallet Balance Check
 ```
-Dashboard → Head (check wallet balance shown)
-Required: 3 contacts × ₹14 = ₹42
+Dashboard â†’ Head (check wallet balance shown)
+Required: 3 contacts Ã— â‚¹14 = â‚¹42
 Click "Call Now" on manual batch (3 contacts)
 ```
 **Verify:**
-- [ ] Wallet balance visible in header (e.g., "₹5000")
+- [ ] Wallet balance visible in header (e.g., "â‚¹5000")
 - [ ] Green "Live" indicator visible
 - [ ] Balance check happens
 - [ ] If sufficient: Proceeds to confirmation
@@ -125,7 +134,7 @@ Click "Call Now" on manual batch (3 contacts)
 
 ---
 
-### ✅ TC-3.2: Insufficient Balance (Optional)
+### âœ… TC-3.2: Insufficient Balance (Optional)
 ```
 (Skip if balance sufficient)
 Try to create batch call
@@ -139,9 +148,9 @@ Get rejection
 
 ---
 
-### ✅ TC-3.3: Successful Call Now
+### âœ… TC-3.3: Successful Call Now
 ```
-Dashboard → Click "Call Now" on batch
+Dashboard â†’ Click "Call Now" on batch
 Confirm in modal
 Watch for success
 ```
@@ -155,9 +164,9 @@ Watch for success
 
 ---
 
-## Test Suite 4: Real-Time Updates ⏱️ ~15 min
+## Test Suite 4: Real-Time Updates â±ï¸ ~15 min
 
-### ✅ TC-4.1: Real-Time Listener Active
+### âœ… TC-4.1: Real-Time Listener Active
 ```
 Open batch detail after "Call Now"
 Open another browser tab with dashboard
@@ -171,21 +180,21 @@ Open another browser tab with dashboard
 
 ---
 
-### ✅ TC-4.2: Status Color Coding
+### âœ… TC-4.2: Status Color Coding
 ```
 View live batch contact list
 Look for different status badges
 ```
 **Verify:**
-- [ ] pending → Gray badge
-- [ ] calling/in_progress → Blue badge + phone icon
-- [ ] completed → Green badge + checkmark ✓
-- [ ] failed → Red badge + X icon
-- [ ] busy → Orange badge
+- [ ] pending â†’ Gray badge
+- [ ] calling/in_progress â†’ Blue badge + phone icon
+- [ ] completed â†’ Green badge + checkmark âœ“
+- [ ] failed â†’ Red badge + X icon
+- [ ] busy â†’ Orange badge
 
 ---
 
-### ✅ TC-4.3: Retry Information
+### âœ… TC-4.3: Retry Information
 ```
 Contact list in live batch
 Check for retry details
@@ -199,9 +208,9 @@ Check for retry details
 
 ---
 
-## Test Suite 5: Dashboard Auto-Refresh ⏱️ ~10 min
+## Test Suite 5: Dashboard Auto-Refresh â±ï¸ ~10 min
 
-### ✅ TC-5.1: New Batch Count Updates
+### âœ… TC-5.1: New Batch Count Updates
 ```
 Dashboard open in Tab 1
 Create new batch in Tab 2
@@ -215,9 +224,9 @@ Switch back to Tab 1
 
 ---
 
-### ✅ TC-5.2: Batch Status Change
+### âœ… TC-5.2: Batch Status Change
 ```
-Draft batch → Click "Call Now" → Confirm
+Draft batch â†’ Click "Call Now" â†’ Confirm
 Watch dashboard
 ```
 **Verify:**
@@ -228,7 +237,7 @@ Watch dashboard
 
 ---
 
-### ✅ TC-5.3: Progress Bar Updates
+### âœ… TC-5.3: Progress Bar Updates
 ```
 Open batch with active calls
 Wait for backend to complete some
@@ -242,9 +251,9 @@ Wait for backend to complete some
 
 ---
 
-## Test Suite 6: Error Handling ⏱️ ~10 min
+## Test Suite 6: Error Handling â±ï¸ ~10 min
 
-### ✅ TC-6.1: Network Disconnect
+### âœ… TC-6.1: Network Disconnect
 ```
 Turn off WiFi/Airplane mode
 Try to create batch
@@ -259,7 +268,7 @@ Turn WiFi back on
 
 ---
 
-### ✅ TC-6.2: Missing Data
+### âœ… TC-6.2: Missing Data
 ```
 Try to save batch with NO contacts
 ```
@@ -270,9 +279,9 @@ Try to save batch with NO contacts
 
 ---
 
-## Test Suite 7: Performance ⏱️ ~15 min
+## Test Suite 7: Performance â±ï¸ ~15 min
 
-### ✅ TC-7.1: Large Batch (100+ contacts)
+### âœ… TC-7.1: Large Batch (100+ contacts)
 ```
 Create batch with 100+ contacts
 Open batch detail
@@ -286,7 +295,7 @@ Scroll through list
 
 ---
 
-### ✅ TC-7.2: Memory Leaks
+### âœ… TC-7.2: Memory Leaks
 ```
 Open/close batch detail screen 10 times
 Watch Chrome DevTools Memory
@@ -298,15 +307,15 @@ Watch Chrome DevTools Memory
 
 ---
 
-## Test Suite 8: Cross-Feature Integration ⏱️ ~15 min
+## Test Suite 8: Cross-Feature Integration â±ï¸ ~15 min
 
-### ✅ TC-8.1: Wallet → Batch → Dashboard
+### âœ… TC-8.1: Wallet â†’ Batch â†’ Dashboard
 ```
-1. Start with low balance (₹100)
+1. Start with low balance (â‚¹100)
 2. Try to create batch call
 3. See rejection
 4. Click "Recharge Now"
-5. Recharge ₹500
+5. Recharge â‚¹500
 6. Return to batch
 7. Try "Call Now" again
 ```
@@ -318,7 +327,7 @@ Watch Chrome DevTools Memory
 
 ---
 
-### ✅ TC-8.2: Batch → Follow-Up
+### âœ… TC-8.2: Batch â†’ Follow-Up
 ```
 Open completed batch
 View interested leads
@@ -333,7 +342,7 @@ Check follow-ups screen
 
 ---
 
-## 📊 Test Summary
+## ðŸ“Š Test Summary
 
 ### Results
 ```
@@ -370,7 +379,7 @@ If no, fix these first:
 
 ---
 
-## 📝 Notes
+## ðŸ“ Notes
 ```
 Tester: _______________
 Date: _______________
@@ -380,7 +389,7 @@ Build Version: _______________
 
 ---
 
-## 🎯 Success Criteria
+## ðŸŽ¯ Success Criteria
 
 ### Must Pass (Release Blocker)
 - [ ] All 4 batch creation methods work
@@ -398,7 +407,7 @@ Build Version: _______________
 
 ---
 
-## 🚀 After Testing
+## ðŸš€ After Testing
 
 1. **If All Pass:**
    - Ready for release
@@ -415,3 +424,5 @@ Build Version: _______________
    - Print test report from console
    - Upload to test artifacts
    - Notify team
+
+

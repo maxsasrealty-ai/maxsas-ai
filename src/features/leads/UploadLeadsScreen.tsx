@@ -2,6 +2,7 @@ import { AppButton } from '@/src/components/ui/AppButton';
 import { AppHeader } from '@/src/components/ui/AppHeader';
 import { LeadReviewPanel } from '@/src/components/ui/LeadReviewPanel';
 import { ScreenContainer } from '@/src/components/ui/ScreenContainer';
+import { useAuth } from '@/src/context/AuthContext';
 import { useBatch } from '@/src/context/BatchContext';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -11,47 +12,52 @@ import { useFileUpload } from './useFileUpload';
 export default function UploadLeadsScreen() {
   const { loading, pickAndParseFile } = useFileUpload();
   const { createLocalBatch } = useBatch();
+  const { requireAuth } = useAuth();
   const [reviewLeads, setReviewLeads] = useState<any[] | null>(null);
 
   const handleFilePick = async () => {
-    const leads = await pickAndParseFile();
-    if (leads) {
-      setReviewLeads(leads);
-    }
+    requireAuth(async () => {
+      const leads = await pickAndParseFile();
+      if (leads) {
+        setReviewLeads(leads);
+      }
+    });
   };
 
   const handleConfirm = async () => {
-    if (!reviewLeads || reviewLeads.length === 0) {
-      Alert.alert('No leads', 'No leads to import.');
-      return;
-    }
+    requireAuth(async () => {
+      if (!reviewLeads || reviewLeads.length === 0) {
+        Alert.alert('No leads', 'No leads to import.');
+        return;
+      }
 
-    try {
-      // Convert leads to contacts format
-      const contacts = reviewLeads.map((lead) => ({
-        phone: lead.phoneRaw || lead.phone,
-        name: lead.name,
-        email: lead.email,
-      }));
+      try {
+        // Convert leads to contacts format
+        const contacts = reviewLeads.map((lead) => ({
+          phone: lead.phoneRaw || lead.phone,
+          name: lead.name,
+          email: lead.email,
+        }));
 
-      // Create batch in local state (NO Firebase write)
-      const batch = createLocalBatch(contacts, 'csv', {
-        fileName: 'CSV Upload',
-        uploadedFrom: 'UploadLeadsScreen',
-        extractionType: 'csv_parser',
-      });
+        // Create batch in local state (NO Firebase write)
+        const batch = createLocalBatch(contacts, 'csv', {
+          fileName: 'CSV Upload',
+          uploadedFrom: 'UploadLeadsScreen',
+          extractionType: 'csv_parser',
+        });
 
-      console.log('✅ Batch created locally:', batch.batchId);
+        console.log('✅ Batch created locally:', batch.batchId);
 
-      // Redirect to dashboard with success message
-      router.replace({
-        pathname: '/batch-dashboard',
-        params: { successMessage: 'Batch created successfully' },
-      });
-    } catch (error) {
-      console.error('Error creating batch:', error);
-      Alert.alert('Error', 'Failed to create batch. Please try again.');
-    }
+        // Redirect to dashboard with success message
+        router.replace({
+          pathname: '/batch-dashboard',
+          params: { successMessage: 'Batch created successfully' },
+        });
+      } catch (error) {
+        console.error('Error creating batch:', error);
+        Alert.alert('Error', 'Failed to create batch. Please try again.');
+      }
+    });
   };
 
   return (

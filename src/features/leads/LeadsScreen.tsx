@@ -3,6 +3,7 @@ import { AppHeader } from '@/src/components/ui/AppHeader';
 import { FloatingActionButton } from '@/src/components/ui/FloatingActionButton';
 import { ScreenContainer } from '@/src/components/ui/ScreenContainer';
 import { StatusBadge } from '@/src/components/ui/StatusBadge';
+import { useAuth } from '@/src/context/AuthContext';
 import { useBatch } from '@/src/context/BatchContext';
 import { useAppTheme } from '@/src/theme/use-app-theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +21,7 @@ const tabs = [
 
 export default function LeadsScreen() {
   const { colors, spacing, radius, typography } = useAppTheme();
+  const { requireAuth } = useAuth();
   const { allBatches, getAllBatches } = useBatch();
   const [activeTab, setActiveTab] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
@@ -218,8 +220,10 @@ export default function LeadsScreen() {
 
       <FloatingActionButton
         onPress={() => {
-          router.push({
-            pathname: '/imports',
+          requireAuth(() => {
+            router.push({
+              pathname: '/imports',
+            });
           });
         }}
       />

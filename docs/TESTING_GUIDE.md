@@ -1,3 +1,12 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Testing Guide - UI Sync Fix Verification
 
 **Date Created:** February 23, 2026  
@@ -6,7 +15,7 @@
 
 ---
 
-## ✅ Testing Checklist
+## âœ… Testing Checklist
 
 ### Pre-Requisites
 - [x] Code fix applied to BatchDetailScreen.tsx
@@ -16,7 +25,7 @@
 
 ---
 
-## 🧪 Test Case 1: Basic Display Test
+## ðŸ§ª Test Case 1: Basic Display Test
 
 **Scenario:** Lead marked as `failed_retryable` appears in "Show Retrying" tab
 
@@ -36,7 +45,7 @@
 **Expected Result:**
 - [ ] Lead with `status: "failed_retryable"` **IS visible**
 - [ ] Shows contact with phone number
-- [ ] Status badge displays: 🔴 Failed
+- [ ] Status badge displays: ðŸ”´ Failed
 - [ ] Metadata shows attempt count
 
 **Actual Result:**
@@ -45,12 +54,12 @@
 ```
 
 **Pass/Fail:** 
-- [ ] PASS ✅
-- [ ] FAIL ❌
+- [ ] PASS âœ…
+- [ ] FAIL âŒ
 
 ---
 
-## 🧪 Test Case 2: Tab-Specific Behavior
+## ðŸ§ª Test Case 2: Tab-Specific Behavior
 
 **Scenario:** Same lead appears in correct tabs
 
@@ -64,7 +73,7 @@
 | Show Pending | NOT visible | | [ ] PASS |
 | Show Completed | NOT visible | | [ ] PASS |
 | Show Failed | VISIBLE | | [ ] PASS |
-| Show Retrying | VISIBLE ✅ | | [ ] PASS |
+| Show Retrying | VISIBLE âœ… | | [ ] PASS |
 
 **Why each tab?**
 - Show Pending: Lead is not `queued` - it's `failed_retryable`
@@ -78,7 +87,7 @@
 
 ---
 
-## 🧪 Test Case 3: Real-Time Sync
+## ðŸ§ª Test Case 3: Real-Time Sync
 
 **Scenario:** Multiple leads sync in real-time
 
@@ -112,7 +121,7 @@ T+2s | Lead appears in tab? |
 
 ---
 
-## 🧪 Test Case 4: Progress Bar Updates
+## ðŸ§ª Test Case 4: Progress Bar Updates
 
 **Scenario:** Progress bar updates when leads fail
 
@@ -127,9 +136,9 @@ T+2s | Lead appears in tab? |
 - [ ] Progress bar is visible
 - [ ] Shows percentage (e.g., "35%")
 - [ ] Stats update in real-time
-- [ ] Shows breakdown: "✓ X completed • ⏱ Y pending • 📞 Z calling"
+- [ ] Shows breakdown: "âœ“ X completed â€¢ â± Y pending â€¢ ðŸ“ž Z calling"
 
-**Note:** Percentage will be `completed / total × 100`, so if you have:
+**Note:** Percentage will be `completed / total Ã— 100`, so if you have:
 - 1 lead total
 - 0 completed
 - 1 failed_retryable
@@ -146,7 +155,7 @@ T+2s | Lead appears in tab? |
 
 ---
 
-## 🧪 Test Case 5: Retry Information Card
+## ðŸ§ª Test Case 5: Retry Information Card
 
 **Scenario:** Retry information displays for retrying leads
 
@@ -175,7 +184,7 @@ T+2s | Lead appears in tab? |
 
 ---
 
-## 🧪 Test Case 6: "Action Required" Stats
+## ðŸ§ª Test Case 6: "Action Required" Stats
 
 **Scenario:** "Action Required" count matches failed_retryable leads
 
@@ -212,7 +221,7 @@ Do they match? [ ] YES [ ] NO
 
 ---
 
-## 🧪 Test Case 7: Lead Metadata Display
+## ðŸ§ª Test Case 7: Lead Metadata Display
 
 **Scenario:** Failed_retryable leads show all relevant metadata
 
@@ -225,17 +234,17 @@ Do they match? [ ] YES [ ] NO
 **Expected Result:**
 Each lead row should show:
 - [ ] **Phone Number** (e.g., "+16175555555")
-- [ ] **Status Badge** (🔴 Failed)
+- [ ] **Status Badge** (ðŸ”´ Failed)
 - [ ] **Contact Index** (e.g., "1" in a circle)
-- [ ] **Meta Row 1:** "Retry: X/3 – Next at N/A" (or timestamp if scheduled)
-- [ ] **Meta Row 2:** "Last: N/A · Status: pending · AI: user_no_response"
+- [ ] **Meta Row 1:** "Retry: X/3 â€“ Next at N/A" (or timestamp if scheduled)
+- [ ] **Meta Row 2:** "Last: N/A Â· Status: pending Â· AI: user_no_response"
 
 **Actual Display:**
 ```
 [1] +16175555555
-    🔴 Failed
-    Retry: 0/3 – Next at N/A
-    Last: N/A · Status: pending · AI: user_no_response
+    ðŸ”´ Failed
+    Retry: 0/3 â€“ Next at N/A
+    Last: N/A Â· Status: pending Â· AI: user_no_response
 ```
 
 **Pass/Fail:**
@@ -244,7 +253,7 @@ Each lead row should show:
 
 ---
 
-## 🧪 Test Case 8: Filter Tab Behavior
+## ðŸ§ª Test Case 8: Filter Tab Behavior
 
 **Scenario:** Tab selection persists and filters correctly update
 
@@ -276,7 +285,7 @@ Show Retrying (again) | Yes/No | Yes/No
 
 ---
 
-## 🧪 Test Case 9: Multiple Batches
+## ðŸ§ª Test Case 9: Multiple Batches
 
 **Scenario:** Filter works correctly across different batches
 
@@ -284,9 +293,9 @@ Show Retrying (again) | Yes/No | Yes/No
 
 **Steps:**
 1. Navigate to Batch 1
-2. Click "Show Retrying" → Verify leads visible
+2. Click "Show Retrying" â†’ Verify leads visible
 3. Navigate to Batch 2
-4. Click "Show Retrying" → Verify leads visible
+4. Click "Show Retrying" â†’ Verify leads visible
 
 **Expected Result:**
 - [ ] Each batch shows only ITS failed_retryable leads
@@ -306,7 +315,7 @@ Are they different (correct) or same (wrong)? [ ] Different [ ] Same
 
 ---
 
-## 🧪 Test Case 10: Performance Test
+## ðŸ§ª Test Case 10: Performance Test
 
 **Scenario:** UI remains responsive with large number of leads
 
@@ -338,7 +347,7 @@ Memory usage: ___MB
 
 ---
 
-## 📋 Summary Results
+## ðŸ“‹ Summary Results
 
 ### Overall Test Status
 
@@ -362,7 +371,7 @@ Memory usage: ___MB
 
 ---
 
-## 🐛 Bug Reporting
+## ðŸ› Bug Reporting
 
 If you find issues during testing, please document:
 
@@ -409,15 +418,15 @@ If you find issues during testing, please document:
 
 ---
 
-## ✅ Sign-Off
+## âœ… Sign-Off
 
 **Tester Name:** _______________  
 **Test Date:** _________________  
 **Build Version:** ______________  
 
 **Overall Result:** 
-- [ ] READY FOR PRODUCTION ✅
-- [ ] NEEDS FIXES FIRST ❌
+- [ ] READY FOR PRODUCTION âœ…
+- [ ] NEEDS FIXES FIRST âŒ
 
 **Notes:**
 ```
@@ -426,7 +435,7 @@ If you find issues during testing, please document:
 
 ---
 
-## 📞 Support
+## ðŸ“ž Support
 
 If tests fail or show unexpected behavior:
 1. Check [DEBUGGING_UI_SYNC_ISSUE.md](DEBUGGING_UI_SYNC_ISSUE.md) for root causes
@@ -436,7 +445,7 @@ If tests fail or show unexpected behavior:
 
 ---
 
-## 🎯 Quick Reference
+## ðŸŽ¯ Quick Reference
 
 **Code Changed:**
 - File: `src/features/leads/BatchDetailScreen.tsx`
@@ -451,4 +460,6 @@ If tests fail or show unexpected behavior:
 - Large batch sizes (50+ leads)
 
 **Success Indicator:**
-Lead with `status: "failed_retryable"` appears in "Show Retrying" tab without manual refresh ✅
+Lead with `status: "failed_retryable"` appears in "Show Retrying" tab without manual refresh âœ…
+
+

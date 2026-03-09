@@ -1,3 +1,12 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Lead Import System - Complete Documentation
 
 ## Overview
@@ -122,19 +131,19 @@ const processed = await masterImportService.process.processImportedLeads(
 
 ```
 src/
-├── lib/
-│   ├── phoneExtractor.ts      # Core extraction & validation logic
-│   ├── importServices.ts      # Import method services
-│   └── firebase.ts            # Firebase integration
-│
-├── features/leads/
-│   ├── ImportsScreen.tsx      # Import method selector
-│   ├── PasteLeadsScreen.tsx   # Clipboard import UI
-│   ├── UploadLeadsScreen.tsx  # File upload (CSV/Excel)
-│   └── AddLeadScreen.tsx      # Manual entry (existing)
-│
-└── components/ui/
-    └── LeadReviewPanel.tsx    # Preview before saving (existing)
+â”œâ”€â”€ lib/
+â”‚   â”œâ”€â”€ phoneExtractor.ts      # Core extraction & validation logic
+â”‚   â”œâ”€â”€ importServices.ts      # Import method services
+â”‚   â””â”€â”€ firebase.ts            # Firebase integration
+â”‚
+â”œâ”€â”€ features/leads/
+â”‚   â”œâ”€â”€ ImportsScreen.tsx      # Import method selector
+â”‚   â”œâ”€â”€ PasteLeadsScreen.tsx   # Clipboard import UI
+â”‚   â”œâ”€â”€ UploadLeadsScreen.tsx  # File upload (CSV/Excel)
+â”‚   â””â”€â”€ AddLeadScreen.tsx      # Manual entry (existing)
+â”‚
+â””â”€â”€ components/ui/
+    â””â”€â”€ LeadReviewPanel.tsx    # Preview before saving (existing)
 ```
 
 ## Screens & Navigation
@@ -247,9 +256,9 @@ Each service includes:
 
 ## Platform Compatibility
 
-✅ Android - Full support
-✅ Web - Full support
-✅ iOS - Full support (ready)
+âœ… Android - Full support
+âœ… Web - Full support
+âœ… iOS - Full support (ready)
 
 ## Performance Considerations
 
@@ -306,3 +315,5 @@ For bugs or features, refer to the implementation in:
 - `src/lib/phoneExtractor.ts` - Core logic
 - `src/lib/importServices.ts` - Services
 - `src/features/leads/*.tsx` - UI Screens
+
+

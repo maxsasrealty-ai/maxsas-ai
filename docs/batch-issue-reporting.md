@@ -1,3 +1,12 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Batch Issue Reporting
 
 ## Overview
@@ -117,3 +126,5 @@ Add composite indexes as admin querying grows, e.g.:
 - This feature intentionally does **not** alter calling, retry, or billing workflows.
 - It is feedback-first and analytics-ready.
 - Admin dashboard logic should treat `batchStatus` as historical context captured at report time.
+
+

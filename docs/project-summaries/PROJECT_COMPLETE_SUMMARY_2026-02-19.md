@@ -1,3 +1,12 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Maxsas-AI Complete Project Summary (19 Feb 2026)
 
 ## 1) Project Overview
@@ -47,7 +56,7 @@ Maxsas-AI ek Expo + React Native based lead operations app hai jisme lead intake
 - Mark completed/interested actions
 
 ### F. Wallet & Billing
-- Cost per call: ₹14
+- Cost per call: â‚¹14
 - Available balance check before batch start
 - Locked/Reserved amount support
 - Transaction history support
@@ -121,3 +130,5 @@ Repo me broad documentation set available hai:
 
 ## 12) Current Overall Status
 System highly implemented and documentation-rich hai, with strong batch architecture, real-time updates, security rules, and wallet gating. Codebase feature-complete direction me hai, but module-level consolidation (services vs lib lead pipelines) future cleanup ka useful next step ho sakta hai.
+
+

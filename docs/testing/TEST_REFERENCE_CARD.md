@@ -1,43 +1,52 @@
-# 🎯 BATCH SYSTEM - TEST QUICK REFERENCE CARD
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
+# ðŸŽ¯ BATCH SYSTEM - TEST QUICK REFERENCE CARD
 
 Print this and keep it handy while testing!
 
 ---
 
-## ⚡ Quick Start (60 min)
+## âš¡ Quick Start (60 min)
 
 ### Phase 1: Batch Creation (15 min)
 ```
-1. Manual: Home → Add Lead → 3 phones → Save ✓
-2. CSV: Home → Upload → 4 contacts from CSV ✓
-3. Paste: Home → Paste → 3 phones → Save ✓
-4. Image: Home → Image → Extract → Save ✓
+1. Manual: Home â†’ Add Lead â†’ 3 phones â†’ Save âœ“
+2. CSV: Home â†’ Upload â†’ 4 contacts from CSV âœ“
+3. Paste: Home â†’ Paste â†’ 3 phones â†’ Save âœ“
+4. Image: Home â†’ Image â†’ Extract â†’ Save âœ“
 ```
 
 ### Phase 2: Wallet Check (10 min)
 ```
-1. Dashboard → Check balance shown ✓
-2. Click "Call Now" on 3-contact batch ✓
-3. Verify required: 3 × ₹14 = ₹42 ✓
-4. Verify available shown ✓
-5. Confirm call ✓
+1. Dashboard â†’ Check balance shown âœ“
+2. Click "Call Now" on 3-contact batch âœ“
+3. Verify required: 3 Ã— â‚¹14 = â‚¹42 âœ“
+4. Verify available shown âœ“
+5. Confirm call âœ“
 ```
 
 ### Phase 3: Real-Time (15 min)
 ```
-1. Open batch detail after "Call Now" ✓
-2. Check progress bar visible ✓
-3. Check status colors: gray/blue/green/red ✓
-4. Check retry info visible ✓
-5. No page refresh needed ✓
+1. Open batch detail after "Call Now" âœ“
+2. Check progress bar visible âœ“
+3. Check status colors: gray/blue/green/red âœ“
+4. Check retry info visible âœ“
+5. No page refresh needed âœ“
 ```
 
 ### Phase 4: Dashboard (10 min)
 ```
-1. New batches appear without refresh ✓
-2. Status badges update ✓
-3. Progress bars update ✓
-4. No lag > 2 seconds ✓
+1. New batches appear without refresh âœ“
+2. Status badges update âœ“
+3. Progress bars update âœ“
+4. No lag > 2 seconds âœ“
 ```
 
 ### Phase 5: Summary (10 min)
@@ -54,42 +63,42 @@ Status: [ ] Pass [ ] Fail
 
 ---
 
-## 🎨 Status Color Reference
+## ðŸŽ¨ Status Color Reference
 
 | Status | Color | Icon | What It Means |
 |--------|-------|------|---------------|
-| pending | 🔘 Gray | ⭕ | Waiting to be called |
-| calling | 🔵 Blue | 📞 | Currently on call |
-| completed | 🟢 Green | ✅ | Call finished |
-| failed | 🔴 Red | ❌ | Call failed |
-| busy | 🟠 Orange | ⚠️ | Line was busy |
+| pending | ðŸ”˜ Gray | â­• | Waiting to be called |
+| calling | ðŸ”µ Blue | ðŸ“ž | Currently on call |
+| completed | ðŸŸ¢ Green | âœ… | Call finished |
+| failed | ðŸ”´ Red | âŒ | Call failed |
+| busy | ðŸŸ  Orange | âš ï¸ | Line was busy |
 
 ---
 
-## 📱 Screen Navigation
+## ðŸ“± Screen Navigation
 
 ```
 Home Screen
-  ├─ Add Lead → [Manual Entry]
-  ├─ Upload Leads → [CSV, Image, Paste]
-  ├─ Batch Dashboard ← [ALL BATCHES]
-  └─ Wallet ← [BALANCE CHECK]
+  â”œâ”€ Add Lead â†’ [Manual Entry]
+  â”œâ”€ Upload Leads â†’ [CSV, Image, Paste]
+  â”œâ”€ Batch Dashboard â† [ALL BATCHES]
+  â””â”€ Wallet â† [BALANCE CHECK]
 
 Batch Dashboard
-  ├─ Batch List [Status, Count, Source]
-  └─ Each Batch → [Batch Detail]
+  â”œâ”€ Batch List [Status, Count, Source]
+  â””â”€ Each Batch â†’ [Batch Detail]
 
 Batch Detail
-  ├─ Batch Info [ID, Count, Date]
-  ├─ Contact List [Phone, Status, Retry Info]
-  ├─ Progress Bar [Completed/Total]
-  ├─ Stats Cards [Completed, Pending, Retries]
-  └─ Action Buttons [Call Now, Schedule, Delete]
+  â”œâ”€ Batch Info [ID, Count, Date]
+  â”œâ”€ Contact List [Phone, Status, Retry Info]
+  â”œâ”€ Progress Bar [Completed/Total]
+  â”œâ”€ Stats Cards [Completed, Pending, Retries]
+  â””â”€ Action Buttons [Call Now, Schedule, Delete]
 ```
 
 ---
 
-## ✅ TEST CHECKLIST
+## âœ… TEST CHECKLIST
 
 ### Creation Tests (Each should show "draft" status)
 - [ ] Manual: 3 contacts, source="manual"
@@ -98,10 +107,10 @@ Batch Detail
 - [ ] Image: extracted numbers, confidence shown, source="image"
 
 ### Wallet Tests (All should succeed)
-- [ ] Balance visible in header (₹XXXX)
+- [ ] Balance visible in header (â‚¹XXXX)
 - [ ] Green "Live" indicator present
 - [ ] Balance check on "Call Now" works
-- [ ] Required amount calculated correctly (contacts × 14)
+- [ ] Required amount calculated correctly (contacts Ã— 14)
 - [ ] Call proceeds if balance sufficient
 - [ ] Call blocked if balance insufficient
 - [ ] Recharge button links to /wallet
@@ -126,7 +135,7 @@ Batch Detail
 
 ---
 
-## 🚨 CRITICAL ISSUES?
+## ðŸš¨ CRITICAL ISSUES?
 
 ### If something breaks:
 1. **Take a screenshot** of error
@@ -136,14 +145,14 @@ Batch Detail
 5. **Document clearly** in test report
 
 ### Common Issues:
-❌ App won't start → Restart: `npm start -- --reset-cache`
-❌ Firebase error → Check .env and rules
-❌ Balance not showing → Check user logged in
-❌ Real-time not working → Check batch status ≠ "draft"
+âŒ App won't start â†’ Restart: `npm start -- --reset-cache`
+âŒ Firebase error â†’ Check .env and rules
+âŒ Balance not showing â†’ Check user logged in
+âŒ Real-time not working â†’ Check batch status â‰  "draft"
 
 ---
 
-## 📊 AFTER TESTING
+## ðŸ“Š AFTER TESTING
 
 Copy this to test report:
 ```
@@ -168,19 +177,19 @@ Date: ___________
 
 ---
 
-## 💡 TIPS
+## ðŸ’¡ TIPS
 
-✓ Test on actual phone/emulator when possible
-✓ Clear browser cache if things look weird
-✓ Check network tab if requests fail
-✓ Use DevTools for screenshot comparison
-✓ Test in multiple browsers (Chrome, Safari)
-✓ Test on different screen sizes
-✓ Check dark mode works (if available)
+âœ“ Test on actual phone/emulator when possible
+âœ“ Clear browser cache if things look weird
+âœ“ Check network tab if requests fail
+âœ“ Use DevTools for screenshot comparison
+âœ“ Test in multiple browsers (Chrome, Safari)
+âœ“ Test on different screen sizes
+âœ“ Check dark mode works (if available)
 
 ---
 
-## 🎓 NEED HELP?
+## ðŸŽ“ NEED HELP?
 
 | Problem | File to Read |
 |---------|--------------|
@@ -195,10 +204,12 @@ Date: ___________
 1. `npm start`
 2. Open app
 3. Start Phase 1
-4. Mark each box ✓
+4. Mark each box âœ“
 5. Fill summary
-6. Done! 🎉
+6. Done! ðŸŽ‰
 
 ---
 
-Print this card and tape it to your monitor! 📌
+Print this card and tape it to your monitor! ðŸ“Œ
+
+

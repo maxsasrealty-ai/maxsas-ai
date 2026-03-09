@@ -1,3 +1,12 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Payment System Current State (Codebase Analysis)
 
 Date: 2026-03-05  
@@ -44,7 +53,7 @@ Scope: Full repository scan focused on wallet, payment, billing, charges, transa
 | File | Purpose | Type |
 |---|---|---|
 | `src/features/leads/BatchDetailScreen.tsx` | Enforces balance check before `Call Now` and `Schedule`; recharge navigation on shortfall | UI flow + balance gating |
-| `src/features/leads/BatchDashboard.tsx` | Balance gating for “Call Now” on draft batches | UI flow + balance gating |
+| `src/features/leads/BatchDashboard.tsx` | Balance gating for â€œCall Nowâ€ on draft batches | UI flow + balance gating |
 | `src/features/home/HomeScreen.tsx` | Live wallet card and wallet navigation | UI summary |
 | `src/components/ui/RechargeButton.tsx` | Recharge modal/button, calls context top-up action | UI component |
 | `src/components/pricing/PricingModal.tsx` | Billing explanation modal (connected minute + qualified lead fee) | UI component |
@@ -95,7 +104,7 @@ Scope: Full repository scan focused on wallet, payment, billing, charges, transa
 - **Service layer:** performs wallet math, atomic transactions, ledger writes, and batch billing finalization.
 - **Repository layer:** read-side listeners for payment/billing screens.
 - **Firestore access:** concentrated in `walletService`, `ledgerService`, `batchService`, `leadService`, and payment repository.
-- **Business logic:** split between wallet model (`₹14/call` path) and ledger model (`minute-based + batch final debit`).
+- **Business logic:** split between wallet model (`â‚¹14/call` path) and ledger model (`minute-based + batch final debit`).
 
 ---
 
@@ -106,11 +115,11 @@ Scope: Full repository scan focused on wallet, payment, billing, charges, transa
 Balance checks occur before dispatch in:
 
 - `src/features/leads/BatchDetailScreen.tsx`
-  - `handleCallNowConfirm()` → `checkBalance(totalContacts)`
-  - `handleScheduleConfirm()` → `checkBalance(totalContacts)`
+  - `handleCallNowConfirm()` â†’ `checkBalance(totalContacts)`
+  - `handleScheduleConfirm()` â†’ `checkBalance(totalContacts)`
 - `src/features/leads/BatchDashboard.tsx`
   - `getCallNowDisabledReason()` local shortfall check
-  - `executeCallNow()` → `checkBalance(batch.totalContacts)`
+  - `executeCallNow()` â†’ `checkBalance(batch.totalContacts)`
 
 If insufficient, user is blocked and prompted to go to `/wallet`.
 
@@ -261,7 +270,7 @@ This means many client-side write attempts to ledger-style docs rely on privileg
 ### Recharge placeholder behavior
 
 - `WalletContext.addBalanceToWallet()` currently returns failure with message:
-  - “Wallet top-ups are handled by automation.”
+  - â€œWallet top-ups are handled by automation.â€
 - `WalletScreen.handleRecharge()` shows info alert (automation-handled).
 - `RechargeButton` still invokes `addBalanceToWallet`, so currently behaves as a non-functional gateway placeholder path from business perspective.
 
@@ -342,3 +351,5 @@ These are call orchestration webhooks, not payment webhooks.
 ---
 
 This document reflects current repository state without modifying runtime logic.
+
+

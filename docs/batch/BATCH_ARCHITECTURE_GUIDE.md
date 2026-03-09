@@ -1,3 +1,12 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Batch-Based Storage Architecture Implementation
 
 ## Overview
@@ -11,35 +20,35 @@ Implemented a proper two-collection Firestore architecture for managing batches 
 
 ```
 Firestore Database
-├── batches (collection)
-│   └── {batchId} (document)
-│       ├── batchId: string
-│       ├── userId: string (who owns this batch)
-│       ├── totalContacts: number
-│       ├── status: "queued" | "scheduled" | "running" | "completed"
-│       ├── action: "call_now" | "schedule"
-│       ├── source: "manual" | "csv" | "clipboard" | "image"
-│       ├── createdAt: timestamp
-│       └── scheduleAt: timestamp | null
-│
-└── leads (collection)
-    ├── {leadId1} (document)
-    │   ├── leadId: string
-    │   ├── batchId: string (reference to batch)
-    │   ├── phone: string
-    │   ├── status: "queued" | "calling" | "completed"
-    │   ├── createdAt: timestamp
-    │   ├── lastActionAt: timestamp | null
-    │   └── attempts: number
-    │
-    ├── {leadId2} (document)
-    │   ├── leadId: string
-    │   ├── batchId: string (reference to batch)
-    │   ├── phone: string
-    │   └── ...
-    │
-    └── {leadIdN} (document)
-        └── ...
+â”œâ”€â”€ batches (collection)
+â”‚   â””â”€â”€ {batchId} (document)
+â”‚       â”œâ”€â”€ batchId: string
+â”‚       â”œâ”€â”€ userId: string (who owns this batch)
+â”‚       â”œâ”€â”€ totalContacts: number
+â”‚       â”œâ”€â”€ status: "queued" | "scheduled" | "running" | "completed"
+â”‚       â”œâ”€â”€ action: "call_now" | "schedule"
+â”‚       â”œâ”€â”€ source: "manual" | "csv" | "clipboard" | "image"
+â”‚       â”œâ”€â”€ createdAt: timestamp
+â”‚       â””â”€â”€ scheduleAt: timestamp | null
+â”‚
+â””â”€â”€ leads (collection)
+    â”œâ”€â”€ {leadId1} (document)
+    â”‚   â”œâ”€â”€ leadId: string
+    â”‚   â”œâ”€â”€ batchId: string (reference to batch)
+    â”‚   â”œâ”€â”€ phone: string
+    â”‚   â”œâ”€â”€ status: "queued" | "calling" | "completed"
+    â”‚   â”œâ”€â”€ createdAt: timestamp
+    â”‚   â”œâ”€â”€ lastActionAt: timestamp | null
+    â”‚   â””â”€â”€ attempts: number
+    â”‚
+    â”œâ”€â”€ {leadId2} (document)
+    â”‚   â”œâ”€â”€ leadId: string
+    â”‚   â”œâ”€â”€ batchId: string (reference to batch)
+    â”‚   â”œâ”€â”€ phone: string
+    â”‚   â””â”€â”€ ...
+    â”‚
+    â””â”€â”€ {leadIdN} (document)
+        â””â”€â”€ ...
 ```
 
 ### Key Principles
@@ -57,38 +66,38 @@ Firestore Database
 ### Step 1: User Extracts Contacts (Local Only)
 ```
 User uploads CSV / Pastes data / Extracts from image
-↓
+â†“
 App creates LOCAL batch draft with contacts array
-↓
+â†“
 Stored in React Context - NOT in Firestore
-↓
+â†“
 User sees batch in "Batch Dashboard"
 ```
 
 ### Step 2: User Clicks "Call Now" or "Schedule"
 ```
 User clicks button on Batch Details page
-↓
+â†“
 App calls saveBatchToFirebase()
-↓
+â†“
 CREATES: One batch document in 'batches' collection
 CREATES: Multiple lead documents in 'leads' collection
-↓
+â†“
 Firebase atomically writes all data
-↓
+â†“
 Each lead references the batchId
-↓
+â†“
 Batch status changes from 'draft' to 'running'/'scheduled'
 ```
 
 ### Step 3: System Processing
 ```
 Calling/Scheduling system reads batch documents
-↓
+â†“
 For each batch, fetches all leads by batchId
-↓
+â†“
 Processes each lead and updates its status
-↓
+â†“
 Updates lead.lastActionAt and lead.attempts
 ```
 
@@ -140,7 +149,7 @@ const stats = await getLeadCountStats(batchId)
 
 ### Batches Collection
 ```
-✓ Users can CREATE batch if:
+âœ“ Users can CREATE batch if:
   - They are authenticated
   - userId matches their UID
   - batchId is set and matches document ID
@@ -148,27 +157,27 @@ const stats = await getLeadCountStats(batchId)
   - action is call_now or schedule
   - totalContacts > 0
 
-✓ Users can READ their own batches
+âœ“ Users can READ their own batches
 
-✓ Users can UPDATE their batches (status transitions)
+âœ“ Users can UPDATE their batches (status transitions)
 
-✓ Users can DELETE their batches
+âœ“ Users can DELETE their batches
 ```
 
 ### Leads Collection
 ```
-✓ Users can CREATE leads if:
+âœ“ Users can CREATE leads if:
   - batchId is NOT null (must reference a batch)
   - phone number is provided
   - leadId matches document ID
   - status is valid (queued, calling, completed)
 
-✓ Users can READ their own leads
+âœ“ Users can READ their own leads
 
-✓ Users can UPDATE leads (status, lastActionAt, attempts)
+âœ“ Users can UPDATE leads (status, lastActionAt, attempts)
   - leadId and batchId must remain unchanged
 
-✓ Users can DELETE their leads
+âœ“ Users can DELETE their leads
 ```
 
 ---
@@ -363,8 +372,10 @@ console.log('Total contacts:', batch.totalContacts);
 
 ### Debug Query Performance
 ```
-Firestore Console → Indexes
+Firestore Console â†’ Indexes
 Make sure there's a composite index on:
 - leads collection
 - (batchId, status) for common queries
 ```
+
+

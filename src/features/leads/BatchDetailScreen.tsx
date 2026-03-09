@@ -20,6 +20,7 @@ import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { FeatureComingSoonModal } from '../../components/ui/FeatureComingSoonModal';
 import { ScheduleConfirmationModal } from '../../components/ui/ScheduleConfirmationModal';
 import { canAccessScheduledCalling, isScheduleEnabled } from '../../config/featureFlags';
+import { useAuth } from '../../context/AuthContext';
 import { useBatch } from '../../context/BatchContext';
 import { useWallet } from '../../context/WalletContext';
 import { usePricing } from '../../hooks/usePricing';
@@ -65,6 +66,7 @@ const getRetryAllDelayMs = () =>
 
 export const BatchDetailScreen: React.FC = () => {
   const { batchId } = useLocalSearchParams<{ batchId: string }>();
+  const { requireAuth } = useAuth();
   const navigation = useNavigation();
   const { currentBatch, allBatches, getBatchDetail, saveBatchToFirebase, deleteDraftBatch } =
     useBatch();
@@ -918,9 +920,11 @@ export const BatchDetailScreen: React.FC = () => {
   }
 
   const handleCallNow = async () => {
-    console.log('--- TRIGGERED: handleCallNow ---');
-    console.log('🎯 Showing Call Now confirmation modal');
-    setShowCallNowModal(true);
+    requireAuth(() => {
+      console.log('--- TRIGGERED: handleCallNow ---');
+      console.log('🎯 Showing Call Now confirmation modal');
+      setShowCallNowModal(true);
+    });
   };
 
   // ACTUAL Firebase save logic for Call Now
@@ -1028,17 +1032,19 @@ export const BatchDetailScreen: React.FC = () => {
   };
 
   const handleSchedule = async () => {
-    console.log('--- TRIGGERED: handleSchedule ---');
-    const scheduleAccess = canAccessScheduledCalling();
+    requireAuth(() => {
+      console.log('--- TRIGGERED: handleSchedule ---');
+      const scheduleAccess = canAccessScheduledCalling();
 
-    if (!isScheduleEnabled || !scheduleAccess) {
-      console.log('🔒 Schedule feature locked - showing coming soon modal');
-      setShowScheduleComingSoonModal(true);
-      return;
-    }
+      if (!isScheduleEnabled || !scheduleAccess) {
+        console.log('🔒 Schedule feature locked - showing coming soon modal');
+        setShowScheduleComingSoonModal(true);
+        return;
+      }
 
-    console.log('🎯 Opening schedule modal');
-    setShowScheduleModal(true);
+      console.log('🎯 Opening schedule modal');
+      setShowScheduleModal(true);
+    });
   };
 
   // ACTUAL Firebase save logic for Schedule

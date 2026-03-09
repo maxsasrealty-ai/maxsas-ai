@@ -1,11 +1,20 @@
-# Demo Call UX Improvements – Completed
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
 
-## 1. Beautiful Transcript UI ✅
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
+# Demo Call UX Improvements â€“ Completed
+
+## 1. Beautiful Transcript UI âœ…
 **File**: [app/demo-transcript.tsx](app/demo-transcript.tsx)
 
 - **Chat Bubble Parser**: Lines parsed from script field
-  - Lines starting with `Bot:` → Left-aligned primary-color bubbles
-  - Lines starting with `User:` → Right-aligned secondary-color bubbles
+  - Lines starting with `Bot:` â†’ Left-aligned primary-color bubbles
+  - Lines starting with `User:` â†’ Right-aligned secondary-color bubbles
 - **Clean Display**: Raw markers (`Bot:`, `User:`) removed from visible text
 - **Modern Styling**: 
   - System font (not monospace)
@@ -15,19 +24,19 @@
 
 ---
 
-## 2. Dynamic Traffic Message (Infinite Loop) ✅
+## 2. Dynamic Traffic Message (Infinite Loop) âœ…
 **File**: [src/features/home/HomeScreen.tsx](src/features/home/HomeScreen.tsx)
 
 - **Infinite Cycle**: `startTrafficTimerInfiniteLoop()` in `clearTrafficTimer` callback
-  - Wait 7 seconds → Show message
-  - Display 7 seconds → Hide
+  - Wait 7 seconds â†’ Show message
+  - Display 7 seconds â†’ Hide
   - **Repeat** until status = completed or failed
 - **Trigger**: Starts when `demoCallLoading === true` and state is `calling` or `idle`
 - **Stop Condition**: Message stops cycling on completion or failure automatically
 
 ---
 
-## 3. Real-time Button Update (Instant Script Detection) ✅
+## 3. Real-time Button Update (Instant Script Detection) âœ…
 **File**: [src/features/home/HomeScreen.tsx](src/features/home/HomeScreen.tsx)
 
 - **Listener Setup**: `attachDemoCallListener()` subscribes to demoCalls/{currentDemoCallId}
@@ -36,12 +45,12 @@
   - If `script.trim() !== ''` AND `status === 'completed'`:
     - `setDemoScriptReady(true)` fires **instantly**
     - `setDemoReadyScript(rawScript)` stores content
-    - UI button changes from "Start Demo" → "View Transcript"
+    - UI button changes from "Start Demo" â†’ "View Transcript"
 - **No Page Refresh Needed**: Real-time Firestore listener ensures millisecond-level updates
 
 ---
 
-## 4. Cleanup: Hide Card After Transcript Return ✅
+## 4. Cleanup: Hide Card After Transcript Return âœ…
 **File**: [src/features/home/HomeScreen.tsx](src/features/home/HomeScreen.tsx)
 
 - **Session Persistence**: Module-level `hiddenDemoCardSessionUsers` Set tracks hidden status
@@ -67,7 +76,9 @@
 ---
 
 ## Key Files Modified
-1. **app/demo-transcript.tsx** – Chat bubble UI parser + styling
-2. **src/features/home/HomeScreen.tsx** – Infinite loop timer + real-time listener
-3. **src/services/demoCallService.ts** – Helper `getDemoCallById()`
-4. **src/services/userService.ts** – Helper `getUserCurrentDemoCallId()`
+1. **app/demo-transcript.tsx** â€“ Chat bubble UI parser + styling
+2. **src/features/home/HomeScreen.tsx** â€“ Infinite loop timer + real-time listener
+3. **src/services/demoCallService.ts** â€“ Helper `getDemoCallById()`
+4. **src/services/userService.ts** â€“ Helper `getUserCurrentDemoCallId()`
+
+

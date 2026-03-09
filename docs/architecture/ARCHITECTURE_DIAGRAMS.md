@@ -1,93 +1,102 @@
-# 🎯 AI Image Extraction - Visual Architecture & Flow Diagrams
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
+# ðŸŽ¯ AI Image Extraction - Visual Architecture & Flow Diagrams
 
 ## System Architecture Diagram
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         MAXSAS REALTY APP                        │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                   │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │                    USER INTERFACE LAYER                   │   │
-│  ├──────────────────────────────────────────────────────────┤   │
-│  │  ImportsScreen                                           │   │
-│  │  ├─ Manual Entry          ──→ AddLeadScreen            │   │
-│  │  ├─ Paste from Clipboard ──→ PasteLeadsScreen         │   │
-│  │  ├─ CSV Upload           ──→ UploadLeadsScreen        │   │
-│  │  ├─ PDF Upload           ──→ UploadLeadsScreen        │   │
-│  │  └─ 🤖 AI Image          ──→ ImageImportScreen  ✨    │   │
-│  │                                                          │   │
-│  └────────────────┬─────────────────────────────────────────┘   │
-│                   │                                               │
-│  ┌────────────────▼─────────────────────────────────────────┐   │
-│  │          IMAGE IMPORT SCREEN (NEW COMPONENT)            │   │
-│  ├──────────────────────────────────────────────────────────┤   │
-│  │  ✓ Image Picker                                          │   │
-│  │  ✓ Base64 Conversion                                    │   │
-│  │  ✓ Preview Display                                      │   │
-│  │  ✓ Loading States                                       │   │
-│  │  ✓ Error Handling                                       │   │
-│  └────────────────┬─────────────────────────────────────────┘   │
-│                   │                                               │
-│  ┌────────────────▼─────────────────────────────────────────┐   │
-│  │        SERVICE LAYER - GEMINI EXTRACTOR                │   │
-│  ├──────────────────────────────────────────────────────────┤   │
-│  │  📦 GeminiPhoneExtractor Class                           │   │
-│  │  ├─ Base64Image + MimeType                             │   │
-│  │  ├─ API Request Construction                           │   │
-│  │  ├─ HTTP Call to Gemini                                │   │
-│  │  ├─ Response Parsing                                   │   │
-│  │  ├─ Phone Validation                                   │   │
-│  │  └─ Deduplication                                      │   │
-│  └────────────────┬─────────────────────────────────────────┘   │
-│                   │                                               │
-│  ┌────────────────▼─────────────────────────────────────────┐   │
-│  │          VALIDATION LAYER                                │   │
-│  ├──────────────────────────────────────────────────────────┤   │
-│  │  ✓ validatePhoneWithMessage()                            │   │
-│  │  ✓ 10-digit validation                                   │   │
-│  │  ✓ First digit check (6-9)                              │   │
-│  │  ✓ Emergency number rejection                           │   │
-│  │  ✓ Format validation                                    │   │
-│  └────────────────┬─────────────────────────────────────────┘   │
-│                   │                                               │
-│  ┌────────────────▼─────────────────────────────────────────┐   │
-│  │            FORMATTING LAYER                              │   │
-│  ├──────────────────────────────────────────────────────────┤   │
-│  │  ✓ formatPhoneForDisplay()  →  +91 98765 43210         │   │
-│  │  ✓ Database format         →  9876543210               │   │
-│  └────────────────┬─────────────────────────────────────────┘   │
-│                   │                                               │
-│  ┌────────────────▼─────────────────────────────────────────┐   │
-│  │           PERSISTENCE LAYER                                │   │
-│  ├──────────────────────────────────────────────────────────┤   │
-│  │  ✓ addLead()  →  Firebase Realtime DB                  │   │
-│  │  ✓ Metadata:  source: 'image', confidence, timestamp    │   │
-│  └──────────────────────────────────────────────────────────┘   │
-│                                                                   │
-└─────────────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                         MAXSAS REALTY APP                        â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚                                                                   â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”‚
+â”‚  â”‚                    USER INTERFACE LAYER                   â”‚   â”‚
+â”‚  â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤   â”‚
+â”‚  â”‚  ImportsScreen                                           â”‚   â”‚
+â”‚  â”‚  â”œâ”€ Manual Entry          â”€â”€â†’ AddLeadScreen            â”‚   â”‚
+â”‚  â”‚  â”œâ”€ Paste from Clipboard â”€â”€â†’ PasteLeadsScreen         â”‚   â”‚
+â”‚  â”‚  â”œâ”€ CSV Upload           â”€â”€â†’ UploadLeadsScreen        â”‚   â”‚
+â”‚  â”‚  â”œâ”€ PDF Upload           â”€â”€â†’ UploadLeadsScreen        â”‚   â”‚
+â”‚  â”‚  â””â”€ ðŸ¤– AI Image          â”€â”€â†’ ImageImportScreen  âœ¨    â”‚   â”‚
+â”‚  â”‚                                                          â”‚   â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜   â”‚
+â”‚                   â”‚                                               â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â–¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”‚
+â”‚  â”‚          IMAGE IMPORT SCREEN (NEW COMPONENT)            â”‚   â”‚
+â”‚  â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤   â”‚
+â”‚  â”‚  âœ“ Image Picker                                          â”‚   â”‚
+â”‚  â”‚  âœ“ Base64 Conversion                                    â”‚   â”‚
+â”‚  â”‚  âœ“ Preview Display                                      â”‚   â”‚
+â”‚  â”‚  âœ“ Loading States                                       â”‚   â”‚
+â”‚  â”‚  âœ“ Error Handling                                       â”‚   â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜   â”‚
+â”‚                   â”‚                                               â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â–¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”‚
+â”‚  â”‚        SERVICE LAYER - GEMINI EXTRACTOR                â”‚   â”‚
+â”‚  â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤   â”‚
+â”‚  â”‚  ðŸ“¦ GeminiPhoneExtractor Class                           â”‚   â”‚
+â”‚  â”‚  â”œâ”€ Base64Image + MimeType                             â”‚   â”‚
+â”‚  â”‚  â”œâ”€ API Request Construction                           â”‚   â”‚
+â”‚  â”‚  â”œâ”€ HTTP Call to Gemini                                â”‚   â”‚
+â”‚  â”‚  â”œâ”€ Response Parsing                                   â”‚   â”‚
+â”‚  â”‚  â”œâ”€ Phone Validation                                   â”‚   â”‚
+â”‚  â”‚  â””â”€ Deduplication                                      â”‚   â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜   â”‚
+â”‚                   â”‚                                               â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â–¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”‚
+â”‚  â”‚          VALIDATION LAYER                                â”‚   â”‚
+â”‚  â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤   â”‚
+â”‚  â”‚  âœ“ validatePhoneWithMessage()                            â”‚   â”‚
+â”‚  â”‚  âœ“ 10-digit validation                                   â”‚   â”‚
+â”‚  â”‚  âœ“ First digit check (6-9)                              â”‚   â”‚
+â”‚  â”‚  âœ“ Emergency number rejection                           â”‚   â”‚
+â”‚  â”‚  âœ“ Format validation                                    â”‚   â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜   â”‚
+â”‚                   â”‚                                               â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â–¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”‚
+â”‚  â”‚            FORMATTING LAYER                              â”‚   â”‚
+â”‚  â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤   â”‚
+â”‚  â”‚  âœ“ formatPhoneForDisplay()  â†’  +91 98765 43210         â”‚   â”‚
+â”‚  â”‚  âœ“ Database format         â†’  9876543210               â”‚   â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜   â”‚
+â”‚                   â”‚                                               â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â–¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”‚
+â”‚  â”‚           PERSISTENCE LAYER                                â”‚   â”‚
+â”‚  â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤   â”‚
+â”‚  â”‚  âœ“ addLead()  â†’  Firebase Realtime DB                  â”‚   â”‚
+â”‚  â”‚  âœ“ Metadata:  source: 'image', confidence, timestamp    â”‚   â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜   â”‚
+â”‚                                                                   â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 
 
-┌─────────────────────────────────────────────────────────────────┐
-│                  EXTERNAL SERVICES                               │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                   │
-│  Google Gemini Vision API                                       │
-│  ├─ Input: Base64 Image + OCR Prompt                           │
-│  ├─ Processing: Vision AI + Phone Number Extraction            │
-│  └─ Output: JSON with extracted numbers + confidence           │
-│                                                                   │
-│  Firebase Realtime Database                                     │
-│  ├─ Collection: /leads                                         │
-│  ├─ Fields: phone, source, confidence, timestamp               │
-│  └─ Rules: Validation + Security                               │
-│                                                                   │
-│  Expo Image Picker                                              │
-│  ├─ Platform: Android, iOS, Web                                │
-│  ├─ Output: Image URI + Base64                                 │
-│  └─ Permissions: Photo Library Access                          │
-│                                                                   │
-└─────────────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                  EXTERNAL SERVICES                               â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚                                                                   â”‚
+â”‚  Google Gemini Vision API                                       â”‚
+â”‚  â”œâ”€ Input: Base64 Image + OCR Prompt                           â”‚
+â”‚  â”œâ”€ Processing: Vision AI + Phone Number Extraction            â”‚
+â”‚  â””â”€ Output: JSON with extracted numbers + confidence           â”‚
+â”‚                                                                   â”‚
+â”‚  Firebase Realtime Database                                     â”‚
+â”‚  â”œâ”€ Collection: /leads                                         â”‚
+â”‚  â”œâ”€ Fields: phone, source, confidence, timestamp               â”‚
+â”‚  â””â”€ Rules: Validation + Security                               â”‚
+â”‚                                                                   â”‚
+â”‚  Expo Image Picker                                              â”‚
+â”‚  â”œâ”€ Platform: Android, iOS, Web                                â”‚
+â”‚  â”œâ”€ Output: Image URI + Base64                                 â”‚
+â”‚  â””â”€ Permissions: Photo Library Access                          â”‚
+â”‚                                                                   â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ---
@@ -96,99 +105,99 @@
 
 ```
 USER INPUT
-   │
-   ├─→ Gallery Selection
-   │      │
-   │      ├─→ expo-image-picker
-   │      │      │
-   │      └─→ Image URI + Base64
-   │
-   ▼
+   â”‚
+   â”œâ”€â†’ Gallery Selection
+   â”‚      â”‚
+   â”‚      â”œâ”€â†’ expo-image-picker
+   â”‚      â”‚      â”‚
+   â”‚      â””â”€â†’ Image URI + Base64
+   â”‚
+   â–¼
 IMAGE PROCESSING
-   │
-   ├─→ ImageImportScreen
-   │      │
-   │      ├─→ Display preview
-   │      ├─→ Show loading state
-   │      └─→ Call GeminiPhoneExtractor
-   │
-   ▼
+   â”‚
+   â”œâ”€â†’ ImageImportScreen
+   â”‚      â”‚
+   â”‚      â”œâ”€â†’ Display preview
+   â”‚      â”œâ”€â†’ Show loading state
+   â”‚      â””â”€â†’ Call GeminiPhoneExtractor
+   â”‚
+   â–¼
 AI EXTRACTION
-   │
-   ├─→ GeminiPhoneExtractor
-   │      │
-   │      ├─→ Construct API payload
-   │      ├─→ POST to Gemini API
-   │      │      │
-   │      │      └─→ {
-   │      │            "found": [
-   │      │              {"number": "9876543210", "confidence": 0.95}
-   │      │            ]
-   │      │          }
-   │      │
-   │      ├─→ Parse JSON response
-   │      └─→ Map to ExtractedPhoneFromImage[]
-   │
-   ▼
+   â”‚
+   â”œâ”€â†’ GeminiPhoneExtractor
+   â”‚      â”‚
+   â”‚      â”œâ”€â†’ Construct API payload
+   â”‚      â”œâ”€â†’ POST to Gemini API
+   â”‚      â”‚      â”‚
+   â”‚      â”‚      â””â”€â†’ {
+   â”‚      â”‚            "found": [
+   â”‚      â”‚              {"number": "9876543210", "confidence": 0.95}
+   â”‚      â”‚            ]
+   â”‚      â”‚          }
+   â”‚      â”‚
+   â”‚      â”œâ”€â†’ Parse JSON response
+   â”‚      â””â”€â†’ Map to ExtractedPhoneFromImage[]
+   â”‚
+   â–¼
 VALIDATION
-   │
-   ├─→ For each phone:
-   │      │
-   │      ├─→ Check length === 10
-   │      ├─→ Check first digit in [6,7,8,9]
-   │      ├─→ Check format (digits only)
-   │      ├─→ Check not emergency number
-   │      │
-   │      ├─→ Valid:   Add to results
-   │      └─→ Invalid: Skip with warning
-   │
-   ├─→ Deduplication
-   │      │
-   │      └─→ Remove duplicate phone numbers
-   │
-   ▼
+   â”‚
+   â”œâ”€â†’ For each phone:
+   â”‚      â”‚
+   â”‚      â”œâ”€â†’ Check length === 10
+   â”‚      â”œâ”€â†’ Check first digit in [6,7,8,9]
+   â”‚      â”œâ”€â†’ Check format (digits only)
+   â”‚      â”œâ”€â†’ Check not emergency number
+   â”‚      â”‚
+   â”‚      â”œâ”€â†’ Valid:   Add to results
+   â”‚      â””â”€â†’ Invalid: Skip with warning
+   â”‚
+   â”œâ”€â†’ Deduplication
+   â”‚      â”‚
+   â”‚      â””â”€â†’ Remove duplicate phone numbers
+   â”‚
+   â–¼
 PRESENTATION
-   │
-   ├─→ Map to UI format
-   │      │
-   │      └─→ {
-   │            phone: "+91 98765 43210",
-   │            phoneRaw: "9876543210",
-   │            confidence: 0.95,
-   │            source: "image"
-   │          }
-   │
-   ├─→ Display in ImageImportScreen
-   │      │
-   │      ├─→ Show number list
-   │      ├─→ Show confidence badges
-   │      └─→ Allow delete/edit
-   │
-   ▼
+   â”‚
+   â”œâ”€â†’ Map to UI format
+   â”‚      â”‚
+   â”‚      â””â”€â†’ {
+   â”‚            phone: "+91 98765 43210",
+   â”‚            phoneRaw: "9876543210",
+   â”‚            confidence: 0.95,
+   â”‚            source: "image"
+   â”‚          }
+   â”‚
+   â”œâ”€â†’ Display in ImageImportScreen
+   â”‚      â”‚
+   â”‚      â”œâ”€â†’ Show number list
+   â”‚      â”œâ”€â†’ Show confidence badges
+   â”‚      â””â”€â†’ Allow delete/edit
+   â”‚
+   â–¼
 USER ACTION
-   │
-   ├─→ Review numbers
-   ├─→ Delete unwanted
-   └─→ Tap "Save"
-       │
-       ▼
+   â”‚
+   â”œâ”€â†’ Review numbers
+   â”œâ”€â†’ Delete unwanted
+   â””â”€â†’ Tap "Save"
+       â”‚
+       â–¼
 FIREBASE SAVE
-   │
-   ├─→ For each phone:
-   │      │
-   │      ├─→ Call addLead({
-   │      │      phone: "9876543210",
-   │      │      source: "image",
-   │      │      confidence: 0.95,
-   │      │      status: "new",
-   │      │      createdAt: timestamp
-   │      │    })
-   │      │
-   │      └─→ Firebase Realtime DB stores
-   │
-   ├─→ Show success message
-   │
-   └─→ Navigate back
+   â”‚
+   â”œâ”€â†’ For each phone:
+   â”‚      â”‚
+   â”‚      â”œâ”€â†’ Call addLead({
+   â”‚      â”‚      phone: "9876543210",
+   â”‚      â”‚      source: "image",
+   â”‚      â”‚      confidence: 0.95,
+   â”‚      â”‚      status: "new",
+   â”‚      â”‚      createdAt: timestamp
+   â”‚      â”‚    })
+   â”‚      â”‚
+   â”‚      â””â”€â†’ Firebase Realtime DB stores
+   â”‚
+   â”œâ”€â†’ Show success message
+   â”‚
+   â””â”€â†’ Navigate back
 ```
 
 ---
@@ -196,54 +205,54 @@ FIREBASE SAVE
 ## Component Relationship Diagram
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    IMPORT SCREEN FLOW                        │
-├─────────────────────────────────────────────────────────────┤
-│                                                               │
-│              ┌─────────────────────────────┐                 │
-│              │    ImportsScreen (Hub)      │                 │
-│              └────────┬────────────────────┘                 │
-│                       │                                       │
-│        ┌──────────────┼──────────────┬──────────────┐        │
-│        │              │              │              │        │
-│        ▼              ▼              ▼              ▼        │
-│    Manual Entry   Clipboard      CSV/Excel       🤖 AI     │
-│    AddLeadScreen  PasteLeads    UploadLeads  ImageImport   │
-│                                                               │
-│                                                               │
-│              ┌──────────────────────────────┐               │
-│              │ LeadReviewPanel (Universal)  │               │
-│              │ Shows extracted leads        │               │
-│              │ Allows delete/edit           │               │
-│              │ Save/Cancel actions          │               │
-│              └──────────────────────────────┘               │
-│                       ▲                                       │
-│                       │ (Common component)                   │
-│                       │                                       │
-│        ┌──────────────┼──────────────┬──────────────┐        │
-│        │              │              │              │        │
-│        ▼              ▼              ▼              ▼        │
-│    Manual Entry   Clipboard      CSV/Excel       🤖 AI     │
-│    AddLeadScreen  PasteLeads    UploadLeads  ImageImport   │
-│                                                               │
-│                                                               │
-│              ┌──────────────────────────────┐               │
-│              │    Firebase (addLead)        │               │
-│              │    Saves all extracted leads │               │
-│              └──────────────────────────────┘               │
-│                       ▲                                       │
-│                       │                                       │
-│        ┌──────────────┼──────────────┬──────────────┐        │
-│        │              │              │              │        │
-└────────┼──────────────┼──────────────┼──────────────┘        │
-         │              │              │              │        │
-         ▼              ▼              ▼              ▼        │
-    Manual Entry   Clipboard      CSV/Excel       🤖 AI     │
-    AddLeadScreen  PasteLeads    UploadLeads  ImageImport   │
-                                                               │
-     Phone           Phone         Phone           Phone      │
-    Validation    Validation     Validation      Validation  │
-    normalizeNumber / validatePhoneWithMessage               │
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                    IMPORT SCREEN FLOW                        â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚                                                               â”‚
+â”‚              â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                 â”‚
+â”‚              â”‚    ImportsScreen (Hub)      â”‚                 â”‚
+â”‚              â””â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                 â”‚
+â”‚                       â”‚                                       â”‚
+â”‚        â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”        â”‚
+â”‚        â”‚              â”‚              â”‚              â”‚        â”‚
+â”‚        â–¼              â–¼              â–¼              â–¼        â”‚
+â”‚    Manual Entry   Clipboard      CSV/Excel       ðŸ¤– AI     â”‚
+â”‚    AddLeadScreen  PasteLeads    UploadLeads  ImageImport   â”‚
+â”‚                                                               â”‚
+â”‚                                                               â”‚
+â”‚              â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”               â”‚
+â”‚              â”‚ LeadReviewPanel (Universal)  â”‚               â”‚
+â”‚              â”‚ Shows extracted leads        â”‚               â”‚
+â”‚              â”‚ Allows delete/edit           â”‚               â”‚
+â”‚              â”‚ Save/Cancel actions          â”‚               â”‚
+â”‚              â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜               â”‚
+â”‚                       â–²                                       â”‚
+â”‚                       â”‚ (Common component)                   â”‚
+â”‚                       â”‚                                       â”‚
+â”‚        â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”        â”‚
+â”‚        â”‚              â”‚              â”‚              â”‚        â”‚
+â”‚        â–¼              â–¼              â–¼              â–¼        â”‚
+â”‚    Manual Entry   Clipboard      CSV/Excel       ðŸ¤– AI     â”‚
+â”‚    AddLeadScreen  PasteLeads    UploadLeads  ImageImport   â”‚
+â”‚                                                               â”‚
+â”‚                                                               â”‚
+â”‚              â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”               â”‚
+â”‚              â”‚    Firebase (addLead)        â”‚               â”‚
+â”‚              â”‚    Saves all extracted leads â”‚               â”‚
+â”‚              â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜               â”‚
+â”‚                       â–²                                       â”‚
+â”‚                       â”‚                                       â”‚
+â”‚        â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”        â”‚
+â”‚        â”‚              â”‚              â”‚              â”‚        â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜        â”‚
+         â”‚              â”‚              â”‚              â”‚        â”‚
+         â–¼              â–¼              â–¼              â–¼        â”‚
+    Manual Entry   Clipboard      CSV/Excel       ðŸ¤– AI     â”‚
+    AddLeadScreen  PasteLeads    UploadLeads  ImageImport   â”‚
+                                                               â”‚
+     Phone           Phone         Phone           Phone      â”‚
+    Validation    Validation     Validation      Validation  â”‚
+    normalizeNumber / validatePhoneWithMessage               â”‚
 ```
 
 ---
@@ -252,31 +261,31 @@ FIREBASE SAVE
 
 ```
 ImageImportScreen          GeminiExtractor         Gemini API
-       │                        │                       │
-       │  extractPhoneNumbers() │                       │
-       │─────────────────────→  │                       │
-       │                        │                       │
-       │                        │  POST /v1beta/...     │
-       │                        │──────────────────────→│
-       │                        │                       │
-       │                        │    🤖 Processing     │
-       │                        │    (2-4 seconds)     │
-       │                        │                       │
-       │                        │  JSON Response       │
-       │                        │←──────────────────────│
-       │                        │                       │
-       │                        │ Parse & Validate     │
-       │                        │ ├─ Extract phones    │
-       │                        │ ├─ Validate format   │
-       │                        │ ├─ Deduplicate       │
-       │                        │ └─ Add confidence    │
-       │                        │                       │
-       │  GeminiExtractionResult│                       │
-       │←─────────────────────  │                       │
-       │                        │                       │
-       ├─ Display numbers                               │
-       ├─ Show confidence                               │
-       └─ Save to Firebase                             │
+       â”‚                        â”‚                       â”‚
+       â”‚  extractPhoneNumbers() â”‚                       â”‚
+       â”‚â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â†’  â”‚                       â”‚
+       â”‚                        â”‚                       â”‚
+       â”‚                        â”‚  POST /v1beta/...     â”‚
+       â”‚                        â”‚â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â†’â”‚
+       â”‚                        â”‚                       â”‚
+       â”‚                        â”‚    ðŸ¤– Processing     â”‚
+       â”‚                        â”‚    (2-4 seconds)     â”‚
+       â”‚                        â”‚                       â”‚
+       â”‚                        â”‚  JSON Response       â”‚
+       â”‚                        â”‚â†â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”‚
+       â”‚                        â”‚                       â”‚
+       â”‚                        â”‚ Parse & Validate     â”‚
+       â”‚                        â”‚ â”œâ”€ Extract phones    â”‚
+       â”‚                        â”‚ â”œâ”€ Validate format   â”‚
+       â”‚                        â”‚ â”œâ”€ Deduplicate       â”‚
+       â”‚                        â”‚ â””â”€ Add confidence    â”‚
+       â”‚                        â”‚                       â”‚
+       â”‚  GeminiExtractionResultâ”‚                       â”‚
+       â”‚â†â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€  â”‚                       â”‚
+       â”‚                        â”‚                       â”‚
+       â”œâ”€ Display numbers                               â”‚
+       â”œâ”€ Show confidence                               â”‚
+       â””â”€ Save to Firebase                             â”‚
 ```
 
 ---
@@ -284,46 +293,46 @@ ImageImportScreen          GeminiExtractor         Gemini API
 ## State Machine - ImageImportScreen
 
 ```
-                    ┌──────────────┐
-                    │  INITIAL     │
-                    │ (No Image)   │
-                    └──────┬───────┘
-                           │
+                    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+                    â”‚  INITIAL     â”‚
+                    â”‚ (No Image)   â”‚
+                    â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”˜
+                           â”‚
                     User selects image
-                           │
-                           ▼
-                    ┌──────────────┐
-                    │   PREVIEW    │
-                    │  (Image       │
-                    │   Loaded)    │
-                    └──────┬───────┘
-                           │
+                           â”‚
+                           â–¼
+                    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+                    â”‚   PREVIEW    â”‚
+                    â”‚  (Image       â”‚
+                    â”‚   Loaded)    â”‚
+                    â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”˜
+                           â”‚
                   User taps "Extract"
-                           │
-                           ▼
-                    ┌──────────────┐
-                    │ EXTRACTING   │
-                    │ (Loading)    │
-                    └──────┬───────┘
-                           │
-                    ┌──────┴──────┐
-                    │             │
-           Success  │             │  Error
-                    ▼             ▼
-            ┌──────────────┐  ┌──────────────┐
-            │   PREVIEW    │  │     ERROR    │
-            │  RESULTS     │  │  (Show msg)  │
-            │ (Numbers,    │  └──────┬───────┘
-            │  Confidence) │         │
-            └──────┬───────┘    Retry/Back
-                   │                 │
+                           â”‚
+                           â–¼
+                    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+                    â”‚ EXTRACTING   â”‚
+                    â”‚ (Loading)    â”‚
+                    â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”˜
+                           â”‚
+                    â”Œâ”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”
+                    â”‚             â”‚
+           Success  â”‚             â”‚  Error
+                    â–¼             â–¼
+            â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+            â”‚   PREVIEW    â”‚  â”‚     ERROR    â”‚
+            â”‚  RESULTS     â”‚  â”‚  (Show msg)  â”‚
+            â”‚ (Numbers,    â”‚  â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”˜
+            â”‚  Confidence) â”‚         â”‚
+            â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”˜    Retry/Back
+                   â”‚                 â”‚
         User actions:          User selects image
-        ├─ Delete             └──────────┘
-        ├─ Save                    │
-        └─ Back                    ▼
-           │               (Back to INITIAL)
-           └──→ Save to Firebase
-               └──→ INITIAL (New cycle)
+        â”œâ”€ Delete             â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+        â”œâ”€ Save                    â”‚
+        â””â”€ Back                    â–¼
+           â”‚               (Back to INITIAL)
+           â””â”€â”€â†’ Save to Firebase
+               â””â”€â”€â†’ INITIAL (New cycle)
 ```
 
 ---
@@ -332,52 +341,52 @@ ImageImportScreen          GeminiExtractor         Gemini API
 
 ```
 Maxsas-AI (Project Root)
-│
-├── app/
-│   ├── image-import.tsx                    ✨ NEW
-│   ├── (tabs)/
-│   │   └── add-lead.tsx
-│   └── ...
-│
-├── src/
-│   ├── services/
-│   │   └── geminiExtractor.ts              ✨ NEW (400 lines)
-│   │
-│   ├── features/leads/
-│   │   ├── ImageImportScreen.tsx           ✨ NEW (500 lines)
-│   │   ├── ImportsScreen.tsx               ✏️ MODIFIED (added option)
-│   │   ├── AddLeadScreen.tsx               ✏️ MODIFIED (validation updated)
-│   │   ├── PasteLeadsScreen.tsx
-│   │   ├── UploadLeadsScreen.tsx
-│   │   └── ...
-│   │
-│   ├── lib/
-│   │   ├── phoneExtractor.ts               ✅ Used (validation)
-│   │   ├── firebase.ts                     ✅ Used (save)
-│   │   └── ...
-│   │
-│   ├── components/ui/
-│   │   ├── AppButton.tsx                   ✅ Used
-│   │   ├── AppHeader.tsx                   ✅ Used
-│   │   └── ...
-│   │
-│   ├── examples/                           ✨ NEW
-│   │   └── geminiExtractionExamples.ts    (7 examples)
-│   │
-│   └── theme/
-│       └── use-app-theme.ts                ✅ Used
-│
-├── Documentation/
-│   ├── IMAGE_EXTRACTION_GUIDE.md           ✨ NEW (60 pages)
-│   ├── QUICK_START_IMAGE_EXTRACTION.md     ✨ NEW (setup)
-│   ├── IMPLEMENTATION_SUMMARY.md           ✨ NEW (overview)
-│   ├── IMPLEMENTATION_CHECKLIST.md         ✨ NEW (checklist)
-│   └── This file                           ✨ NEW (diagrams)
-│
-├── .env.local                              ✨ NEW (API key)
-├── .gitignore                              (should include .env*)
-├── package.json
-└── tsconfig.json
+â”‚
+â”œâ”€â”€ app/
+â”‚   â”œâ”€â”€ image-import.tsx                    âœ¨ NEW
+â”‚   â”œâ”€â”€ (tabs)/
+â”‚   â”‚   â””â”€â”€ add-lead.tsx
+â”‚   â””â”€â”€ ...
+â”‚
+â”œâ”€â”€ src/
+â”‚   â”œâ”€â”€ services/
+â”‚   â”‚   â””â”€â”€ geminiExtractor.ts              âœ¨ NEW (400 lines)
+â”‚   â”‚
+â”‚   â”œâ”€â”€ features/leads/
+â”‚   â”‚   â”œâ”€â”€ ImageImportScreen.tsx           âœ¨ NEW (500 lines)
+â”‚   â”‚   â”œâ”€â”€ ImportsScreen.tsx               âœï¸ MODIFIED (added option)
+â”‚   â”‚   â”œâ”€â”€ AddLeadScreen.tsx               âœï¸ MODIFIED (validation updated)
+â”‚   â”‚   â”œâ”€â”€ PasteLeadsScreen.tsx
+â”‚   â”‚   â”œâ”€â”€ UploadLeadsScreen.tsx
+â”‚   â”‚   â””â”€â”€ ...
+â”‚   â”‚
+â”‚   â”œâ”€â”€ lib/
+â”‚   â”‚   â”œâ”€â”€ phoneExtractor.ts               âœ… Used (validation)
+â”‚   â”‚   â”œâ”€â”€ firebase.ts                     âœ… Used (save)
+â”‚   â”‚   â””â”€â”€ ...
+â”‚   â”‚
+â”‚   â”œâ”€â”€ components/ui/
+â”‚   â”‚   â”œâ”€â”€ AppButton.tsx                   âœ… Used
+â”‚   â”‚   â”œâ”€â”€ AppHeader.tsx                   âœ… Used
+â”‚   â”‚   â””â”€â”€ ...
+â”‚   â”‚
+â”‚   â”œâ”€â”€ examples/                           âœ¨ NEW
+â”‚   â”‚   â””â”€â”€ geminiExtractionExamples.ts    (7 examples)
+â”‚   â”‚
+â”‚   â””â”€â”€ theme/
+â”‚       â””â”€â”€ use-app-theme.ts                âœ… Used
+â”‚
+â”œâ”€â”€ Documentation/
+â”‚   â”œâ”€â”€ IMAGE_EXTRACTION_GUIDE.md           âœ¨ NEW (60 pages)
+â”‚   â”œâ”€â”€ QUICK_START_IMAGE_EXTRACTION.md     âœ¨ NEW (setup)
+â”‚   â”œâ”€â”€ IMPLEMENTATION_SUMMARY.md           âœ¨ NEW (overview)
+â”‚   â”œâ”€â”€ IMPLEMENTATION_CHECKLIST.md         âœ¨ NEW (checklist)
+â”‚   â””â”€â”€ This file                           âœ¨ NEW (diagrams)
+â”‚
+â”œâ”€â”€ .env.local                              âœ¨ NEW (API key)
+â”œâ”€â”€ .gitignore                              (should include .env*)
+â”œâ”€â”€ package.json
+â””â”€â”€ tsconfig.json
 ```
 
 ---
@@ -385,72 +394,72 @@ Maxsas-AI (Project Root)
 ## Technology Stack Diagram
 
 ```
-┌────────────────────────────────────────────────────────────┐
-│                     PRESENTATION LAYER                      │
-├────────────────────────────────────────────────────────────┤
-│  React Native (Expo)                                        │
-│  ├─ Components: ImageImportScreen                           │
-│  ├─ State: useState, loading, extractedPhones              │
-│  ├─ Navigation: router (expo-router)                        │
-│  └─ Theme: useAppTheme (custom)                            │
-└────────────────────────────────────────────────────────────┘
-         │                          │
-         ▼                          ▼
-┌──────────────────────┐   ┌──────────────────────┐
-│   IMAGE HANDLING     │   │   UI COMPONENTS      │
-├──────────────────────┤   ├──────────────────────┤
-│ expo-image-picker    │   │ AppButton            │
-│ ├─ Gallery access    │   │ AppHeader            │
-│ ├─ Permissions       │   │ AppCard              │
-│ └─ Base64 encoding   │   │ ScreenContainer      │
-│                      │   │ Ionicons             │
-│ React Native Image   │   └──────────────────────┘
-│ ├─ Image preview     │
-│ └─ Display          │
-└──────────────────────┘
-         │
-         ▼
-┌────────────────────────────────────────────────────────────┐
-│                    SERVICE LAYER                            │
-├────────────────────────────────────────────────────────────┤
-│  GeminiPhoneExtractor                                       │
-│  ├─ API client class                                        │
-│  ├─ Image-to-JSON conversion                               │
-│  ├─ Phone validation logic                                 │
-│  └─ Error handling                                         │
-└────────────────────────────────────────────────────────────┘
-         │
-         ▼
-┌────────────────────────────────────────────────────────────┐
-│                 EXTERNAL API LAYER                          │
-├────────────────────────────────────────────────────────────┤
-│  Google Gemini Vision API (v1beta)                          │
-│  ├─ Model: gemini-1.5-flash                                │
-│  ├─ Input: Base64 Image + OCR Prompt                        │
-│  ├─ Output: JSON with extracted numbers                    │
-│  └─ Authentication: API Key (env var)                      │
-└────────────────────────────────────────────────────────────┘
-         │
-         ▼
-┌────────────────────────────────────────────────────────────┐
-│                 VALIDATION LAYER                            │
-├────────────────────────────────────────────────────────────┤
-│  Phone Validation (phoneExtractor.ts)                       │
-│  ├─ normalizeNumber()                                       │
-│  ├─ validatePhoneWithMessage()                              │
-│  ├─ formatPhoneForDisplay()                                 │
-│  └─ isValidIndianPhone()                                    │
-└────────────────────────────────────────────────────────────┘
-         │
-         ▼
-┌────────────────────────────────────────────────────────────┐
-│              PERSISTENCE LAYER (FIREBASE)                   │
-├────────────────────────────────────────────────────────────┤
-│  Firebase Realtime Database                                │
-│  ├─ addLead(leadData)  → /leads/[leadId]                  │
-│  ├─ Fields: phone, source, confidence, timestamp            │
-│  └─ Rules: Validation + Authentication                      │
-└────────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                     PRESENTATION LAYER                      â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚  React Native (Expo)                                        â”‚
+â”‚  â”œâ”€ Components: ImageImportScreen                           â”‚
+â”‚  â”œâ”€ State: useState, loading, extractedPhones              â”‚
+â”‚  â”œâ”€ Navigation: router (expo-router)                        â”‚
+â”‚  â””â”€ Theme: useAppTheme (custom)                            â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+         â”‚                          â”‚
+         â–¼                          â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚   IMAGE HANDLING     â”‚   â”‚   UI COMPONENTS      â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤   â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚ expo-image-picker    â”‚   â”‚ AppButton            â”‚
+â”‚ â”œâ”€ Gallery access    â”‚   â”‚ AppHeader            â”‚
+â”‚ â”œâ”€ Permissions       â”‚   â”‚ AppCard              â”‚
+â”‚ â””â”€ Base64 encoding   â”‚   â”‚ ScreenContainer      â”‚
+â”‚                      â”‚   â”‚ Ionicons             â”‚
+â”‚ React Native Image   â”‚   â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+â”‚ â”œâ”€ Image preview     â”‚
+â”‚ â””â”€ Display          â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+         â”‚
+         â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                    SERVICE LAYER                            â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚  GeminiPhoneExtractor                                       â”‚
+â”‚  â”œâ”€ API client class                                        â”‚
+â”‚  â”œâ”€ Image-to-JSON conversion                               â”‚
+â”‚  â”œâ”€ Phone validation logic                                 â”‚
+â”‚  â””â”€ Error handling                                         â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+         â”‚
+         â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                 EXTERNAL API LAYER                          â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚  Google Gemini Vision API (v1beta)                          â”‚
+â”‚  â”œâ”€ Model: gemini-1.5-flash                                â”‚
+â”‚  â”œâ”€ Input: Base64 Image + OCR Prompt                        â”‚
+â”‚  â”œâ”€ Output: JSON with extracted numbers                    â”‚
+â”‚  â””â”€ Authentication: API Key (env var)                      â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+         â”‚
+         â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                 VALIDATION LAYER                            â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚  Phone Validation (phoneExtractor.ts)                       â”‚
+â”‚  â”œâ”€ normalizeNumber()                                       â”‚
+â”‚  â”œâ”€ validatePhoneWithMessage()                              â”‚
+â”‚  â”œâ”€ formatPhoneForDisplay()                                 â”‚
+â”‚  â””â”€ isValidIndianPhone()                                    â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+         â”‚
+         â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚              PERSISTENCE LAYER (FIREBASE)                   â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚  Firebase Realtime Database                                â”‚
+â”‚  â”œâ”€ addLead(leadData)  â†’ /leads/[leadId]                  â”‚
+â”‚  â”œâ”€ Fields: phone, source, confidence, timestamp            â”‚
+â”‚  â””â”€ Rules: Validation + Authentication                      â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ---
@@ -459,37 +468,37 @@ Maxsas-AI (Project Root)
 
 ```
 ImageImportScreen
-│
-├─→ Uses: expo-image-picker
-│   └─→ Returns: Image URI + Base64
-│
-├─→ Calls: GeminiPhoneExtractor.extractPhoneNumbers()
-│   └─→ Returns: GeminiExtractionResult
-│
-├─→ Uses: validatePhoneWithMessage()
-│   └─→ Returns: { valid, normalized, error }
-│
-├─→ Uses: formatPhoneForDisplay()
-│   └─→ Returns: "+91 XXXXX XXXXX"
-│
-├─→ Uses: addLead()
-│   └─→ Saves to Firebase
-│
-├─→ Uses: useAppTheme()
-│   └─→ Returns: Theme colors
-│
-├─→ Uses: router (expo-router)
-│   └─→ Handles: Navigation
-│
-└─→ Renders: UI Components
-    ├─ AppButton
-    ├─ AppHeader
-    ├─ ScreenContainer
-    ├─ Image
-    ├─ View
-    ├─ Text
-    ├─ ActivityIndicator
-    └─ ScrollView
+â”‚
+â”œâ”€â†’ Uses: expo-image-picker
+â”‚   â””â”€â†’ Returns: Image URI + Base64
+â”‚
+â”œâ”€â†’ Calls: GeminiPhoneExtractor.extractPhoneNumbers()
+â”‚   â””â”€â†’ Returns: GeminiExtractionResult
+â”‚
+â”œâ”€â†’ Uses: validatePhoneWithMessage()
+â”‚   â””â”€â†’ Returns: { valid, normalized, error }
+â”‚
+â”œâ”€â†’ Uses: formatPhoneForDisplay()
+â”‚   â””â”€â†’ Returns: "+91 XXXXX XXXXX"
+â”‚
+â”œâ”€â†’ Uses: addLead()
+â”‚   â””â”€â†’ Saves to Firebase
+â”‚
+â”œâ”€â†’ Uses: useAppTheme()
+â”‚   â””â”€â†’ Returns: Theme colors
+â”‚
+â”œâ”€â†’ Uses: router (expo-router)
+â”‚   â””â”€â†’ Handles: Navigation
+â”‚
+â””â”€â†’ Renders: UI Components
+    â”œâ”€ AppButton
+    â”œâ”€ AppHeader
+    â”œâ”€ ScreenContainer
+    â”œâ”€ Image
+    â”œâ”€ View
+    â”œâ”€ Text
+    â”œâ”€ ActivityIndicator
+    â””â”€ ScrollView
 ```
 
 ---
@@ -498,35 +507,35 @@ ImageImportScreen
 
 ```
 ImageImportScreen
-│
-├─→ Pick Image
-│   ├─ Permission denied  →  Alert "Permission Required"
-│   └─ Cancel/Error      →  Silently handle
-│
-├─→ Convert to Base64
-│   ├─ No base64         →  Alert "Could not read image"
-│   └─ Success          →  Continue
-│
-├─→ Call Gemini API
-│   ├─ Network error     →  Alert with error message
-│   ├─ API error (401)   →  Check API key
-│   ├─ API error (429)   →  Rate limited - retry later
-│   ├─ API error (500)   →  Server error - retry
-│   └─ Success          →  Continue
-│
-├─→ Parse Response
-│   ├─ Invalid JSON      →  Alert "Invalid response"
-│   └─ Valid JSON        →  Continue
-│
-├─→ Validate Phones
-│   ├─ No numbers       →  Alert "No numbers found"
-│   ├─ All invalid      →  Alert with details
-│   └─ Some valid       →  Show valid, skip invalid
-│
-└─→ Save to Firebase
-    ├─ Auth error       →  Alert "Not authenticated"
-    ├─ Network error    →  Alert "Connection failed"
-    └─ Success         →  Show success & navigate back
+â”‚
+â”œâ”€â†’ Pick Image
+â”‚   â”œâ”€ Permission denied  â†’  Alert "Permission Required"
+â”‚   â””â”€ Cancel/Error      â†’  Silently handle
+â”‚
+â”œâ”€â†’ Convert to Base64
+â”‚   â”œâ”€ No base64         â†’  Alert "Could not read image"
+â”‚   â””â”€ Success          â†’  Continue
+â”‚
+â”œâ”€â†’ Call Gemini API
+â”‚   â”œâ”€ Network error     â†’  Alert with error message
+â”‚   â”œâ”€ API error (401)   â†’  Check API key
+â”‚   â”œâ”€ API error (429)   â†’  Rate limited - retry later
+â”‚   â”œâ”€ API error (500)   â†’  Server error - retry
+â”‚   â””â”€ Success          â†’  Continue
+â”‚
+â”œâ”€â†’ Parse Response
+â”‚   â”œâ”€ Invalid JSON      â†’  Alert "Invalid response"
+â”‚   â””â”€ Valid JSON        â†’  Continue
+â”‚
+â”œâ”€â†’ Validate Phones
+â”‚   â”œâ”€ No numbers       â†’  Alert "No numbers found"
+â”‚   â”œâ”€ All invalid      â†’  Alert with details
+â”‚   â””â”€ Some valid       â†’  Show valid, skip invalid
+â”‚
+â””â”€â†’ Save to Firebase
+    â”œâ”€ Auth error       â†’  Alert "Not authenticated"
+    â”œâ”€ Network error    â†’  Alert "Connection failed"
+    â””â”€ Success         â†’  Show success & navigate back
 ```
 
 ---
@@ -548,3 +557,5 @@ Refer back to these when:
 - Understanding the flow
 - Training team members
 - Documenting changes
+
+

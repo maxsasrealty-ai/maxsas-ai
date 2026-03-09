@@ -1,32 +1,41 @@
-# 🎯 QUICK REFERENCE - N8N READY APP
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
+# ðŸŽ¯ QUICK REFERENCE - N8N READY APP
 
 ## Files Created (7 new files)
 
 ```
 src/lib/
-├─ leadSchema.ts ................. Lead schema & validation
-├─ leadService.ts ................ All service functions
+â”œâ”€ leadSchema.ts ................. Lead schema & validation
+â”œâ”€ leadService.ts ................ All service functions
 
 src/components/ui/
-├─ DashboardStats.tsx ............ Real-time metrics
+â”œâ”€ DashboardStats.tsx ............ Real-time metrics
 
 src/features/leads/
-├─ FollowUpScheduleScreen.tsx ..... Schedule follow-ups
-├─ ScheduledFollowUpsScreen.tsx ... View scheduled follow-ups
+â”œâ”€ FollowUpScheduleScreen.tsx ..... Schedule follow-ups
+â”œâ”€ ScheduledFollowUpsScreen.tsx ... View scheduled follow-ups
 
 app/
-├─ follow-up-schedule.tsx ......... Route
-├─ scheduled-follow-ups.tsx ....... Route
+â”œâ”€ follow-up-schedule.tsx ......... Route
+â”œâ”€ scheduled-follow-ups.tsx ....... Route
 
 Docs/
-├─ N8N_READINESS.md .............. Complete guide
-├─ IMPLEMENTATION_COMPLETE_N8N.md. Summary
-└─ QUICK_REFERENCE.md ............ This file
+â”œâ”€ N8N_READINESS.md .............. Complete guide
+â”œâ”€ IMPLEMENTATION_COMPLETE_N8N.md. Summary
+â””â”€ QUICK_REFERENCE.md ............ This file
 ```
 
 ---
 
-## 📐 Lead Schema (What N8N Sees)
+## ðŸ“ Lead Schema (What N8N Sees)
 
 ```typescript
 {
@@ -57,7 +66,7 @@ Docs/
 
 ---
 
-## 🔧 Key Service Functions
+## ðŸ”§ Key Service Functions
 
 ```typescript
 // Add lead with schema
@@ -95,7 +104,7 @@ const followUps = await getScheduledFollowUps();
 
 ---
 
-## 📊 Dashboard Component
+## ðŸ“Š Dashboard Component
 
 ```tsx
 import { DashboardStats } from '@/src/components/ui/DashboardStats';
@@ -107,7 +116,7 @@ import { DashboardStats } from '@/src/components/ui/DashboardStats';
 
 ---
 
-## 🔄 Routes
+## ðŸ”„ Routes
 
 | Route | Component | Purpose |
 |-------|-----------|---------|
@@ -117,7 +126,7 @@ import { DashboardStats } from '@/src/components/ui/DashboardStats';
 
 ---
 
-## 🎯 Common Workflows
+## ðŸŽ¯ Common Workflows
 
 ### Add Lead (Existing Works!)
 ```typescript
@@ -159,7 +168,7 @@ console.log(`${stats.scheduledLeads} leads scheduled`);
 
 ---
 
-## 🔍 For N8N: Common Queries
+## ðŸ” For N8N: Common Queries
 
 ```firestore
 // Get pending leads (not yet automated)
@@ -188,7 +197,7 @@ collection('leads')
 
 ---
 
-## 📝 Actions for N8N
+## ðŸ“ Actions for N8N
 
 ```javascript
 // Update after calling
@@ -225,22 +234,22 @@ update('/leads/{leadId}', {
 
 ---
 
-## ✅ Verification Checklist
+## âœ… Verification Checklist
 
 - [ ] App runs without errors
 - [ ] Dashboard shows lead counts
 - [ ] Can add manual lead
 - [ ] Can schedule follow-up
-- [ ] Check Firebase console → see schema fields
-- [ ] Check Firebase console → see history entries
-- [ ] Open DevTools → no console errors
+- [ ] Check Firebase console â†’ see schema fields
+- [ ] Check Firebase console â†’ see history entries
+- [ ] Open DevTools â†’ no console errors
 - [ ] Can mark as interested
 - [ ] Can view scheduled follow-ups
 - [ ] Pull-to-refresh works
 
 ---
 
-## 🚀 N8N Integration Checklist
+## ðŸš€ N8N Integration Checklist
 
 - [ ] Design N8N workflows
 - [ ] Create Firebase API connection
@@ -253,32 +262,32 @@ update('/leads/{leadId}', {
 
 ---
 
-## 📞 Common Status Values
+## ðŸ“ž Common Status Values
 
 ```
 status:
-  "new" → Lead just added
-  "interested" → Lead showed interest
-  "not_interested" → Lead declined
-  "follow_up" → Scheduled for follow-up
-  "closed" → Deal closed
+  "new" â†’ Lead just added
+  "interested" â†’ Lead showed interest
+  "not_interested" â†’ Lead declined
+  "follow_up" â†’ Scheduled for follow-up
+  "closed" â†’ Deal closed
 
 intakeStatus:
-  "pending" → Waiting for automation
-  "in_progress" → N8N currently processing
-  "completed" → N8N finished
-  "failed" → Error occurred
+  "pending" â†’ Waiting for automation
+  "in_progress" â†’ N8N currently processing
+  "completed" â†’ N8N finished
+  "failed" â†’ Error occurred
 
 intakeAction:
-  "none" → No action yet
-  "call" → Call lead
-  "email" → Send email
-  "sms" → Send SMS
+  "none" â†’ No action yet
+  "call" â†’ Call lead
+  "email" â†’ Send email
+  "sms" â†’ Send SMS
 ```
 
 ---
 
-## 💡 Pro Tips
+## ðŸ’¡ Pro Tips
 
 1. **Always check automationTriggered flag** before duplicate processing
 2. **Read history array** to understand what happened
@@ -289,7 +298,7 @@ intakeAction:
 
 ---
 
-## 🎓 Learning Path
+## ðŸŽ“ Learning Path
 
 1. Read `N8N_READINESS.md` - Full guide
 2. Read `IMPLEMENTATION_COMPLETE_N8N.md` - Overview
@@ -300,7 +309,9 @@ intakeAction:
 
 ---
 
-**Your app is n8n automation-ready! 🚀**
+**Your app is n8n automation-ready! ðŸš€**
 
 No more changes needed to the app structure.
 Just design your workflows and connect them!
+
+

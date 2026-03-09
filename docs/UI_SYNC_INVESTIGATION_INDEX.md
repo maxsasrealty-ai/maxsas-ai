@@ -1,42 +1,51 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # UI Sync Investigation - Complete Index
 
 **Investigation Completed:** February 23, 2026  
 **Issue Type:** Dashboard "Show Retrying" tab display bug  
-**Status:** ✅ RESOLVED  
+**Status:** âœ… RESOLVED  
 
 ---
 
-## 📋 Quick Navigation
+## ðŸ“‹ Quick Navigation
 
 ### For Quick Understanding
-→ **[INVESTIGATION_SUMMARY.md](INVESTIGATION_SUMMARY.md)** (2 min read)
+â†’ **[INVESTIGATION_SUMMARY.md](INVESTIGATION_SUMMARY.md)** (2 min read)
 - Executive summary
 - Root cause in 1 sentence
 - What was fixed
 
 ### For Visual Learners
-→ **[VISUAL_GUIDE_UI_SYNC_ISSUE.md](VISUAL_GUIDE_UI_SYNC_ISSUE.md)** (5 min read)
+â†’ **[VISUAL_GUIDE_UI_SYNC_ISSUE.md](VISUAL_GUIDE_UI_SYNC_ISSUE.md)** (5 min read)
 - Data flow diagrams
 - Filter decision trees
 - Before/after scenarios
 - Real-time sync timeline
 
 ### For Detailed Technical Info
-→ **[DEBUGGING_UI_SYNC_ISSUE.md](DEBUGGING_UI_SYNC_ISSUE.md)** (10 min read)
+â†’ **[DEBUGGING_UI_SYNC_ISSUE.md](DEBUGGING_UI_SYNC_ISSUE.md)** (10 min read)
 - Complete root cause analysis
 - Field state reference
 - Field impact table
 - Summary answer table
 
 ### For Your Specific Questions
-→ **[QUESTIONS_ANSWERED_DETAILED.md](QUESTIONS_ANSWERED_DETAILED.md)** (15 min read)
+â†’ **[QUESTIONS_ANSWERED_DETAILED.md](QUESTIONS_ANSWERED_DETAILED.md)** (15 min read)
 - Q1: Frontend filtering logic
 - Q2: Progress bar calculation
 - Q3: Batch ID scope analysis
 - Q4: Mandatory field requirements
 
 ### For Implementation
-→ **[IMPLEMENTATION_FIX_GUIDE.md](IMPLEMENTATION_FIX_GUIDE.md)** (5 min read)
+â†’ **[IMPLEMENTATION_FIX_GUIDE.md](IMPLEMENTATION_FIX_GUIDE.md)** (5 min read)
 - Code changes applied
 - Testing checklist
 - Success criteria
@@ -44,7 +53,7 @@
 
 ---
 
-## 🎯 The Issue in 30 Seconds
+## ðŸŽ¯ The Issue in 30 Seconds
 
 **Problem:** Lead marked as `failed_retryable` doesn't appear in "Show Retrying" tab
 
@@ -55,11 +64,11 @@ Your lead had both = 0/null, so it got filtered out
 Now the lead appears immediately
 
 **File:** `src/features/leads/BatchDetailScreen.tsx` line 248  
-**Status:** ✅ Applied and tested
+**Status:** âœ… Applied and tested
 
 ---
 
-## 📊 Your Questions Answered
+## ðŸ“Š Your Questions Answered
 
 | Question | Location | Summary |
 |----------|----------|---------|
@@ -70,7 +79,7 @@ Now the lead appears immediately
 
 ---
 
-## 🔍 Investigation Highlights
+## ðŸ” Investigation Highlights
 
 ### Root Cause
 **Location:** [src/features/leads/BatchDetailScreen.tsx](src/features/leads/BatchDetailScreen.tsx#L248-L250)
@@ -95,28 +104,28 @@ if (leadFilter === 'retrying') {
 
 | Finding | Impact | Status |
 |---------|--------|--------|
-| Real-time sync works correctly | Confirmed — 1-2 sec latency | ✅ |
-| No pre-filtering in Firestore query | Correct architecture — frontend handles tabs | ✅ |
-| Filter blocking failed_retryable leads | **ROOT CAUSE** | ✅ FIXED |
-| Progress bar math is correct | 0/1 = 0% (semantic issue) | ✅ |
-| No mandatory field changes needed | Status field alone sufficient | ✅ |
+| Real-time sync works correctly | Confirmed â€” 1-2 sec latency | âœ… |
+| No pre-filtering in Firestore query | Correct architecture â€” frontend handles tabs | âœ… |
+| Filter blocking failed_retryable leads | **ROOT CAUSE** | âœ… FIXED |
+| Progress bar math is correct | 0/1 = 0% (semantic issue) | âœ… |
+| No mandatory field changes needed | Status field alone sufficient | âœ… |
 
 ---
 
-## 📈 Implementation State
+## ðŸ“ˆ Implementation State
 
-### ✅ Completed
+### âœ… Completed
 - [x] Root cause analysis (found missing status check)
 - [x] Frontend fix applied (src/features/leads/BatchDetailScreen.tsx)
 - [x] Code committed
 - [x] Documentation created (4 files, 50KB+)
 
-### ⏳ Recommended (Optional)
+### â³ Recommended (Optional)
 - [ ] Backend n8n improvement (set retryCount & nextRetryAt)
 - [ ] Manual end-to-end testing
 - [ ] Monitor batch detail screens in production
 
-### ✔️ Verified
+### âœ”ï¸ Verified
 - [x] Real-time listener working
 - [x] Firestore query returning all leads
 - [x] Field mapping correct
@@ -125,29 +134,29 @@ if (leadFilter === 'retrying') {
 
 ---
 
-## 🔄 Data Flow Summary
+## ðŸ”„ Data Flow Summary
 
 ```
 n8n Call Failed (No Answer)
-         ↓
+         â†“
 Firestore: status = "failed_retryable"
-         ↓
+         â†“
 Real-time Listener (Fetches ALL leads by batchId)
-         ↓
+         â†“
 Frontend: liveLeads = [lead with failed_retryable]
-         ↓
+         â†“
 Filter Check (leadFilter === 'retrying')
-  ├─ OLD: retryCount > 0? NO ❌
-  └─ NEW: status === 'failed_retryable'? YES ✅
-         ↓
+  â”œâ”€ OLD: retryCount > 0? NO âŒ
+  â””â”€ NEW: status === 'failed_retryable'? YES âœ…
+         â†“
 Lead INCLUDED in filteredLeads
-         ↓
-"Show Retrying" Tab Shows Lead ✅
+         â†“
+"Show Retrying" Tab Shows Lead âœ…
 ```
 
 ---
 
-## 📝 All Documentation Files
+## ðŸ“ All Documentation Files
 
 Create date: February 23, 2026
 
@@ -189,29 +198,29 @@ Create date: February 23, 2026
 
 ---
 
-## 🎓 Key Learnings
+## ðŸŽ“ Key Learnings
 
 ### Frontend Architecture
 - Firestore queries fetch raw data (no pre-filtering)
 - Frontend applies business logic filtering (tabs)
 - Real-time listeners update component state
-- Proper unsubscribe prevents memory leaks ✅
+- Proper unsubscribe prevents memory leaks âœ…
 
 ### Filter Logic
-- "Show Pending" → filters `status === 'queued'`
-- "Show Completed" → filters `status === 'completed'`
-- "Show Failed" → shows all (no filter)
-- "Show Retrying" → filters on retry metadata **OR** failed_retryable status ✅
+- "Show Pending" â†’ filters `status === 'queued'`
+- "Show Completed" â†’ filters `status === 'completed'`
+- "Show Failed" â†’ shows all (no filter)
+- "Show Retrying" â†’ filters on retry metadata **OR** failed_retryable status âœ…
 
 ### State Management
 - Real-time listener provides live data
 - useMemo prevents excessive re-renderring
 - Dependencies properly managed
-- No race conditions with current architecture ✅
+- No race conditions with current architecture âœ…
 
 ---
 
-## 🚀 Next Phase (Optional)
+## ðŸš€ Next Phase (Optional)
 
 ### Backend Improvement
 When n8n marks lead as `failed_retryable`, also:
@@ -228,7 +237,7 @@ When n8n marks lead as `failed_retryable`, also:
 
 ---
 
-## 📞 Support Reference
+## ðŸ“ž Support Reference
 
 **Code Location:** [src/features/leads/BatchDetailScreen.tsx](src/features/leads/BatchDetailScreen.tsx)
 
@@ -242,20 +251,22 @@ When n8n marks lead as `failed_retryable`, also:
 - attempts: 1
 
 **Real-Time Behavior:**
-- ✅ Listener syncs in 1-2 seconds
-- ✅ Filter applies immediately
-- ✅ UI updates without refresh
+- âœ… Listener syncs in 1-2 seconds
+- âœ… Filter applies immediately
+- âœ… UI updates without refresh
 
 ---
 
-## ✨ Summary
+## âœ¨ Summary
 
 A comprehensive investigation identified and fixed a UI display bug where leads marked as `failed_retryable` (no answer case) weren't appearing in the "Show Retrying" tab. The fix was simple (one status check), but the analysis revealed important architectural insights about the frontend filtering system, real-time synchronization, and data flow.
 
-**Ready for testing and deployment. ✅**
+**Ready for testing and deployment. âœ…**
 
 ---
 
 Last Updated: February 23, 2026  
-Investigation Status: COMPLETE ✅  
-Fix Status: APPLIED ✅
+Investigation Status: COMPLETE âœ…  
+Fix Status: APPLIED âœ…
+
+

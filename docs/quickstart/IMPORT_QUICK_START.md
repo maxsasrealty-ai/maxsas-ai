@@ -1,3 +1,12 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Lead Import System - Quick Start Guide
 
 ## What Was Built
@@ -19,16 +28,16 @@ A complete, production-ready lead import system for your Maxsas AI app that extr
 
 ## Features Implemented
 
-✅ **Clipboard Paste** - Extract numbers from text
-✅ **CSV Upload** - Auto-detect phone columns
-✅ **Excel Upload** - Support XLSX/XLS
-✅ **PDF Upload** - Text-based PDFs only
-✅ **Gallery Upload** - Image attachment + offline mode message
-✅ **Phone Validation** - 10-digit Indian format
-✅ **Duplicate Removal** - Automatic deduplication
-✅ **Multiple Formats** - Supports various phone formats
-✅ **Preview Screen** - Review before saving
-✅ **Database Integration** - Saves to Firebase
+âœ… **Clipboard Paste** - Extract numbers from text
+âœ… **CSV Upload** - Auto-detect phone columns
+âœ… **Excel Upload** - Support XLSX/XLS
+âœ… **PDF Upload** - Text-based PDFs only
+âœ… **Gallery Upload** - Image attachment + offline mode message
+âœ… **Phone Validation** - 10-digit Indian format
+âœ… **Duplicate Removal** - Automatic deduplication
+âœ… **Multiple Formats** - Supports various phone formats
+âœ… **Preview Screen** - Review before saving
+âœ… **Database Integration** - Saves to Firebase
 
 ## How to Use
 
@@ -61,13 +70,13 @@ The app automatically:
 The system recognizes all these formats:
 
 ```
-9876543210              ✅ Plain 10 digits
-+91 9876543210         ✅ With country code
-98765-43210            ✅ With dashes
-98765.43210            ✅ With dots
-98765 43210            ✅ With spaces
-Call at 9876543210     ✅ Inside text
-Phone: +91 9876543210  ✅ Mixed formats
+9876543210              âœ… Plain 10 digits
++91 9876543210         âœ… With country code
+98765-43210            âœ… With dashes
+98765.43210            âœ… With dots
+98765 43210            âœ… With spaces
+Call at 9876543210     âœ… Inside text
+Phone: +91 9876543210  âœ… Mixed formats
 ```
 
 ## Code Examples
@@ -142,8 +151,8 @@ When saved, each lead includes:
 
 ## Files Modified
 
-- ✅ `src/features/leads/PasteLeadsScreen.tsx` - Now supports phone extraction
-- ✅ Existing `LeadReviewPanel.tsx` - Works with imported leads
+- âœ… `src/features/leads/PasteLeadsScreen.tsx` - Now supports phone extraction
+- âœ… Existing `LeadReviewPanel.tsx` - Works with imported leads
 
 ## Testing
 
@@ -152,7 +161,7 @@ When saved, each lead includes:
 Copy this text:
 "Contact: 98765 43210 or +91 9876543211"
 
-Paste into app → Should extract both numbers
+Paste into app â†’ Should extract both numbers
 ```
 
 **Test CSV:**
@@ -161,7 +170,7 @@ Name,Phone,Email
 John,9876543210,john@example.com
 Jane,9876543211,jane@example.com
 
-Upload → Should detect phone column automatically
+Upload â†’ Should detect phone column automatically
 ```
 
 **Test Excel:**
@@ -172,18 +181,18 @@ Auto-detects phone column and extracts
 
 ## Performance
 
-- ⚡ All processing is local (instant)
-- 📱 Works offline
-- 🔒 No network calls
-- 💾 Minimal memory usage
-- ✅ Handles 1000+ rows instantly
+- âš¡ All processing is local (instant)
+- ðŸ“± Works offline
+- ðŸ”’ No network calls
+- ðŸ’¾ Minimal memory usage
+- âœ… Handles 1000+ rows instantly
 
 ## What's NOT Included
 
-❌ AI/OCR for scanned PDFs (shows offline message)
-❌ Server-side processing
-❌ API calls
-❌ ML-based detection
+âŒ AI/OCR for scanned PDFs (shows offline message)
+âŒ Server-side processing
+âŒ API calls
+âŒ ML-based detection
 
 ## Next Features to Add
 
@@ -204,25 +213,25 @@ If you encounter issues:
 
 ## Important Notes
 
-✅ **All local processing** - No AI, no external services
-✅ **Production ready** - Tested and optimized
-✅ **Type-safe** - Full TypeScript support
-✅ **Cross-platform** - Android, Web, iOS
-✅ **Well documented** - Complete documentation included
+âœ… **All local processing** - No AI, no external services
+âœ… **Production ready** - Tested and optimized
+âœ… **Type-safe** - Full TypeScript support
+âœ… **Cross-platform** - Android, Web, iOS
+âœ… **Well documented** - Complete documentation included
 
 ## Architecture
 
 ```
 User Input
-    ↓
+    â†“
 Import Service
-    ↓
+    â†“
 Phone Extractor (Validation + Normalization)
-    ↓
+    â†“
 Deduplication
-    ↓
+    â†“
 Preview Screen (with delete option)
-    ↓
+    â†“
 Firebase Storage
 ```
 
@@ -236,17 +245,19 @@ Firebase Storage
 
 ## Success Criteria
 
-✅ User can paste text with numbers
-✅ App extracts all valid phone numbers
-✅ Duplicates automatically removed
-✅ Preview shown before saving
-✅ Numbers saved to Firebase with metadata
-✅ User can delete before confirming
-✅ Works on Android and Web
+âœ… User can paste text with numbers
+âœ… App extracts all valid phone numbers
+âœ… Duplicates automatically removed
+âœ… Preview shown before saving
+âœ… Numbers saved to Firebase with metadata
+âœ… User can delete before confirming
+âœ… Works on Android and Web
 
 ---
 
-**Status:** ✅ Complete and Ready for Integration
+**Status:** âœ… Complete and Ready for Integration
 
 **Version:** 1.0
 **Last Updated:** Feb 3, 2026
+
+

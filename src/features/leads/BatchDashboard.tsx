@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
+import { useAuth } from '../../context/AuthContext';
 import { useBatch } from '../../context/BatchContext';
 import { useWallet } from '../../context/WalletContext';
 import { useAppTheme } from '../../theme/use-app-theme';
@@ -49,6 +50,7 @@ const verticalScale = (size: number) => (maxScaleHeight / 667) * size;
 
 export const BatchDashboard: React.FC = () => {
   const { colors: themeColors, spacing, radius, typography } = useAppTheme();
+  const { requireAuth } = useAuth();
   const { allBatches, leadStatsByBatch, loading, error, clearError, saveBatchToFirebase } = useBatch();
   const {
     availableBalance,
@@ -182,14 +184,16 @@ export const BatchDashboard: React.FC = () => {
   };
 
   const handleCallNow = (batch: Batch | BatchDraft) => {
-    const disabledReason = getCallNowDisabledReason(batch);
-    if (disabledReason) {
-      Alert.alert('Call Now Unavailable', disabledReason);
-      return;
-    }
+    requireAuth(() => {
+      const disabledReason = getCallNowDisabledReason(batch);
+      if (disabledReason) {
+        Alert.alert('Call Now Unavailable', disabledReason);
+        return;
+      }
 
-    setSelectedBatchForCall(batch);
-    setShowCallConfirmModal(true);
+      setSelectedBatchForCall(batch);
+      setShowCallConfirmModal(true);
+    });
   };
 
   const columns = getColumnCount(contentLayoutWidth);
@@ -283,7 +287,7 @@ export const BatchDashboard: React.FC = () => {
                   },
                   pressed && styles.primaryButtonPressed,
                 ]}
-                onPress={() => router.push('/upload-leads')}
+                onPress={() => requireAuth(() => router.push('/upload-leads'))}
               >
                 <Text style={styles.primaryButtonText}>Import Leads</Text>
               </Pressable>

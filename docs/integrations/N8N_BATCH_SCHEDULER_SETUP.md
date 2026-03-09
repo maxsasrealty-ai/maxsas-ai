@@ -1,3 +1,12 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # n8n Batch Scheduler Workflow Configuration
 
 ## Overview
@@ -71,7 +80,7 @@ return {
 ```
 
 ### Connection
-- Wire Cron → This Function node
+- Wire Cron â†’ This Function node
 
 ---
 
@@ -114,7 +123,7 @@ Node Type: Firebase - Firestore
 - **Limit**: `50` (process max 50 batches per cycle)
 
 ### Output Handling
-- **Return Full Documents**: Check ✓
+- **Return Full Documents**: Check âœ“
 
 ### Advanced Options
 - **Specify Return Data**: Leave empty (get all fields)
@@ -156,8 +165,8 @@ $node["Query Scheduled Batches"].json.batchCount > 0
 This prevents downstream nodes from running if no batches exist.
 
 ### Connections
-- Success branch (TRUE) → Loop through batches (Node 5)
-- Failure branch (FALSE) → Finish (or log empty condition)
+- Success branch (TRUE) â†’ Loop through batches (Node 5)
+- Failure branch (FALSE) â†’ Finish (or log empty condition)
 
 ---
 
@@ -251,7 +260,7 @@ Click **+ Add Field** for each:
 | `updatedAt` | `{{ $node["Prepare Transition Update"].json.transitionData.updatedAt }}` | Object |
 
 ### Advanced Options
-- **Merge**: Check ✓ (Important! Prevents overwriting entire document)
+- **Merge**: Check âœ“ (Important! Prevents overwriting entire document)
 - **Specify Return Data**: Check, then add: `status, startedAt, updatedAt`
 
 ### Error Handling
@@ -518,7 +527,7 @@ Action: Notify #bot-alerts Slack channel
 **Solution**: Verify service account has `datastore.documents.update` permission on batches collection.
 
 ### Issue: "Some batches not transitioning"
-**Solution**: Check if batch `scheduleAt` is exactly in past. May be due to clock skew. Increase comparison margin to ±5 seconds.
+**Solution**: Check if batch `scheduleAt` is exactly in past. May be due to clock skew. Increase comparison margin to Â±5 seconds.
 
 ### Issue: "Duplicate webhook calls"
 **Solution**: Ensure error handling doesn't retry. Add `if-batch-not-null` check before webhook.
@@ -531,71 +540,71 @@ Action: Notify #bot-alerts Slack channel
 ## Part 17: Diagram of Workflow Flow
 
 ```
-┌──────────────────┐
-│ Cron Trigger     │ Every 30 seconds
-│ (Node 1)         │
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────────────┐
-│ Calculate Current Time   │
-│ (Node 2)                 │
-└────────┬─────────────────┘
-         │
-         ▼
-┌──────────────────────────────┐
-│ Query Scheduled Batches      │ status='scheduled'
-│ (Node 3)                     │ scheduleAt <= now
-└────────┬─────────────────────┘
-         │
-         ▼
-┌──────────────────────────────┐
-│ Branch: Any Batches?         │
-│ (Node 4)                     │
-└────┬─────────────────────┬───┘
-  YES│                    │NO
-     ▼                    ▼
-┌──────────────────┐   [End]
-│ For Each Batch   │
-│ (Node 5)         │
-└────────┬─────────┘
-         │
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ Cron Trigger     â”‚ Every 30 seconds
+â”‚ (Node 1)         â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+         â”‚
+         â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ Calculate Current Time   â”‚
+â”‚ (Node 2)                 â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+         â”‚
+         â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ Query Scheduled Batches      â”‚ status='scheduled'
+â”‚ (Node 3)                     â”‚ scheduleAt <= now
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+         â”‚
+         â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ Branch: Any Batches?         â”‚
+â”‚ (Node 4)                     â”‚
+â””â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”˜
+  YESâ”‚                    â”‚NO
+     â–¼                    â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   [End]
+â”‚ For Each Batch   â”‚
+â”‚ (Node 5)         â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+         â”‚
     (Loop start)
-         │
-         ▼
-┌──────────────────────────┐
-│ Prepare Transition Data  │
-│ (Node 6)                 │
-└────────┬─────────────────┘
-         │
-         ▼
-┌──────────────────────────┐
-│ Update Batch Status      │ status: running
-│ (Node 7)                 │ startedAt: now
-└────────┬─────────────────┘
-         │
-         ▼
-┌──────────────────────────┐
-│ Extract for Webhook      │
-│ (Node 8)                 │
-└────────┬─────────────────┘
-         │
-         ▼
-┌──────────────────────────┐
-│ Notify Dispatcher        │ POST to webhook
-│ (Node 9)                 │
-└────────┬─────────────────┘
-         │
+         â”‚
+         â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ Prepare Transition Data  â”‚
+â”‚ (Node 6)                 â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+         â”‚
+         â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ Update Batch Status      â”‚ status: running
+â”‚ (Node 7)                 â”‚ startedAt: now
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+         â”‚
+         â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ Extract for Webhook      â”‚
+â”‚ (Node 8)                 â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+         â”‚
+         â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ Notify Dispatcher        â”‚ POST to webhook
+â”‚ (Node 9)                 â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+         â”‚
     (End loop iteration)
-         │
-         ▼
+         â”‚
+         â–¼
 [Next batch or end loop]
-         │
-         ▼
-┌──────────────────────────┐
-│ Log Summary              │
-│ (Node 10)                │
-└──────────────────────────┘
+         â”‚
+         â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ Log Summary              â”‚
+â”‚ (Node 10)                â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ---
@@ -662,4 +671,6 @@ for (const doc of snapshot.docs) {
   });
 }
 ```
+
+
 

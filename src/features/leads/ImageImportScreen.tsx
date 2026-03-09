@@ -12,6 +12,7 @@
 import { AppButton } from '@/src/components/ui/AppButton';
 import { AppHeader } from '@/src/components/ui/AppHeader';
 import { ScreenContainer } from '@/src/components/ui/ScreenContainer';
+import { useAuth } from '@/src/context/AuthContext';
 import { useBatch } from '@/src/context/BatchContext';
 import { formatPhoneForDisplay } from '@/src/lib/phoneExtractor';
 import type { ExtractedPhoneFromImage } from '@/src/services/geminiExtractor';
@@ -43,6 +44,7 @@ type Lead = {
 export default function ImageImportScreen() {
   const { colors } = useAppTheme();
   const { createLocalBatch } = useBatch();
+  const { requireAuth } = useAuth();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [extractedPhones, setExtractedPhones] = useState<ExtractedPhoneFromImage[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -55,50 +57,52 @@ export default function ImageImportScreen() {
    * Pick image from device gallery
    */
   const pickImage = async () => {
-    try {
-      // Request image picker permissions
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    requireAuth(async () => {
+      try {
+        // Request image picker permissions
+        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-      if (!permissionResult.granted) {
-        Alert.alert(
-          'Permission Required',
-          'Please allow access to your photo gallery to upload images.',
-          [{ text: 'OK' }]
-        );
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: false,
-        quality: 0.8,
-        base64: true, // IMPORTANT: Get base64 data directly
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const asset = result.assets[0];
-
-        if (!asset.base64) {
-          Alert.alert('Error', 'Could not read image. Please try another image.');
+        if (!permissionResult.granted) {
+          Alert.alert(
+            'Permission Required',
+            'Please allow access to your photo gallery to upload images.',
+            [{ text: 'OK' }]
+          );
           return;
         }
 
-        console.log('✅ Image selected:', {
-          size: asset.width && asset.height ? `${asset.width}x${asset.height}` : 'unknown',
-          uri: asset.uri,
-          base64Length: asset.base64.length,
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: false,
+          quality: 0.8,
+          base64: true, // IMPORTANT: Get base64 data directly
         });
 
-        setSelectedImage(asset.uri);
-        setErrorMessage('');
-        
-        // Auto-extract phone numbers after image selection
-        await extractPhonesFromImage(asset.base64, asset.mimeType || 'image/jpeg');
+        if (!result.canceled && result.assets && result.assets.length > 0) {
+          const asset = result.assets[0];
+
+          if (!asset.base64) {
+            Alert.alert('Error', 'Could not read image. Please try another image.');
+            return;
+          }
+
+          console.log('✅ Image selected:', {
+            size: asset.width && asset.height ? `${asset.width}x${asset.height}` : 'unknown',
+            uri: asset.uri,
+            base64Length: asset.base64.length,
+          });
+
+          setSelectedImage(asset.uri);
+          setErrorMessage('');
+
+          // Auto-extract phone numbers after image selection
+          await extractPhonesFromImage(asset.base64, asset.mimeType || 'image/jpeg');
+        }
+      } catch (error) {
+        console.error('Error picking image:', error);
+        Alert.alert('Error', 'Failed to pick image. Please try again.');
       }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick image. Please try again.');
-    }
+    });
   };
 
   /**
@@ -182,30 +186,32 @@ export default function ImageImportScreen() {
    * (NO Firebase write happens here)
    */
   const handleCreateBatch = () => {
-    if (leads.length === 0) {
-      Alert.alert('No leads', 'Please extract at least one lead to create a batch.');
-      return;
-    }
+    requireAuth(() => {
+      if (leads.length === 0) {
+        Alert.alert('No leads', 'Please extract at least one lead to create a batch.');
+        return;
+      }
 
-    // Create contacts from leads
-    const contacts = leads.map((lead) => ({
-      phone: lead.phoneRaw,
-      confidence: lead.confidence,
-    }));
+      // Create contacts from leads
+      const contacts = leads.map((lead) => ({
+        phone: lead.phoneRaw,
+        confidence: lead.confidence,
+      }));
 
-    // Create batch in local state (no Firebase write)
-    const batch = createLocalBatch(contacts, 'image', {
-      fileName: `Image_${new Date().toISOString()}`,
-      uploadedFrom: 'ImageImportScreen',
-      extractionType: 'ai',
-    });
+      // Create batch in local state (no Firebase write)
+      const batch = createLocalBatch(contacts, 'image', {
+        fileName: `Image_${new Date().toISOString()}`,
+        uploadedFrom: 'ImageImportScreen',
+        extractionType: 'ai',
+      });
 
-    console.log('✅ Batch created locally:', batch.batchId);
+      console.log('✅ Batch created locally:', batch.batchId);
 
-    // Redirect to dashboard with success message
-    router.replace({
-      pathname: '/batch-dashboard',
-      params: { successMessage: 'Batch created successfully' },
+      // Redirect to dashboard with success message
+      router.replace({
+        pathname: '/batch-dashboard',
+        params: { successMessage: 'Batch created successfully' },
+      });
     });
   };
 

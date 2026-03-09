@@ -1,56 +1,25 @@
 import { Feather } from '@expo/vector-icons';
-import { Tabs, router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { Redirect, Tabs } from 'expo-router';
+import { ActivityIndicator, View } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { useAuth } from '@/src/context/AuthContext';
-import { isUserProfileComplete } from '@/src/services/userService';
 import { useAppTheme } from '@/src/theme/use-app-theme';
 
 export default function TabLayout() {
   const { colors } = useAppTheme();
-  const { user } = useAuth();
-  const params = useLocalSearchParams<{ pass?: string | string[] }>();
-  const [checkingProfile, setCheckingProfile] = useState(true);
-  const passParam = Array.isArray(params?.pass) ? params.pass[0] : params?.pass;
-  const normalizedPass = typeof passParam === 'string' ? passParam.trim() : '';
+  const { user, authLoaded } = useAuth();
 
-  useEffect(() => {
-    let mounted = true;
+  if (!authLoaded) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
+        <ActivityIndicator color={colors.primary} />
+      </View>
+    );
+  }
 
-    const runCheck = async () => {
-      if (!user) {
-        if (normalizedPass) {
-          if (mounted) setCheckingProfile(false);
-          return;
-        }
-        router.replace('/login');
-        if (mounted) setCheckingProfile(false);
-        return;
-      }
-
-      try {
-        const complete = await isUserProfileComplete(user.uid);
-        if (!complete) {
-          router.replace('/(onboarding)/name');
-        }
-      } catch (error) {
-        console.error('Failed to validate profile completeness:', error);
-        router.replace('/(onboarding)/name');
-      } finally {
-        if (mounted) setCheckingProfile(false);
-      }
-    };
-
-    runCheck();
-
-    return () => {
-      mounted = false;
-    };
-  }, [normalizedPass, user]);
-
-  if (checkingProfile) {
-    return null;
+  if (!user) {
+    return <Redirect href='/' />;
   }
 
   return (

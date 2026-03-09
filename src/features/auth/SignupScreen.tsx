@@ -24,7 +24,6 @@ const SignupScreen = () => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
   const [error, setError] = useState('');
-  const [info, setInfo] = useState('');
 
   const handleSignup = async () => {
     if (!email || !password || !confirmPassword) {
@@ -36,11 +35,9 @@ const SignupScreen = () => {
       return;
     }
     setError('');
-    setInfo('');
     try {
       await signup(email, password);
-      setInfo('Verification email sent. Please check your Gmail.');
-      router.replace('/login');
+      router.replace('/');
     } catch (e: any) {
       const friendlyMessage =
         e.code === 'auth/email-already-in-use'
@@ -102,7 +99,6 @@ const SignupScreen = () => {
             />
 
             {error ? <Text style={[styles.errorText, { color: colors.danger }]}>{error}</Text> : null}
-            {info ? <Text style={[styles.infoText, { color: colors.accent }]}>{info}</Text> : null}
 
             <AppButton
               title="Create Account"
@@ -168,12 +164,6 @@ const styles = StyleSheet.create({
   errorText: {
     textAlign: 'center',
     marginTop: 16,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  infoText: {
-    textAlign: 'center',
-    marginTop: 12,
     fontSize: 14,
     fontWeight: '600',
   },

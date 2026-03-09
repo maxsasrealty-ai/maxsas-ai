@@ -1,4 +1,13 @@
-# 📱 BATCH-BASED CALLING SYSTEM - IMPLEMENTATION COMPLETE
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
+# ðŸ“± BATCH-BASED CALLING SYSTEM - IMPLEMENTATION COMPLETE
 
 ## Overview
 
@@ -6,22 +15,22 @@ Your MAXSAS AI app has been transformed from **individual lead saving** to a **b
 
 ---
 
-## 🎯 What Changed
+## ðŸŽ¯ What Changed
 
 ### BEFORE (Individual Lead Saving)
 ```
-Upload → Extract → Save Each Lead Individually → View in Dashboard
+Upload â†’ Extract â†’ Save Each Lead Individually â†’ View in Dashboard
 ```
 
 ### AFTER (Batch-Based System)
 ```
-Upload → Extract → Create Local Batch → Redirect to Dashboard  
-→ User Selects Action (Call Now or Schedule) → THEN Firebase Save
+Upload â†’ Extract â†’ Create Local Batch â†’ Redirect to Dashboard  
+â†’ User Selects Action (Call Now or Schedule) â†’ THEN Firebase Save
 ```
 
 ---
 
-## 📦 NEW FILES CREATED
+## ðŸ“¦ NEW FILES CREATED
 
 ### 1. Type Definitions
 **File**: `src/types/batch.ts` (250 lines)
@@ -60,12 +69,12 @@ interface Batch {
 
 ```typescript
 // Key functions
-- createLocalBatch() → Creates batch in local state ONLY
-- deleteDraftBatch() → Removes batch from local state ONLY
-- saveBatchToFirebase() → Triggered by user action (Call/Schedule)
-- getAllBatches() → Fetches from Firebase
-- getBatchDetail() → Gets single batch with contacts
-- updateBatchStatus() → Updates batch progress
+- createLocalBatch() â†’ Creates batch in local state ONLY
+- deleteDraftBatch() â†’ Removes batch from local state ONLY
+- saveBatchToFirebase() â†’ Triggered by user action (Call/Schedule)
+- getAllBatches() â†’ Fetches from Firebase
+- getBatchDetail() â†’ Gets single batch with contacts
+- updateBatchStatus() â†’ Updates batch progress
 ```
 
 **Hook**: `useBatch()` - Access batch state anywhere
@@ -102,18 +111,18 @@ getLeadsForBatch(batchId)
 **PHASE 2 & 5 - Central Command Center**
 
 Shows:
-- ✅ List of ALL batches (draft, scheduled, running, completed)
-- ✅ Batch source emoji (📊 CSV, 📷 Image, 📋 Clipboard, ✏️ Manual)
-- ✅ Contact count per batch
-- ✅ Real-time status indicators
-- ✅ Created timestamp
-- ✅ Quick stats (Total, Awaiting Command, Running)
+- âœ… List of ALL batches (draft, scheduled, running, completed)
+- âœ… Batch source emoji (ðŸ“Š CSV, ðŸ“· Image, ðŸ“‹ Clipboard, âœï¸ Manual)
+- âœ… Contact count per batch
+- âœ… Real-time status indicators
+- âœ… Created timestamp
+- âœ… Quick stats (Total, Awaiting Command, Running)
 
 **Status Badges**:
-- 🟠 DRAFT: "Awaiting Command"
-- 🔵 SCHEDULED: "Scheduled at 5:30 PM"
-- 🟢 RUNNING: "Calling in Progress"
-- ✅ COMPLETED: "Completed"
+- ðŸŸ  DRAFT: "Awaiting Command"
+- ðŸ”µ SCHEDULED: "Scheduled at 5:30 PM"
+- ðŸŸ¢ RUNNING: "Calling in Progress"
+- âœ… COMPLETED: "Completed"
 
 **Pull-to-Refresh**: Auto-syncs with Firebase
 
@@ -123,15 +132,15 @@ Shows:
 **PHASE 3 - User Actions & Contact Review**
 
 Shows:
-- ✅ Batch ID, total contacts, created time
-- ✅ All 10-50 phone numbers in scrollable list
-- ✅ Contact confidence scores (if from AI extraction)
-- ✅ Full phone number with name (if available)
+- âœ… Batch ID, total contacts, created time
+- âœ… All 10-50 phone numbers in scrollable list
+- âœ… Contact confidence scores (if from AI extraction)
+- âœ… Full phone number with name (if available)
 
 **User Actions (DRAFT status only)**:
-- 📞 **Call Now** → Saves to Firebase with status: 'running'
-- 📅 **Schedule** → Opens date/time picker, saves with status: 'scheduled'
-- 🗑️ **Delete** → Removes from local state ONLY (no Firebase)
+- ðŸ“ž **Call Now** â†’ Saves to Firebase with status: 'running'
+- ðŸ“… **Schedule** â†’ Opens date/time picker, saves with status: 'scheduled'
+- ðŸ—‘ï¸ **Delete** â†’ Removes from local state ONLY (no Firebase)
 
 **After User Action**:
 - Batch saved to Firebase atomically
@@ -147,17 +156,17 @@ Simple wrapper routes that export the components.
 
 ---
 
-## 🔄 MODIFIED FILES
+## ðŸ”„ MODIFIED FILES
 
 ### ImageImportScreen.tsx (PHASE 1 - Import Flow Change)
 
 **Changes**:
-- ❌ Removed: `addLead()` import (no direct Firebase writes)
-- ❌ Removed: `handleSaveLeads()` function
-- ✅ Added: `useBatch()` hook
-- ✅ Added: `handleCreateBatch()` function
-- ✅ Changed button: "💾 Save" → "📱 Create Batch"
-- ✅ New flow: Extract → Create Batch → Redirect to `/batch-detail`
+- âŒ Removed: `addLead()` import (no direct Firebase writes)
+- âŒ Removed: `handleSaveLeads()` function
+- âœ… Added: `useBatch()` hook
+- âœ… Added: `handleCreateBatch()` function
+- âœ… Changed button: "ðŸ’¾ Save" â†’ "ðŸ“± Create Batch"
+- âœ… New flow: Extract â†’ Create Batch â†’ Redirect to `/batch-detail`
 
 **Before**:
 ```tsx
@@ -193,7 +202,7 @@ const handleCreateBatch = () => {
 
 ---
 
-## 🔐 Firebase Rules Updated (PHASE 6)
+## ðŸ” Firebase Rules Updated (PHASE 6)
 
 **File**: `firestore.rules`
 
@@ -248,124 +257,124 @@ allow delete:
 
 ---
 
-## 📊 Firebase Structure
+## ðŸ“Š Firebase Structure
 
 ```
 /batches/{batchId}
-  ├─ batchId: "uuid-here"
-  ├─ userId: "user123"
-  ├─ status: "running" | "scheduled" | "completed"
-  ├─ action: "call_now" | "schedule"
-  ├─ source: "image" | "csv" | "clipboard" | "manual"
-  ├─ totalContacts: 15
-  ├─ createdAt: Timestamp
-  ├─ scheduleAt: Timestamp (if scheduled)
-  ├─ startedAt: Timestamp (if running)
-  └─ metadata: { fileName, extractionType }
+  â”œâ”€ batchId: "uuid-here"
+  â”œâ”€ userId: "user123"
+  â”œâ”€ status: "running" | "scheduled" | "completed"
+  â”œâ”€ action: "call_now" | "schedule"
+  â”œâ”€ source: "image" | "csv" | "clipboard" | "manual"
+  â”œâ”€ totalContacts: 15
+  â”œâ”€ createdAt: Timestamp
+  â”œâ”€ scheduleAt: Timestamp (if scheduled)
+  â”œâ”€ startedAt: Timestamp (if running)
+  â””â”€ metadata: { fileName, extractionType }
 
 /leads/{leadId}
-  ├─ phone: "9876543210"
-  ├─ batchId: "uuid-here" [REQUIRED]
-  ├─ userId: "user123"
-  ├─ name: "John Doe"
-  ├─ email: "john@example.com"
-  ├─ source: "image" | "csv" | "clipboard" | "manual"
-  ├─ status: "queued" | "calling" | "completed"
-  ├─ createdAt: Timestamp
-  └─ confidence: 0.95 (if from AI)
+  â”œâ”€ phone: "9876543210"
+  â”œâ”€ batchId: "uuid-here" [REQUIRED]
+  â”œâ”€ userId: "user123"
+  â”œâ”€ name: "John Doe"
+  â”œâ”€ email: "john@example.com"
+  â”œâ”€ source: "image" | "csv" | "clipboard" | "manual"
+  â”œâ”€ status: "queued" | "calling" | "completed"
+  â”œâ”€ createdAt: Timestamp
+  â””â”€ confidence: 0.95 (if from AI)
 ```
 
 ---
 
-## 🔄 Complete User Flow
+## ðŸ”„ Complete User Flow
 
 ### Step 1: Upload
 ```
 User clicks "Upload from Gallery"
-  ↓
+  â†“
 Selects image with phone numbers
-  ↓
+  â†“
 ImageImportScreen extracts numbers via Gemini AI
-  ↓
+  â†“
 Preview shows extracted contacts
 ```
 
 ### Step 2: Create Batch
 ```
 User reviews extracted numbers
-  ↓
-Clicks "📱 Create Batch"
-  ↓
+  â†“
+Clicks "ðŸ“± Create Batch"
+  â†“
 BatchContext.createLocalBatch() creates in-memory batch
-  ↓
+  â†“
 User redirected to /batch-detail?batchId=xxx
-  ↓
+  â†“
 NO Firebase write yet
 ```
 
 ### Step 3: Batch Detail
 ```
 User sees all contacts in batch
-  ↓
+  â†“
 User chooses action:
-  A) "📞 Call Now"
-  B) "📅 Schedule"
-  C) "🗑️ Delete"
+  A) "ðŸ“ž Call Now"
+  B) "ðŸ“… Schedule"
+  C) "ðŸ—‘ï¸ Delete"
 ```
 
 ### Step 4a: Call Now Action
 ```
 User clicks "Call Now"
-  ↓
+  â†“
 batchService.saveBatchToFirebase(batch, 'call_now')
-  ↓
+  â†“
 Atomic Firebase write:
   - Creates /batches/{batchId} with status: 'running'
   - Creates /leads/{x} for each contact with batchId reference
-  ↓
+  â†“
 Status updates to "Calling in Progress"
-  ↓
+  â†“
 Redirects to dashboard
 ```
 
 ### Step 4b: Schedule Action
 ```
 User clicks "Schedule"
-  ↓
+  â†“
 Date/time picker modal opens
-  ↓
+  â†“
 User selects date + time
-  ↓
+  â†“
 batchService.saveBatchToFirebase(batch, 'schedule', scheduleAt)
-  ↓
+  â†“
 Atomic Firebase write:
   - Creates /batches/{batchId} with status: 'scheduled'
   - Sets scheduleAt: selected timestamp
   - Creates /leads/{x} for each contact
-  ↓
+  â†“
 Status updates to "Scheduled at 5:30 PM"
-  ↓
+  â†“
 N8N automation monitors and calls at scheduled time
 ```
 
 ### Step 4c: Delete Action
 ```
 User clicks "Delete"
-  ↓
+  â†“
 Confirmation dialog
-  ↓
+  â†“
 deleteDraftBatch(batchId) removes from local state
-  ↓
+  â†“
 NO Firebase write
-  ↓
+  â†“
 Batch disappears
-  ↓
+  â†“
 Redirects to dashboard
 ```
 
 ---
 
-## 🚀 Setup Steps
+## ðŸš€ Setup Steps
 
 ### 1. Install Dependencies (if needed)
 ```bash
@@ -392,7 +401,7 @@ export default function RootLayout() {
 ### 3. Deploy Firebase Rules
 ```
 1. Go to Firebase Console
-2. Firestore → Rules tab
+2. Firestore â†’ Rules tab
 3. Copy content from firestore.rules
 4. Paste into Firebase console
 5. Publish
@@ -400,29 +409,29 @@ export default function RootLayout() {
 
 ### 4. Update Navigation Structure
 Ensure routes exist:
-- ✅ `/batch-dashboard` (shows all batches)
-- ✅ `/batch-detail` (shows batch contacts + actions)
-- ✅ `/image-import` (upload image)
-- ✅ Any other import screens (clipboard, CSV, manual)
+- âœ… `/batch-dashboard` (shows all batches)
+- âœ… `/batch-detail` (shows batch contacts + actions)
+- âœ… `/image-import` (upload image)
+- âœ… Any other import screens (clipboard, CSV, manual)
 
 ---
 
-## ✨ Key Features
+## âœ¨ Key Features
 
-✅ **Batch Creation**: Instantaneous, local-only (no Firebase overhead)
-✅ **Delayed Firebase Write**: Only on user action (Call/Schedule)
-✅ **Atomic Operations**: All contacts saved together (all or nothing)
-✅ **User Isolation**: Each user sees only their batches
-✅ **Real-Time Dashboard**: Pull-to-refresh syncs status
-✅ **Status Tracking**: Draft → Running/Scheduled → Completed
-✅ **Date/Time Scheduling**: Pick any future date + time
-✅ **Delete Before Save**: Users can discard batches without Firebase trace
-✅ **N8N Ready**: Batches structure ready for automation
-✅ **Atomic Writes**: All contacts in batch saved together
+âœ… **Batch Creation**: Instantaneous, local-only (no Firebase overhead)
+âœ… **Delayed Firebase Write**: Only on user action (Call/Schedule)
+âœ… **Atomic Operations**: All contacts saved together (all or nothing)
+âœ… **User Isolation**: Each user sees only their batches
+âœ… **Real-Time Dashboard**: Pull-to-refresh syncs status
+âœ… **Status Tracking**: Draft â†’ Running/Scheduled â†’ Completed
+âœ… **Date/Time Scheduling**: Pick any future date + time
+âœ… **Delete Before Save**: Users can discard batches without Firebase trace
+âœ… **N8N Ready**: Batches structure ready for automation
+âœ… **Atomic Writes**: All contacts in batch saved together
 
 ---
 
-## 🔮 N8N Integration Ready
+## ðŸ”® N8N Integration Ready
 
 ### What N8N Can Do Now
 
@@ -441,65 +450,65 @@ Ensure routes exist:
 
 3. **Update Progress**
    ```
-   /batches/{batchId} → status: 'running'
-   /leads/{leadId} → status: 'calling'
+   /batches/{batchId} â†’ status: 'running'
+   /leads/{leadId} â†’ status: 'calling'
    ```
 
 4. **Mark Complete**
    ```
-   /batches/{batchId} → status: 'completed'
+   /batches/{batchId} â†’ status: 'completed'
    Add summary (total called, answered, failed)
    ```
 
 ---
 
-## ⚠️ Important Notes
+## âš ï¸ Important Notes
 
 ### What Did NOT Change
-- ✅ Image extraction logic (still uses Gemini AI)
-- ✅ Phone validation (still validates Indian numbers)
-- ✅ Authentication (still uses Firebase Auth)
-- ✅ Existing import screens structure (only button changed)
-- ✅ Database backend (Firestore still used)
+- âœ… Image extraction logic (still uses Gemini AI)
+- âœ… Phone validation (still validates Indian numbers)
+- âœ… Authentication (still uses Firebase Auth)
+- âœ… Existing import screens structure (only button changed)
+- âœ… Database backend (Firestore still used)
 
 ### What CAN Still Be Done
-- Users can import from CSV ✅
-- Users can paste numbers ✅
-- Users can manually enter ✅
-- Users can upload screenshots ✅
-- All still create batches ✅
+- Users can import from CSV âœ…
+- Users can paste numbers âœ…
+- Users can manually enter âœ…
+- Users can upload screenshots âœ…
+- All still create batches âœ…
 
 ### What CHANGED
-- ❌ Removed: Direct Firebase saves from import screens
-- ❌ Removed: Individual "Save Lead" buttons
-- ✅ Added: "Create Batch" flow
-- ✅ Added: Batch dashboard with status tracking
-- ✅ Added: Scheduled calling support
-- ✅ Added: Batch-level actions
+- âŒ Removed: Direct Firebase saves from import screens
+- âŒ Removed: Individual "Save Lead" buttons
+- âœ… Added: "Create Batch" flow
+- âœ… Added: Batch dashboard with status tracking
+- âœ… Added: Scheduled calling support
+- âœ… Added: Batch-level actions
 
 ---
 
-## 📋 Testing Checklist
+## ðŸ“‹ Testing Checklist
 
-- [ ] Upload image → extracts numbers ✓
-- [ ] Click "Create Batch" → redirects to batch detail ✓
-- [ ] Batch shows all contacts ✓
-- [ ] Can delete batch (no Firebase write) ✓
-- [ ] Click "Call Now" → saves to Firebase ✓
-- [ ] Batch status changes to "Calling in Progress" ✓
-- [ ] Click "Schedule" → opens date/time picker ✓
-- [ ] Select future date/time → saves to Firebase ✓
-- [ ] Batch status changes to "Scheduled" ✓
-- [ ] Dashboard shows batch status correctly ✓
-- [ ] Pull-to-refresh updates dashboard ✓
-- [ ] Click batch → shows all contacts ✓
-- [ ] Firebase rules enforce batchId requirement ✓
-- [ ] Can't create leads without batchId ✓
-- [ ] User isolation working (only own batches visible) ✓
+- [ ] Upload image â†’ extracts numbers âœ“
+- [ ] Click "Create Batch" â†’ redirects to batch detail âœ“
+- [ ] Batch shows all contacts âœ“
+- [ ] Can delete batch (no Firebase write) âœ“
+- [ ] Click "Call Now" â†’ saves to Firebase âœ“
+- [ ] Batch status changes to "Calling in Progress" âœ“
+- [ ] Click "Schedule" â†’ opens date/time picker âœ“
+- [ ] Select future date/time â†’ saves to Firebase âœ“
+- [ ] Batch status changes to "Scheduled" âœ“
+- [ ] Dashboard shows batch status correctly âœ“
+- [ ] Pull-to-refresh updates dashboard âœ“
+- [ ] Click batch â†’ shows all contacts âœ“
+- [ ] Firebase rules enforce batchId requirement âœ“
+- [ ] Can't create leads without batchId âœ“
+- [ ] User isolation working (only own batches visible) âœ“
 
 ---
 
-## 🎉 Summary
+## ðŸŽ‰ Summary
 
 Your app now follows a **professional batch-based calling system**:
 
@@ -512,4 +521,6 @@ Your app now follows a **professional batch-based calling system**:
 7. N8N automation can monitor and execute calls
 8. Users maintain full control over batches
 
-**This is production-ready architecture!** 🚀
+**This is production-ready architecture!** ðŸš€
+
+

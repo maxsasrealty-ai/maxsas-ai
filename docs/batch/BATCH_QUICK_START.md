@@ -1,27 +1,36 @@
-# 🚀 BATCH SYSTEM - QUICK START GUIDE
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
+# ðŸš€ BATCH SYSTEM - QUICK START GUIDE
 
 ## Files Added (7 files, 1,500+ lines)
 
 ```
-✅ src/types/batch.ts                              (250 lines)
-✅ src/context/BatchContext.tsx                    (200 lines)
-✅ src/services/batchService.ts                    (280 lines)
-✅ src/features/leads/BatchDashboard.tsx           (350 lines)
-✅ src/features/leads/BatchDetailScreen.tsx        (450 lines)
-✅ app/batch-dashboard.tsx                         (3 lines)
-✅ app/batch-detail.tsx                            (3 lines)
+âœ… src/types/batch.ts                              (250 lines)
+âœ… src/context/BatchContext.tsx                    (200 lines)
+âœ… src/services/batchService.ts                    (280 lines)
+âœ… src/features/leads/BatchDashboard.tsx           (350 lines)
+âœ… src/features/leads/BatchDetailScreen.tsx        (450 lines)
+âœ… app/batch-dashboard.tsx                         (3 lines)
+âœ… app/batch-detail.tsx                            (3 lines)
 ```
 
 ## Files Modified (1 file)
 
 ```
-✅ src/features/leads/ImageImportScreen.tsx        (replaced handleSaveLeads)
-✅ firestore.rules                                 (batch collection rules added)
+âœ… src/features/leads/ImageImportScreen.tsx        (replaced handleSaveLeads)
+âœ… firestore.rules                                 (batch collection rules added)
 ```
 
 ---
 
-## 🔧 Setup Required
+## ðŸ”§ Setup Required
 
 ### Step 1: Install uuid package
 ```bash
@@ -51,79 +60,79 @@ export default function RootLayout() {
 
 ### Step 3: Deploy Firebase Rules
 1. Open Firebase Console
-2. Go to Firestore → Rules
+2. Go to Firestore â†’ Rules
 3. Copy entire content from `firestore.rules`
 4. Paste and Publish
 
 ### Step 4: Verify Routes Exist
 ```
-app/batch-dashboard.tsx      ✅ Created
-app/batch-detail.tsx         ✅ Created
-app/image-import.tsx         ✅ Existing
+app/batch-dashboard.tsx      âœ… Created
+app/batch-detail.tsx         âœ… Created
+app/image-import.tsx         âœ… Existing
 ```
 
 ---
 
-## 💬 How It Works Now
+## ðŸ’¬ How It Works Now
 
 ### Upload Flow
 ```
 User selects image
-  ↓
+  â†“
 Gemini AI extracts numbers (unchanged)
-  ↓
+  â†“
 Preview shows extracted contacts
-  ↓
-User clicks "📱 Create Batch"
-  ↓
+  â†“
+User clicks "ðŸ“± Create Batch"
+  â†“
 Batch created in LOCAL MEMORY ONLY
-  ↓
+  â†“
 Redirected to /batch-detail
-  ↓
-NO Firebase write yet ← KEY DIFFERENCE
+  â†“
+NO Firebase write yet â† KEY DIFFERENCE
 ```
 
 ### Dashboard Flow
 ```
 User clicks "Call Now" or "Schedule"
-  ↓
+  â†“
 batchService.saveBatchToFirebase() called
-  ↓
+  â†“
 ATOMIC write to Firebase:
-  - /batches/{batchId} ← main batch record
-  - /leads/{x,y,z} ← all contacts linked to batch
-  ↓
+  - /batches/{batchId} â† main batch record
+  - /leads/{x,y,z} â† all contacts linked to batch
+  â†“
 Status updates to "Running" or "Scheduled"
-  ↓
+  â†“
 Dashboard refreshes and shows status
 ```
 
 ---
 
-## 📱 UI Changes
+## ðŸ“± UI Changes
 
 ### Import Screen
-- Old: "💾 Save 15 Leads" button
-- New: "📱 Create Batch (15 Numbers)" button
+- Old: "ðŸ’¾ Save 15 Leads" button
+- New: "ðŸ“± Create Batch (15 Numbers)" button
 
 ### Dashboard
 - Old: Individual leads listed
 - New: Batches listed with status badges
-  - 🟠 DRAFT: "Awaiting Command"
-  - 🔵 SCHEDULED: "Scheduled at 5:30 PM"
-  - 🟢 RUNNING: "Calling in Progress"
-  - ✅ COMPLETED: "Completed"
+  - ðŸŸ  DRAFT: "Awaiting Command"
+  - ðŸ”µ SCHEDULED: "Scheduled at 5:30 PM"
+  - ðŸŸ¢ RUNNING: "Calling in Progress"
+  - âœ… COMPLETED: "Completed"
 
 ### Batch Detail
 - Shows all contacts in batch
 - Three action buttons:
-  - 📞 Call Now
-  - 📅 Schedule (date + time picker)
-  - 🗑️ Delete (no Firebase impact)
+  - ðŸ“ž Call Now
+  - ðŸ“… Schedule (date + time picker)
+  - ðŸ—‘ï¸ Delete (no Firebase impact)
 
 ---
 
-## 🔐 Firebase Changes
+## ðŸ” Firebase Changes
 
 ### New Rules
 ```javascript
@@ -138,7 +147,7 @@ match /batches/{batchId} {
 // Leads collection (CHANGED)
 match /leads/{leadId} {
   allow create: if authenticated
-    && batchId != null  ← REQUIRED NOW
+    && batchId != null  â† REQUIRED NOW
     && userId == auth.uid
 }
 ```
@@ -147,47 +156,47 @@ match /leads/{leadId} {
 
 ---
 
-## ✅ Testing Scenarios
+## âœ… Testing Scenarios
 
 ### Scenario 1: Create & Delete Batch
 ```
-1. Upload image → extracts 10 numbers
+1. Upload image â†’ extracts 10 numbers
 2. Create batch
-3. Redirect to batch detail ✓
+3. Redirect to batch detail âœ“
 4. Click "Delete"
 5. Confirm deletion
 6. Back to dashboard (batch gone)
-7. NO Firebase entries created ✓
+7. NO Firebase entries created âœ“
 ```
 
 ### Scenario 2: Call Now
 ```
-1. Upload image → extracts 10 numbers
+1. Upload image â†’ extracts 10 numbers
 2. Create batch
 3. Click "Call Now"
 4. Confirmation dialog
-5. Batch saved to Firebase ✓
-6. Status: "Calling in Progress" ✓
-7. All 10 leads in /leads collection with batchId ✓
-8. /batches/{batchId} status: 'running' ✓
+5. Batch saved to Firebase âœ“
+6. Status: "Calling in Progress" âœ“
+7. All 10 leads in /leads collection with batchId âœ“
+8. /batches/{batchId} status: 'running' âœ“
 ```
 
 ### Scenario 3: Schedule for Later
 ```
-1. Upload image → extracts 10 numbers
+1. Upload image â†’ extracts 10 numbers
 2. Create batch
 3. Click "Schedule"
 4. Select "Tomorrow" + "2:00 PM"
 5. Confirm
-6. Batch saved to Firebase ✓
-7. Status: "Scheduled at 2:00 PM" ✓
-8. /batches/{batchId} scheduleAt: set ✓
+6. Batch saved to Firebase âœ“
+7. Status: "Scheduled at 2:00 PM" âœ“
+8. /batches/{batchId} scheduleAt: set âœ“
 9. N8N can monitor and trigger at time
 ```
 
 ---
 
-## 🔗 API Reference
+## ðŸ”— API Reference
 
 ### useBatch() Hook
 ```tsx
@@ -232,7 +241,7 @@ await saveBatchToFirebase(
 
 ---
 
-## 🎯 Database Queries for N8N
+## ðŸŽ¯ Database Queries for N8N
 
 ### Get Scheduled Batches Ready to Call
 ```javascript
@@ -273,10 +282,10 @@ db.collection('leads')
 
 ---
 
-## ⚠️ Important Notes
+## âš ï¸ Important Notes
 
 ### Don't Break Existing Features
-- Image extraction still works ✓
+- Image extraction still works âœ“
 - CSV import still works (will also use batches)
 - Clipboard paste still works (will also use batches)
 - Manual entry still works (will also use batches)
@@ -297,7 +306,7 @@ db.collection('leads')
 
 ---
 
-## 🆘 Troubleshooting
+## ðŸ†˜ Troubleshooting
 
 ### Issue: "Create Batch button not appearing"
 - Check: useBatch() hook is accessible
@@ -317,42 +326,42 @@ db.collection('leads')
 
 ---
 
-## 📊 Sample Flow Diagram
+## ðŸ“Š Sample Flow Diagram
 
 ```
                     IMAGE UPLOAD
-                        ↓
+                        â†“
                 GEMINI AI EXTRACTION
-                        ↓
+                        â†“
                     PREVIEW CONTACTS
-                        ↓
+                        â†“
               "CREATE BATCH" CLICKED
-                        ↓
-            ┌─────────────────────────┐
-            │ IN-MEMORY BATCH CREATED │
-            │ (No Firebase Write)      │
-            └─────────────────────────┘
-                        ↓
+                        â†“
+            â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+            â”‚ IN-MEMORY BATCH CREATED â”‚
+            â”‚ (No Firebase Write)      â”‚
+            â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                        â†“
             /BATCH-DETAIL?batchId=xxx
-                        ↓
-          ┌─────────────────────────────┐
-          │  USER SELECTS ACTION:       │
-          │  • Call Now                 │
-          │  • Schedule                 │
-          │  • Delete                   │
-          └─────────────────────────────┘
-          ↙              ↓              ↘
+                        â†“
+          â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+          â”‚  USER SELECTS ACTION:       â”‚
+          â”‚  â€¢ Call Now                 â”‚
+          â”‚  â€¢ Schedule                 â”‚
+          â”‚  â€¢ Delete                   â”‚
+          â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+          â†™              â†“              â†˜
       DELETE          CALL NOW       SCHEDULE
-        ↓                ↓               ↓
+        â†“                â†“               â†“
       NO FB        FIREBASE          DATE/TIME
       WRITE        WRITE             PICKER
-        ↓                ↓               ↓
+        â†“                â†“               â†“
     REMOVED        /batches +        /batches +
     FROM           /leads            /leads
     MEMORY         created           created
-                     ↓                 ↓
+                     â†“                 â†“
                    RUNNING          SCHEDULED
-                     ↓                 ↓
+                     â†“                 â†“
                  DASHBOARD        N8N MONITORS
                  SHOWS            & EXECUTES
                  PROGRESS         AT SCHEDULED
@@ -361,17 +370,19 @@ db.collection('leads')
 
 ---
 
-## ✨ Next Steps
+## âœ¨ Next Steps
 
 1. **Install uuid**: `npm install uuid`
 2. **Update layout**: Add `<BatchProvider>`
 3. **Deploy rules**: Copy firestore.rules to Firebase
-4. **Test flow**: Upload → Create → Call/Schedule
+4. **Test flow**: Upload â†’ Create â†’ Call/Schedule
 5. **Design N8N**: Plan automation workflows
 6. **Connect N8N**: Set up webhook triggers
 
 ---
 
-**🎉 System is now production-ready for batch-based calling!**
+**ðŸŽ‰ System is now production-ready for batch-based calling!**
 
-All uploads create batches → All actions are batch-level → N8N automation ready → Full user control.
+All uploads create batches â†’ All actions are batch-level â†’ N8N automation ready â†’ Full user control.
+
+

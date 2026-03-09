@@ -1,3 +1,12 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Implementation Fix Guide - UI Sync Issue
 
 ## Problem Summary
@@ -10,7 +19,7 @@ When n8n marks a lead as `failed_retryable` (user didn't answer), the Dashboard 
 
 ---
 
-## 🛠️ Frontend Solution (Quick Fix)
+## ðŸ› ï¸ Frontend Solution (Quick Fix)
 
 ### File: [src/features/leads/BatchDetailScreen.tsx](src/features/leads/BatchDetailScreen.tsx#L240-L256)
 
@@ -27,7 +36,7 @@ const filteredLeads = useMemo(() => {
     }
 
     if (leadFilter === 'retrying') {
-      return (lead.retryCount || 0) > 0 || !!lead.nextRetryAt;  // ← ISSUE: Missing status check
+      return (lead.retryCount || 0) > 0 || !!lead.nextRetryAt;  // â† ISSUE: Missing status check
     }
 
     const status = getLeadDisplayStatus(lead).label;
@@ -38,7 +47,7 @@ const filteredLeads = useMemo(() => {
   });
 }, [batch?.status, leadFilter, liveLeads]);
 
-// ✅ AFTER (Lines 240-256)
+// âœ… AFTER (Lines 240-256)
 const filteredLeads = useMemo(() => {
   if (batch?.status === 'draft') return liveLeads;
 
@@ -48,9 +57,9 @@ const filteredLeads = useMemo(() => {
     }
 
     if (leadFilter === 'retrying') {
-      // ✅ FIX: Include leads with failed_retryable status OR scheduled retries
+      // âœ… FIX: Include leads with failed_retryable status OR scheduled retries
       return (
-        lead.status === 'failed_retryable' ||  // ← NEW: Add this check
+        lead.status === 'failed_retryable' ||  // â† NEW: Add this check
         (lead.retryCount || 0) > 0 ||
         !!lead.nextRetryAt
       );
@@ -67,7 +76,7 @@ const filteredLeads = useMemo(() => {
 
 ---
 
-## 🔄 Backend / n8n Solution (Recommended)
+## ðŸ”„ Backend / n8n Solution (Recommended)
 
 When n8n marks a lead as `failed_retryable` due to "no answer", also update:
 
@@ -86,7 +95,7 @@ When handling `user_no_response`:
   attempts: <attempts + 1>,
   
   // NEW: Add retry information
-  retryCount: <retryCount + 1>,  // Was: 0 → Now: 1
+  retryCount: <retryCount + 1>,  // Was: 0 â†’ Now: 1
   nextRetryAt: new Date(now + 5 * 60 * 1000),  // Schedule 5 min from now
   lastAttemptAt: new Date(),
   callStatus: "failed"  // or "no_response" if custom
@@ -113,30 +122,30 @@ service cloud.firestore {
 
 ---
 
-## 🎯 Testing Checklist
+## ðŸŽ¯ Testing Checklist
 
 ### Test Case: User No Response (No Answer)
 
 **Setup:**
 1. Create batch with 1 lead
-2. n8n calls the number → user doesn't answer
+2. n8n calls the number â†’ user doesn't answer
 
 **Expected n8n Action:**
 ```firestore
 Lead Document Update:
-✓ status: "failed_retryable"
-✓ aiDisposition: "user_no_response"
-✓ attempts: 1
-✓ retryCount: 1 (NEW - was 0)
-✓ nextRetryAt: <timestamp 5 min from now> (NEW - was null)
+âœ“ status: "failed_retryable"
+âœ“ aiDisposition: "user_no_response"
+âœ“ attempts: 1
+âœ“ retryCount: 1 (NEW - was 0)
+âœ“ nextRetryAt: <timestamp 5 min from now> (NEW - was null)
 ```
 
 **Expected Frontend Behavior:**
-1. Batch Dashboard → Click batch
+1. Batch Dashboard â†’ Click batch
 2. Click "Show Retrying" tab
 3. Lead appears in list with:
-   - Status badge: 🔴 Failed (user_no_response)
-   - Retry info: "Retry: 1/3 – Next at HH:MM"
+   - Status badge: ðŸ”´ Failed (user_no_response)
+   - Retry info: "Retry: 1/3 â€“ Next at HH:MM"
    - Next retry scheduled banner
 
 **Verification:**
@@ -147,7 +156,7 @@ Lead Document Update:
 
 ---
 
-## 📊 Field State Reference
+## ðŸ“Š Field State Reference
 
 ### Before Fix (BROKEN STATE)
 
@@ -159,9 +168,9 @@ Lead Document {
   aiDisposition: "user_no_response",
   attempts: 1,
   
-  // ❌ Missing for "Show Retrying" filter
-  retryCount: 0,  ← ZERO (filter blocks display)
-  nextRetryAt: null,  ← NULL (filter blocks display)
+  // âŒ Missing for "Show Retrying" filter
+  retryCount: 0,  â† ZERO (filter blocks display)
+  nextRetryAt: null,  â† NULL (filter blocks display)
   callStatus: "pending",
   lastAttemptAt: null,
 }
@@ -177,17 +186,17 @@ Lead Document {
   aiDisposition: "user_no_response",
   attempts: 1,
   
-  // ✅ Set by n8n/backend
-  retryCount: 1,  ← INCREMENTED (filter allows display)
-  nextRetryAt: Timestamp(now + 300s),  ← SET (filter allows display)
-  callStatus: "failed",  ← Updated status
-  lastAttemptAt: Timestamp(now),  ← Track attempt time
+  // âœ… Set by n8n/backend
+  retryCount: 1,  â† INCREMENTED (filter allows display)
+  nextRetryAt: Timestamp(now + 300s),  â† SET (filter allows display)
+  callStatus: "failed",  â† Updated status
+  lastAttemptAt: Timestamp(now),  â† Track attempt time
 }
 ```
 
 ---
 
-## 🔧 Code Changes Summary
+## ðŸ”§ Code Changes Summary
 
 | File | Change | Benefit |
 |------|--------|---------|
@@ -196,19 +205,19 @@ Lead Document {
 
 ---
 
-## 🚀 Implementation Plan
+## ðŸš€ Implementation Plan
 
 ### Phase 1: Frontend (Immediate - 5 min)
 1. Edit [BatchDetailScreen.tsx](src/features/leads/BatchDetailScreen.tsx#L240-L256)
 2. Add status check to retrying filter
 3. Test with existing "failed_retryable" leads
-4. ✅ Leads now appear in "Show Retrying" tab
+4. âœ… Leads now appear in "Show Retrying" tab
 
 ### Phase 2: Backend (Proper - 30 min)
 1. Update n8n workflow to increment `retryCount`
 2. Schedule `nextRetryAt` when marking as failed_retryable
 3. Test with new calls
-4. ✅ Both frontend and backend properly synced
+4. âœ… Both frontend and backend properly synced
 
 ### Phase 3: Monitoring (Ongoing)
 1. Monitor batch detail screens for leads in "Show Retrying"
@@ -217,7 +226,7 @@ Lead Document {
 
 ---
 
-## 📝 Related Files
+## ðŸ“ Related Files
 
 - **Main Issue:** `Lead with status: "failed_retryable" doesn't show in "Show Retrying" tab`
 - **Docs:** [DEBUGGING_UI_SYNC_ISSUE.md](./DEBUGGING_UI_SYNC_ISSUE.md)
@@ -227,7 +236,7 @@ Lead Document {
 
 ---
 
-## ✅ Success Criteria
+## âœ… Success Criteria
 
 After applying both fixes:
 
@@ -241,7 +250,7 @@ After applying both fixes:
 
 ---
 
-## 🎬 Quick Start (Frontend Fix Only)
+## ðŸŽ¬ Quick Start (Frontend Fix Only)
 
 Replace lines 240-256 in [BatchDetailScreen.tsx](src/features/leads/BatchDetailScreen.tsx):
 
@@ -256,7 +265,7 @@ const filteredLeads = useMemo(() => {
 
     if (leadFilter === 'retrying') {
       return (
-        lead.status === 'failed_retryable' ||  // ← ADD THIS LINE
+        lead.status === 'failed_retryable' ||  // â† ADD THIS LINE
         (lead.retryCount || 0) > 0 ||
         !!lead.nextRetryAt
       );
@@ -271,4 +280,6 @@ const filteredLeads = useMemo(() => {
 }, [batch?.status, leadFilter, liveLeads]);
 ```
 
-Then test with "Show Retrying" tab. Lead should appear immediately! ✅
+Then test with "Show Retrying" tab. Lead should appear immediately! âœ…
+
+

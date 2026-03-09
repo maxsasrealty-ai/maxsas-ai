@@ -1,3 +1,12 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Updated Firestore Security Rules
 
 ## Current Rules (firestore.rules)
@@ -62,7 +71,7 @@ service cloud.firestore {
 ### Option 1: Firebase Console
 1. Go to [Firebase Console](https://console.firebase.google.com/)
 2. Select **real-estate-ai-agent-cbd9b** project
-3. Navigate to **Firestore Database** → **Rules** tab
+3. Navigate to **Firestore Database** â†’ **Rules** tab
 4. Copy the rules from above
 5. Click **Publish**
 
@@ -81,7 +90,7 @@ firebase deploy --only firestore:rules
 ## Testing the Rules
 
 ### Test in Firebase Console Rules Simulator:
-1. Go to Firestore → Rules → Simulator tab
+1. Go to Firestore â†’ Rules â†’ Simulator tab
 2. **Create Lead Test:**
    - Service: Cloud Firestore
    - Document Path: `/leads/test_lead_001`
@@ -147,3 +156,5 @@ To allow n8n to read leads:
 
 - Firebase Rules Docs: https://firebase.google.com/docs/firestore/security/get-started
 - Security best practices: https://firebase.google.com/docs/firestore/security/best-practices
+
+

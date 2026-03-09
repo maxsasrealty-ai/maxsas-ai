@@ -1,4 +1,13 @@
-# Batch & Lead UI Architecture — Final Report
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
+# Batch & Lead UI Architecture â€” Final Report
 
 Date: 2026-03-05
 Scope: Read-only analysis of existing app flow, routes, screens, state handling, retry/delete controls, and best insertion point for a new Batch Results screen.    
@@ -129,7 +138,7 @@ Auxiliary fields drive business meaning:
 
 ---
 
-## 6) Retry/Delete Controls — Actual Placement & Behavior
+## 6) Retry/Delete Controls â€” Actual Placement & Behavior
 
 Main location: `BatchDetailScreen.tsx`
 
@@ -233,3 +242,5 @@ The missing piece is a dedicated, user-facing operational results screen.
 Best path: add a minimal `/batch-results` screen anchored to `BatchDetailScreen` terminal state, then optionally expose it from Completed lists in Leads/Dashboard.
 
 This gives a clean post-call review layer without disturbing existing retry/billing workflows.
+
+

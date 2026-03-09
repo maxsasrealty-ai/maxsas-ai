@@ -1,3 +1,12 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Client-Side Batch Billing
 
 Date: 2026-03-05
@@ -151,3 +160,5 @@ This keeps:
 
 - `batch_debit` is now a first-class wallet transaction type in app types/UI.
 - Existing `BatchDashboard`/`BatchDetail` balance checks remain unchanged and continue to gate dispatch.
+
+

@@ -1,3 +1,12 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Quick Reference: Phone Number Handling
 
 ## One-Line Summary
@@ -9,9 +18,9 @@
 
 ```typescript
 import {
-  normalizeNumber,           // Input → 10-digit clean
-  extractPhoneNumbers,       // Text → extract all numbers
-  formatPhoneForDisplay,     // 10-digit → UI format (+91 98765 43210)
+  normalizeNumber,           // Input â†’ 10-digit clean
+  extractPhoneNumbers,       // Text â†’ extract all numbers
+  formatPhoneForDisplay,     // 10-digit â†’ UI format (+91 98765 43210)
   isValidIndianPhone,        // Validation check
 } from '@/src/lib/phoneExtractor';
 
@@ -71,7 +80,7 @@ if (clean) {
 
 ---
 
-## Input → Output Examples
+## Input â†’ Output Examples
 
 | Input | `normalizeNumber()` | `formatPhoneForDisplay()` |
 |-------|-------------------|------------------------|
@@ -88,15 +97,15 @@ if (clean) {
 
 ```
 ALWAYS:
-┌─────────────────────────────────────┐
-│ User Input (any format)             │
-│ "Call +91 9876543210 or 98765-43210"│
-└────────────┬────────────────────────┘
-             │
-             ├─→ normalizeNumber() → '9876543210' ──→ SAVE TO DATABASE
-             │                                          (clean 10-digit)
-             │
-             └─→ formatPhoneForDisplay() → '+91 98765 43210' ──→ SHOW IN UI
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ User Input (any format)             â”‚
+â”‚ "Call +91 9876543210 or 98765-43210"â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+             â”‚
+             â”œâ”€â†’ normalizeNumber() â†’ '9876543210' â”€â”€â†’ SAVE TO DATABASE
+             â”‚                                          (clean 10-digit)
+             â”‚
+             â””â”€â†’ formatPhoneForDisplay() â†’ '+91 98765 43210' â”€â”€â†’ SHOW IN UI
                                                 (formatted version)
 ```
 
@@ -104,10 +113,10 @@ ALWAYS:
 
 ## Rules
 
-✓ **Valid numbers start with**: 6, 7, 8, 9  
-✓ **Must be exactly**: 10 digits  
-✗ **Cannot be**: Emergency numbers (100, 101, 112, etc.)  
-✗ **Cannot start with**: 0, 1, 2, 3, 4, 5  
+âœ“ **Valid numbers start with**: 6, 7, 8, 9  
+âœ“ **Must be exactly**: 10 digits  
+âœ— **Cannot be**: Emergency numbers (100, 101, 112, etc.)  
+âœ— **Cannot start with**: 0, 1, 2, 3, 4, 5  
 
 ---
 
@@ -174,13 +183,13 @@ extractPhoneNumbers('Call 9876543210');  // Shows extraction result
 
 ## Gotchas
 
-❌ **DON'T store formatted numbers**:
+âŒ **DON'T store formatted numbers**:
 ```typescript
 // WRONG
 firestore.add({ phone: '+91 98765 43210' })
 ```
 
-✅ **DO store clean numbers**:
+âœ… **DO store clean numbers**:
 ```typescript
 // CORRECT
 firestore.add({ phone: '9876543210' })
@@ -190,20 +199,22 @@ firestore.add({ phone: '9876543210' })
 
 ## All Supported Input Formats
 
-✓ `9876543210`  
-✓ `+91 9876543210`  
-✓ `+919876543210`  
-✓ `91 9876543210`  
-✓ `91 98765 43210`  
-✓ `98765-43210`  
-✓ `98765.43210`  
-✓ `(987) 654-3210`  
-✓ `Call 9876543210` (inside text)  
-✓ `Multiple: 9876543210, +91 9876543211` (multiple in one text)  
+âœ“ `9876543210`  
+âœ“ `+91 9876543210`  
+âœ“ `+919876543210`  
+âœ“ `91 9876543210`  
+âœ“ `91 98765 43210`  
+âœ“ `98765-43210`  
+âœ“ `98765.43210`  
+âœ“ `(987) 654-3210`  
+âœ“ `Call 9876543210` (inside text)  
+âœ“ `Multiple: 9876543210, +91 9876543211` (multiple in one text)  
 
 ---
 
-**Status**: ✅ Production Ready  
+**Status**: âœ… Production Ready  
 **Database Format**: 10-digit clean (9876543210)  
 **Display Format**: +91 98765 43210  
 **Zero AI/ML**: Pure regex-based local processing
+
+

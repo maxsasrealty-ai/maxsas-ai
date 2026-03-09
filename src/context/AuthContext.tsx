@@ -1,16 +1,21 @@
 import { auth, db, User, UserCredential } from '@/src/lib/firebase';
-import { sendEmailVerification as sendWebEmailVerification } from 'firebase/auth';
+import { router } from 'expo-router';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
+import LoginRequiredModal from '@/src/components/auth/LoginRequiredModal';
+
 type AuthContextType = {
   user: User | null;
+  isGuest: boolean;
   loading: boolean; // For async operations like login/signup
   authLoaded: boolean; // For the initial auth state check
   login: (email: string, password: string) => Promise<UserCredential>;
   signup: (email: string, password: string) => Promise<UserCredential>;
-  resendVerification: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  requireAuth: (action: () => void) => void;
+  openLoginModal: () => void;
+  closeLoginModal: () => void;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -19,53 +24,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [authLoaded, setAuthLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const reloadUser = async (authUser: any) => {
-    if (!authUser) return;
-    if (typeof authUser.reload === 'function') {
-      await authUser.reload();
-      return;
-    }
-  };
-
-  const sendVerificationEmail = async (authUser: any) => {
-    if (!authUser) {
-      throw new Error('No authenticated user available for verification email.');
-    }
-
-    if (typeof authUser.sendEmailVerification === 'function') {
-      await authUser.sendEmailVerification();
-      return;
-    }
-
-    await sendWebEmailVerification(authUser);
-  };
+  const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged((firebaseUser: User | null) => {
-      const syncAuthState = async () => {
-        if (!firebaseUser) {
-          setUser(null);
-          if (!authLoaded) {
-            setAuthLoaded(true);
-          }
-          return;
-        }
-
-        try {
-          await reloadUser(firebaseUser);
-          setUser(firebaseUser);
-        } catch (error) {
-          console.error('Auth state sync failed:', error);
-          setUser(firebaseUser);
-        } finally {
-          if (!authLoaded) {
-            setAuthLoaded(true);
-          }
-        }
-      };
-
-      syncAuthState();
+      setUser(firebaseUser);
+      if (!authLoaded) {
+        setAuthLoaded(true);
+      }
     });
 
     return unsub;
@@ -74,17 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const userCredential = await auth.signInWithEmailAndPassword(email, password);
-      await reloadUser(userCredential.user);
-
-      if (userCredential.user.emailVerified === false) {
-        await auth.signOut();
-        const verificationError: any = new Error('Please verify your email before logging in.');
-        verificationError.code = 'auth/email-not-verified';
-        throw verificationError;
-      }
-
-      return userCredential;
+      return await auth.signInWithEmailAndPassword(email, password);
     } finally {
       setLoading(false);
     }
@@ -98,8 +54,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password
       );
       const { user } = userCredential;
-
-      await sendVerificationEmail(user);
 
       // Save user to Firestore with PHASE 1 concurrency control defaults
       const now = Timestamp.now();
@@ -124,27 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       await setDoc(doc(db, 'users', user.uid), userData);
-      await auth.signOut();
       return userCredential;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const resendVerification = async (email: string, password: string) => {
-    setLoading(true);
-    try {
-      const userCredential = await auth.signInWithEmailAndPassword(email, password);
-      await reloadUser(userCredential.user);
-
-      if (userCredential.user.emailVerified === true) {
-        const alreadyVerifiedError: any = new Error('Email is already verified.');
-        alreadyVerifiedError.code = 'auth/email-already-verified';
-        throw alreadyVerifiedError;
-      }
-
-      await sendVerificationEmail(userCredential.user);
-      await auth.signOut();
     } finally {
       setLoading(false);
     }
@@ -152,11 +86,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     await auth.signOut();
+    router.replace('/');
   };
 
+  const openLoginModal = () => setIsLoginModalVisible(true);
+  const closeLoginModal = () => setIsLoginModalVisible(false);
+
+  const requireAuth = (action: () => void) => {
+    if (user) {
+      action();
+      return;
+    }
+
+    openLoginModal();
+  };
+
+  const isGuest = !user;
+
   return (
-    <AuthContext.Provider value={{ user, authLoaded, loading, login, signup, resendVerification, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isGuest,
+        authLoaded,
+        loading,
+        login,
+        signup,
+        logout,
+        requireAuth,
+        openLoginModal,
+        closeLoginModal,
+      }}
+    >
       {children}
+      <LoginRequiredModal visible={isLoginModalVisible} onClose={closeLoginModal} />
     </AuthContext.Provider>
   );
 }

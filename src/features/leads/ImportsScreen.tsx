@@ -17,6 +17,7 @@ import {
 import { AppCard } from '@/src/components/ui/AppCard';
 import { AppHeader } from '@/src/components/ui/AppHeader';
 import { ScreenContainer } from '@/src/components/ui/ScreenContainer';
+import { useAuth } from '@/src/context/AuthContext';
 import { useAppTheme } from '@/src/theme/use-app-theme';
 
 // Helper function to add opacity to hex colors
@@ -96,15 +97,18 @@ const IMPORT_OPTIONS: ImportOption[] = [
 
 export default function LeadsImportScreen() {
   const { colors } = useAppTheme();
+  const { requireAuth } = useAuth();
 
   const handleSelectOption = (option: ImportOption) => {
-    if (option.id === 'image') {
-      // Navigate to AI-powered image extraction
-      router.push({ pathname: '/image-import' });
-    } else {
-      // Navigate to the appropriate screen
-      router.push(option.route);
-    }
+    requireAuth(() => {
+      if (option.id === 'image') {
+        // Navigate to AI-powered image extraction
+        router.push({ pathname: '/image-import' });
+      } else {
+        // Navigate to the appropriate screen
+        router.push(option.route);
+      }
+    });
   };
 
   return (

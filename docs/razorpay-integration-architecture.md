@@ -1,3 +1,12 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Razorpay Integration Architecture (Read-Only Audit + Secure Design)
 
 Date: 2026-03-05
@@ -282,3 +291,5 @@ Implement backend-first in this order:
 2. `/api/payments/razorpay/webhook`
 3. idempotent Firestore wallet credit transaction
 4. frontend recharge button wiring to new flow
+
+

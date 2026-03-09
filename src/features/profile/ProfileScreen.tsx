@@ -71,7 +71,7 @@ function FloatingInputField({
 
 export default function ProfileScreen() {
   const { colors, radius, spacing, typography } = useAppTheme();
-  const { user, logout } = useAuth();
+  const { user, logout, requireAuth } = useAuth();
 
   const [isEditing, setIsEditing] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
@@ -157,58 +157,60 @@ export default function ProfileScreen() {
   };
 
   const handleSave = async () => {
-    if (!user || saving || !hasChanges) return;
+    requireAuth(async () => {
+      if (!user || saving || !hasChanges) return;
 
-    const normalizedName = name.trim().replace(/\s+/g, ' ');
-    if (!normalizedName) {
-      setError('Name is required.');
-      return;
-    }
+      const normalizedName = name.trim().replace(/\s+/g, ' ');
+      if (!normalizedName) {
+        setError('Name is required.');
+        return;
+      }
 
-    if (!/^[A-Za-z ]+$/.test(normalizedName)) {
-      setError('Name can contain only alphabets and spaces.');
-      return;
-    }
+      if (!/^[A-Za-z ]+$/.test(normalizedName)) {
+        setError('Name can contain only alphabets and spaces.');
+        return;
+      }
 
-    const normalizedEmail = email.trim().toLowerCase();
-    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
-    if (!emailValid) {
-      setError('Enter a valid email address.');
-      return;
-    }
+      const normalizedEmail = email.trim().toLowerCase();
+      const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
+      if (!emailValid) {
+        setError('Enter a valid email address.');
+        return;
+      }
 
-    const normalizedPhone = normalizePhone(phone);
-    if (!normalizedPhone) {
-      setError('Enter a valid Indian mobile number (10 digits, starts with 9/8/7).');
-      return;
-    }
+      const normalizedPhone = normalizePhone(phone);
+      if (!normalizedPhone) {
+        setError('Enter a valid Indian mobile number (10 digits, starts with 9/8/7).');
+        return;
+      }
 
-    setSaving(true);
-    setError('');
+      setSaving(true);
+      setError('');
 
-    try {
-      await upsertUserProfile(user.uid, {
-        name: normalizedName,
-        phone: normalizedPhone,
-        email: normalizedEmail,
-      });
+      try {
+        await upsertUserProfile(user.uid, {
+          name: normalizedName,
+          phone: normalizedPhone,
+          email: normalizedEmail,
+        });
 
-      setName(normalizedName);
-      setPhone(normalizedPhone);
-      setEmail(normalizedEmail);
+        setName(normalizedName);
+        setPhone(normalizedPhone);
+        setEmail(normalizedEmail);
 
-      setInitialName(normalizedName);
-      setInitialPhone(normalizedPhone);
-      setInitialEmail(normalizedEmail);
+        setInitialName(normalizedName);
+        setInitialPhone(normalizedPhone);
+        setInitialEmail(normalizedEmail);
 
-      setIsEditing(false);
-      showSuccessToast();
-    } catch (saveError) {
-      console.error('Failed to update profile:', saveError);
-      setError('Unable to save changes. Please try again.');
-    } finally {
-      setSaving(false);
-    }
+        setIsEditing(false);
+        showSuccessToast();
+      } catch (saveError) {
+        console.error('Failed to update profile:', saveError);
+        setError('Unable to save changes. Please try again.');
+      } finally {
+        setSaving(false);
+      }
+    });
   };
 
   const handleCancelEdit = () => {
@@ -217,6 +219,11 @@ export default function ProfileScreen() {
     setEmail(initialEmail);
     setError('');
     setIsEditing(false);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    router.replace('/');
   };
 
   return (
@@ -398,7 +405,7 @@ export default function ProfileScreen() {
             {error ? <Text style={[styles.feedback, { color: colors.danger }]}>{error}</Text> : null}
 
             <View style={[styles.actions, { gap: spacing.sm, marginTop: spacing.xs }]}>
-              <AppButton title="Logout" variant="destructive" onPress={logout} />
+              <AppButton title="Logout" variant="destructive" onPress={handleLogout} />
             </View>
           </>
         )}

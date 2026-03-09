@@ -1,6 +1,15 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Real-Time Batch Dashboard - Implementation Summary
 
-## Problem Solved ✅
+## Problem Solved âœ…
 
 **Issue:** Batches were saving to Firebase correctly but not showing in the UI dashboard in real-time. Users had to manually refresh to see new batches or status updates.
 
@@ -38,13 +47,13 @@ export function subscribeToBatches(
 
 **Before (Manual Fetch):**
 ```
-User clicks refresh → getAllBatches() → getDocs() → Update state
+User clicks refresh â†’ getAllBatches() â†’ getDocs() â†’ Update state
 ```
 
 **After (Real-Time Subscription):**
 ```
-Context mounts → subscribeToBatches() → onSnapshot → Auto-update state
-Firebase changes → Instant UI update (no user action needed)
+Context mounts â†’ subscribeToBatches() â†’ onSnapshot â†’ Auto-update state
+Firebase changes â†’ Instant UI update (no user action needed)
 ```
 
 **Key Changes:**
@@ -81,7 +90,7 @@ Firebase changes → Instant UI update (no user action needed)
    - Real-time listener detects new batch in Firebase
    - Batch automatically appears in `firebaseBatches`
    - Merge logic adds it to `allBatches`
-   - UI updates instantly ✨
+   - UI updates instantly âœ¨
 
 **Location:** [src/context/BatchContext.tsx](src/context/BatchContext.tsx)
 
@@ -138,101 +147,101 @@ Firebase changes → Instant UI update (no user action needed)
 ### Complete Flow Diagram:
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                     APP INITIALIZATION                        │
-└──────────────────────────────────────────────────────────────┘
-                              ↓
-┌──────────────────────────────────────────────────────────────┐
-│  BatchContext mounts                                          │
-│  → useEffect calls subscribeToBatches()                       │
-│  → Firestore listener becomes ACTIVE                          │
-└──────────────────────────────────────────────────────────────┘
-                              ↓
-┌──────────────────────────────────────────────────────────────┐
-│  REAL-TIME FIREBASE LISTENER                                  │
-│  → Monitors: collection('batches')                            │
-│  → Filter: where('userId', '==', currentUser.uid)             │
-│  → Event: Any create/update/delete                            │
-└──────────────────────────────────────────────────────────────┘
-                              ↓
-┌──────────────────────────────────────────────────────────────┐
-│  DATA UPDATE PIPELINE                                         │
-│                                                               │
-│  Firebase Change Detected                                     │
-│         ↓                                                     │
-│  onSnapshot callback fires                                    │
-│         ↓                                                     │
-│  Process & sort batches                                       │
-│         ↓                                                     │
-│  setFirebaseBatches(batches) ← Update state                   │
-└──────────────────────────────────────────────────────────────┘
-                              ↓
-┌──────────────────────────────────────────────────────────────┐
-│  AUTO-MERGE EFFECT                                            │
-│  → Triggered by: [firebaseBatches, localDrafts] changes       │
-│  → Logic:                                                     │
-│    1. Filter out local drafts that exist in Firebase         │
-│    2. Combine: uniqueLocalDrafts + firebaseBatches           │
-│    3. setAllBatches(combined)                                │
-└──────────────────────────────────────────────────────────────┘
-                              ↓
-┌──────────────────────────────────────────────────────────────┐
-│  UI AUTO-UPDATES                                              │
-│  → BatchDashboard re-renders                                  │
-│  → Shows new/updated batches instantly                        │
-│  → No user action required                                    │
-└──────────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                     APP INITIALIZATION                        â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                              â†“
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  BatchContext mounts                                          â”‚
+â”‚  â†’ useEffect calls subscribeToBatches()                       â”‚
+â”‚  â†’ Firestore listener becomes ACTIVE                          â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                              â†“
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  REAL-TIME FIREBASE LISTENER                                  â”‚
+â”‚  â†’ Monitors: collection('batches')                            â”‚
+â”‚  â†’ Filter: where('userId', '==', currentUser.uid)             â”‚
+â”‚  â†’ Event: Any create/update/delete                            â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                              â†“
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  DATA UPDATE PIPELINE                                         â”‚
+â”‚                                                               â”‚
+â”‚  Firebase Change Detected                                     â”‚
+â”‚         â†“                                                     â”‚
+â”‚  onSnapshot callback fires                                    â”‚
+â”‚         â†“                                                     â”‚
+â”‚  Process & sort batches                                       â”‚
+â”‚         â†“                                                     â”‚
+â”‚  setFirebaseBatches(batches) â† Update state                   â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                              â†“
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  AUTO-MERGE EFFECT                                            â”‚
+â”‚  â†’ Triggered by: [firebaseBatches, localDrafts] changes       â”‚
+â”‚  â†’ Logic:                                                     â”‚
+â”‚    1. Filter out local drafts that exist in Firebase         â”‚
+â”‚    2. Combine: uniqueLocalDrafts + firebaseBatches           â”‚
+â”‚    3. setAllBatches(combined)                                â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                              â†“
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  UI AUTO-UPDATES                                              â”‚
+â”‚  â†’ BatchDashboard re-renders                                  â”‚
+â”‚  â†’ Shows new/updated batches instantly                        â”‚
+â”‚  â†’ No user action required                                    â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ### User Creates New Batch Flow:
 
 ```
 1. User uploads leads
-   ↓
-2. createLocalBatch() → adds to localDrafts
-   ↓
-3. Auto-merge effect → shows draft in dashboard
-   ↓
+   â†“
+2. createLocalBatch() â†’ adds to localDrafts
+   â†“
+3. Auto-merge effect â†’ shows draft in dashboard
+   â†“
 4. User clicks "Call Now" or "Schedule"
-   ↓
-5. saveBatchToFirebase() → writes to Firestore
-   ↓
+   â†“
+5. saveBatchToFirebase() â†’ writes to Firestore
+   â†“
 6. Removes from localDrafts
-   ↓
+   â†“
 7. Real-time listener detects new Firebase doc
-   ↓
+   â†“
 8. setFirebaseBatches() with new batch
-   ↓
+   â†“
 9. Auto-merge adds to allBatches
-   ↓
-10. Dashboard updates INSTANTLY ✨
+   â†“
+10. Dashboard updates INSTANTLY âœ¨
 ```
 
 ---
 
 ## Benefits Achieved
 
-### ✅ Real-Time Updates
+### âœ… Real-Time Updates
 - Dashboard shows new batches **instantly** when created
-- Status changes (running → completed) reflect **immediately**
+- Status changes (running â†’ completed) reflect **immediately**
 - Multiple users can see each other's updates in real-time
 
-### ✅ No Manual Refresh Needed
+### âœ… No Manual Refresh Needed
 - Removed `getAllBatches()` calls on screen focus
 - Data always up-to-date without user action
 - Pull-to-refresh still works for visual feedback
 
-### ✅ Better State Management
+### âœ… Better State Management
 - Clear separation: `localDrafts` vs `firebaseBatches`
 - Auto-merge logic prevents duplicates
 - Single source of truth from Firebase
 
-### ✅ Proper Cleanup
+### âœ… Proper Cleanup
 - Listener unsubscribes when context unmounts
 - No memory leaks
 - Proper React lifecycle management
 
-### ✅ Loading & Error States
+### âœ… Loading & Error States
 - Shows "Connecting to live batches..." on first load
 - Error handling with user-friendly messages
 - Loading indicator only during initial connection
@@ -289,29 +298,29 @@ useEffect(() => {
 
 ## Testing Checklist
 
-### ✅ Real-Time Updates
-- [ ] Create new batch → appears instantly in dashboard
-- [ ] Batch status changes → updates without refresh
+### âœ… Real-Time Updates
+- [ ] Create new batch â†’ appears instantly in dashboard
+- [ ] Batch status changes â†’ updates without refresh
 - [ ] Multiple tabs/devices show same data
 
-### ✅ Draft Handling
+### âœ… Draft Handling
 - [ ] Local draft shows immediately after upload
 - [ ] Draft disappears after "Call Now"/"Schedule"
 - [ ] Saved batch appears from Firebase
 
-### ✅ UI Experience
+### âœ… UI Experience
 - [ ] "Live Updates Active" indicator visible
 - [ ] No manual refresh needed
 - [ ] Pull-to-refresh still works
 - [ ] Loading state on first open
 
-### ✅ Error Handling
-- [ ] Network offline → shows error
-- [ ] Invalid auth → shows error
-- [ ] Firestore rules violation → shows error
+### âœ… Error Handling
+- [ ] Network offline â†’ shows error
+- [ ] Invalid auth â†’ shows error
+- [ ] Firestore rules violation â†’ shows error
 
-### ✅ Cleanup
-- [ ] Navigate away → listener unsubscribes
+### âœ… Cleanup
+- [ ] Navigate away â†’ listener unsubscribes
 - [ ] No memory leaks
 - [ ] Console logs show cleanup message
 
@@ -357,17 +366,17 @@ getAllBatches() // Still callable but no-op if listener active
 
 ## Performance Considerations
 
-### 📊 Network Usage
+### ðŸ“Š Network Usage
 - **Before:** Full fetch on every screen focus
 - **After:** Only delta updates from Firestore
 - **Savings:** ~70-90% reduced bandwidth
 
-### ⚡ UI Updates
+### âš¡ UI Updates
 - **Before:** Manual refresh lag (0.5-2s)
 - **After:** Instant UI updates (~50-200ms)
 - **Improvement:** 10x faster perceived performance
 
-### 🔋 Battery Impact
+### ðŸ”‹ Battery Impact
 - Firestore listeners are optimized by Google
 - Only active connections consume battery
 - Unsubscribe on unmount prevents drain
@@ -390,14 +399,14 @@ getAllBatches() // Still callable but no-op if listener active
 ### Console Logs to Monitor:
 
 ```
-👀 Setting up real-time listener for batches
-🔄 Real-time batch update received: X batches
-✅ Processed batches: [ {...} ]
-🔄 BatchContext: Merging batches
+ðŸ‘€ Setting up real-time listener for batches
+ðŸ”„ Real-time batch update received: X batches
+âœ… Processed batches: [ {...} ]
+ðŸ”„ BatchContext: Merging batches
   - Local drafts: X
   - Firebase batches: Y
   - Total combined: Z
-🔌 BatchContext: Cleaning up batch listener
+ðŸ”Œ BatchContext: Cleaning up batch listener
 ```
 
 ### If Batches Not Appearing:
@@ -412,11 +421,13 @@ getAllBatches() // Still callable but no-op if listener active
 
 ## Summary
 
-✅ **Real-time listeners implemented**  
-✅ **Dashboard auto-updates without refresh**  
-✅ **Draft + Firebase batches both visible**  
-✅ **Proper cleanup on unmount**  
-✅ **Loading and error states handled**  
-✅ **No breaking changes**  
+âœ… **Real-time listeners implemented**  
+âœ… **Dashboard auto-updates without refresh**  
+âœ… **Draft + Firebase batches both visible**  
+âœ… **Proper cleanup on unmount**  
+âœ… **Loading and error states handled**  
+âœ… **No breaking changes**  
 
-**Result:** Dashboard ab fully live hai! Batches instantly dikhengi aur real-time update hongi! 🎉
+**Result:** Dashboard ab fully live hai! Batches instantly dikhengi aur real-time update hongi! ðŸŽ‰
+
+

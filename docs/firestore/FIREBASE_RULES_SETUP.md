@@ -1,3 +1,12 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Firebase Security Rules Deployment Guide
 
 ## Firestore Security Rules Setup
@@ -24,7 +33,7 @@ The app now has security rules defined in `firestore.rules`. These rules ensure:
 **Option 1: Using Firebase Console**
 1. Go to [Firebase Console](https://console.firebase.google.com/)
 2. Select your "maxsas-ai" project
-3. Go to **Firestore Database** → **Rules** tab
+3. Go to **Firestore Database** â†’ **Rules** tab
 4. Copy the entire content from `firestore.rules` file
 5. Paste it into the Rules editor
 6. Click **Publish**
@@ -50,6 +59,8 @@ firebase deploy --only firestore:rules
 - Test the rules before deploying to production using the Firestore Rules Simulator in Firebase Console
 
 ### Current App Updates:
-✅ Auth routing fixed - login/signup now shows when not authenticated
-✅ Logout button added to Settings screen
-✅ Firestore security rules created and ready to deploy
+âœ… Auth routing fixed - login/signup now shows when not authenticated
+âœ… Logout button added to Settings screen
+âœ… Firestore security rules created and ready to deploy
+
+

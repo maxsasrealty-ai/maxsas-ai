@@ -1,12 +1,21 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # UI Sync Issue - Investigation Report
 
 **Date:** February 23, 2026  
 **Issue:** Dashboard "Show Retrying" tab shows "No contacts in this batch" despite leads marked as `failed_retryable` in Firestore  
-**Status:** ✅ Root Cause Identified
+**Status:** âœ… Root Cause Identified
 
 ---
 
-## 🔴 Root Cause Analysis
+## ðŸ”´ Root Cause Analysis
 
 ### **Issue 1: "Show Retrying" Filter Logic (CRITICAL)**
 
@@ -24,10 +33,10 @@ The filter ONLY shows leads where **EITHER**:
 - `nextRetryAt` is set (truthy)
 
 **Your Test Case:**
-- Lead has `status: "failed_retryable"` ✅
-- Lead has `attempts: 1` ✅
-- BUT: `retryCount: 0` (not set yet) ❌
-- AND: `nextRetryAt: null` (not scheduled yet) ❌
+- Lead has `status: "failed_retryable"` âœ…
+- Lead has `attempts: 1` âœ…
+- BUT: `retryCount: 0` (not set yet) âŒ
+- AND: `nextRetryAt: null` (not scheduled yet) âŒ
 
 **Result:** Lead is filtered OUT and doesn't appear in "Show Retrying" tab
 
@@ -42,7 +51,7 @@ The `getLeadDisplayStatus()` function maps `failed_retryable` to "Failed" status
 ```typescript
 const getLeadDisplayStatus = (lead: Lead) => {
   if (lead.status === 'failed_retryable') {
-    return { label: 'Failed', color: '#ef4444', emoji: '🔴' };
+    return { label: 'Failed', color: '#ef4444', emoji: 'ðŸ”´' };
   }
   // ...
 }
@@ -69,9 +78,9 @@ const calculateStats = useCallback(() => {
 **Problem:**
 - Progress bar counts: `Completed / Total`
 - If you have 1 lead with `status: "failed_retryable"`, it counts as:
-  - NOT completed (✓)
-  - NOT queued (✓)
-  - NOT in_progress (✓)
+  - NOT completed (âœ“)
+  - NOT queued (âœ“)
+  - NOT in_progress (âœ“)
   
 The lead is **not included in any count**, but it **IS included in total**, which may cause percentage display issues or zero-progress state.
 
@@ -85,7 +94,7 @@ The lead is **not included in any count**, but it **IS included in total**, whic
 export function subscribeToBatchLeads(batchId: string, callback: (leads: Lead[]) => void) {
   const q = query(
     collection(db, 'leads'),
-    where('batchId', '==', batchId)  // ← Only filters by batchId
+    where('batchId', '==', batchId)  // â† Only filters by batchId
   );
 
   const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -103,13 +112,13 @@ export function subscribeToBatchLeads(batchId: string, callback: (leads: Lead[])
 }
 ```
 
-**Scope:** ✅ Correctly fetches **all leads** for the batch (no pre-filtering by status)
+**Scope:** âœ… Correctly fetches **all leads** for the batch (no pre-filtering by status)
 
-**Sync:** ✅ Real-time listener properly syncs updates from Firestore
+**Sync:** âœ… Real-time listener properly syncs updates from Firestore
 
 ---
 
-## 📋 Answers to Your Questions
+## ðŸ“‹ Answers to Your Questions
 
 ### **Q1: Frontend Filtering Logic**
 
@@ -129,7 +138,7 @@ export function subscribeToBatchLeads(batchId: string, callback: (leads: Lead[])
 
 The progress bar logic calculates:
 ```typescript
-Percentage = (completed / total) × 100
+Percentage = (completed / total) Ã— 100
 ```
 
 If you have:
@@ -137,7 +146,7 @@ If you have:
 - `completed = 0` (no leads with `status: 'completed'`)
 - `failed_retryable` lead is counted in total but NOT in any stat category
 
-**Result:** 0 completed / 1 total = **0%** ✓ (Mathematically correct, but semantically confusing)
+**Result:** 0 completed / 1 total = **0%** âœ“ (Mathematically correct, but semantically confusing)
 
 The issue is that `failed_retryable` leads should probably be:
 1. Excluded from progress percentage (not part of initial scope), OR
@@ -150,7 +159,7 @@ The issue is that `failed_retryable` leads should probably be:
 **Is the UI filtering leads based on a composite key (batchId + status + userId)?**
 
 **No.** The subscription query only filters on:
-- `where('batchId', '==', batchId)` ← Only field checked
+- `where('batchId', '==', batchId)` â† Only field checked
 
 **No userId/status pre-filtering** - all leads for that batch are fetched.
 
@@ -172,20 +181,20 @@ However:
 
 ---
 
-## ✅ The Complete Picture
+## âœ… The Complete Picture
 
 | Field | Your Value | Required for Tab? | Status |
 |-------|-----------|-------------------|--------|
-| `status` | `"failed_retryable"` | ❌ No | Shows as "Failed" in display |
-| `attempts` | `1` | ❌ No | Used for "Action Required" count |
-| `retryCount` | `0` (or null) | ✅ YES | Missing - **BLOCKS** "Show Retrying" |
-| `nextRetryAt` | `null` | ✅ YES (if retryCount=0) | Missing - **BLOCKS** "Show Retrying" |
-| `callStatus` | `"pending"` (presumably) | ❌ No | Not checked for retrying filter |
-| `aiDisposition` | `"user_no_response"` | ❌ No | Used for display only |
+| `status` | `"failed_retryable"` | âŒ No | Shows as "Failed" in display |
+| `attempts` | `1` | âŒ No | Used for "Action Required" count |
+| `retryCount` | `0` (or null) | âœ… YES | Missing - **BLOCKS** "Show Retrying" |
+| `nextRetryAt` | `null` | âœ… YES (if retryCount=0) | Missing - **BLOCKS** "Show Retrying" |
+| `callStatus` | `"pending"` (presumably) | âŒ No | Not checked for retrying filter |
+| `aiDisposition` | `"user_no_response"` | âŒ No | Used for display only |
 
 ---
 
-## 🔧 Fix Implementation
+## ðŸ”§ Fix Implementation
 
 ### **Option A: Update n8n Workflow to Set retryCount**
 
@@ -194,7 +203,7 @@ When n8n marks a lead as `failed_retryable`, it should set:
 ```firestore
 {
   status: "failed_retryable",
-  retryCount: 1,  // ← INCREMENT THIS on each retry failure
+  retryCount: 1,  // â† INCREMENT THIS on each retry failure
   nextRetryAt: Timestamp(Date.now() + 5 * 60 * 1000),  // 5 min from now
   aiDisposition: "user_no_response",
   // ... other fields
@@ -208,7 +217,7 @@ Modify [BatchDetailScreen.tsx](src/features/leads/BatchDetailScreen.tsx#L248-L25
 ```typescript
 if (leadFilter === 'retrying') {
   return (
-    lead.status === 'failed_retryable' ||  // ← ADD THIS
+    lead.status === 'failed_retryable' ||  // â† ADD THIS
     (lead.retryCount || 0) > 0 ||
     !!lead.nextRetryAt
   );
@@ -227,24 +236,24 @@ This ensures:
 
 ---
 
-## 🧪 Verification Steps
+## ðŸ§ª Verification Steps
 
 After implementing the fix:
 
 1. **Firestore Check:**
    ```
    Lead Doc:
-   - status: "failed_retryable" ✓
-   - retryCount: 1 ✓ (WAS: 0)
-   - nextRetryAt: <timestamp> ✓ (WAS: null)
-   - attempts: 1 ✓
-   - aiDisposition: "user_no_response" ✓
+   - status: "failed_retryable" âœ“
+   - retryCount: 1 âœ“ (WAS: 0)
+   - nextRetryAt: <timestamp> âœ“ (WAS: null)
+   - attempts: 1 âœ“
+   - aiDisposition: "user_no_response" âœ“
    ```
 
 2. **Dashboard Check:**
    - Navigate to batch detail screen
    - Click "Show Retrying" tab
-   - Lead should appear ✓
+   - Lead should appear âœ“
 
 3. **Stats Check:**
    - Progress bar should update percentage
@@ -252,18 +261,18 @@ After implementing the fix:
 
 ---
 
-## 📊 Real-Time Sync Status
+## ðŸ“Š Real-Time Sync Status
 
-- **Subscription:** ✅ Working (only batchId filter)
-- **Data Fetch:** ✅ No pre-filtering by status
-- **Field Mapping:** ✅ All critical fields mapped
-- **Cleanup:** ✅ Proper unsubscribe on component unmount
+- **Subscription:** âœ… Working (only batchId filter)
+- **Data Fetch:** âœ… No pre-filtering by status
+- **Field Mapping:** âœ… All critical fields mapped
+- **Cleanup:** âœ… Proper unsubscribe on component unmount
 
 Real-time updates **WILL sync immediately** once Firestore is updated with `retryCount > 0`.
 
 ---
 
-## 📝 Summary Table
+## ðŸ“ Summary Table
 
 | Question | Answer | Root Cause |
 |----------|--------|-----------|
@@ -274,10 +283,12 @@ Real-time updates **WILL sync immediately** once Firestore is updated with `retr
 
 ---
 
-## 🚀 Next Steps
+## ðŸš€ Next Steps
 
 1. **Update n8n workflow** to set `retryCount` when creating retry attempts
 2. **Update frontend filter** to include `status === 'failed_retryable'` check (defensive)
 3. **Test end-to-end** with actual workflow
 
 See [IMPLEMENTATION_FIX_GUIDE.md](./IMPLEMENTATION_FIX_GUIDE.md) for detailed code changes.
+
+

@@ -1,3 +1,12 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Batch Detail Screen - Live Updates Implementation
 
 ## Overview
@@ -13,7 +22,7 @@ Added `subscribeToBatchLeads()` function:
 - Automatically updates UI when any lead changes
 - Returns unsubscribe function for cleanup
 - Handles real-time updates for:
-  - `callStatus` changes (pending → in_progress → answered/failed)
+  - `callStatus` changes (pending â†’ in_progress â†’ answered/failed)
   - `attempts` increments
   - `aiDisposition` updates
   - `retryCount` changes
@@ -34,7 +43,7 @@ Added real-time stats computation:
 - **Pending calls**: Count of leads with status = 'queued'
 - **In progress**: Count of calling/answered leads
 - **Total retries**: Sum of all retry counts
-- **Average retries**: Total retries ÷ total leads
+- **Average retries**: Total retries Ã· total leads
 - **Next retry times**: Array of upcoming retry timestamps
 
 ```typescript
@@ -53,8 +62,8 @@ Visual progress indicator showing:
 - Updates in real-time as calls complete
 
 ```
-Progress: [████████░░░░░░░░░░░░░░░░] 35%
-✓ 7 completed  ⏱ 13 pending  📞 2 calling
+Progress: [â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘] 35%
+âœ“ 7 completed  â± 13 pending  ðŸ“ž 2 calling
 ```
 
 ### 4. Live Statistics Cards
@@ -68,10 +77,10 @@ Display real-time metrics:
 **For Running/Scheduled Batches**: Shows live contact list with:
 - Phone number
 - **Status Badge**: Color-coded status (completed/calling/interested/not_interested/follow_up)
-  - Green: completed ✓
-  - Orange: calling 📞
-  - Blue: interested 👍
-  - Red: not interested 👎
+  - Green: completed âœ“
+  - Orange: calling ðŸ“ž
+  - Blue: interested ðŸ‘
+  - Red: not interested ðŸ‘Ž
 - **Meta Information**:
   - Retry count with orange refresh icon
   - Attempt count
@@ -148,7 +157,7 @@ Added comprehensive styles for:
 ## Real-Time Updates Flow
 
 ```
-Firestore → onSnapshot listener → setLiveLeads → calculateStats → Component re-render
+Firestore â†’ onSnapshot listener â†’ setLiveLeads â†’ calculateStats â†’ Component re-render
 ```
 
 Each lead update in Firestore triggers:
@@ -211,3 +220,5 @@ The component gracefully handles:
 4. Add search by phone number in live list
 5. Add export/download updated contact list
 6. Add call recording playback for completed calls
+
+

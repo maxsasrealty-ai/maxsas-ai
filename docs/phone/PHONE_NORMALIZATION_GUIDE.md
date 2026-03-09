@@ -1,20 +1,29 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Phone Number Normalization & Extraction Guide
 
 ## Overview
 
 Your app now has **production-grade phone number handling** that ensures:
-- ✅ Clean, consistent 10-digit format for database storage
-- ✅ Proper formatting (+91 98765 43210) for UI display
-- ✅ Handles ALL Indian phone number formats
-- ✅ Automatic deduplication
-- ✅ Emergency number filtering
-- ✅ Comprehensive validation
+- âœ… Clean, consistent 10-digit format for database storage
+- âœ… Proper formatting (+91 98765 43210) for UI display
+- âœ… Handles ALL Indian phone number formats
+- âœ… Automatic deduplication
+- âœ… Emergency number filtering
+- âœ… Comprehensive validation
 
 ## Core Principle
 
 ```
-DATABASE STORAGE        →  UI DISPLAY
-9876543210             →  +91 98765 43210
+DATABASE STORAGE        â†’  UI DISPLAY
+9876543210             â†’  +91 98765 43210
 (clean 10-digit)         (formatted for users)
 ```
 
@@ -283,8 +292,8 @@ const saveLeadToFirebase = async (phoneInput: string) => {
   
   // Save to Firebase - ALWAYS store clean format
   await firestore.collection('leads').add({
-    phone: cleanPhone,              // ✓ CORRECT: clean 10-digit
-    displayPhone: formatPhoneForDisplay(cleanPhone), // ✗ DON'T: don't store formatted
+    phone: cleanPhone,              // âœ“ CORRECT: clean 10-digit
+    displayPhone: formatPhoneForDisplay(cleanPhone), // âœ— DON'T: don't store formatted
     source: 'manual',
     createdAt: new Date(),
   });
@@ -295,21 +304,21 @@ const saveLeadToFirebase = async (phoneInput: string) => {
 
 ## What Gets Extracted?
 
-### ✅ Supported Formats
+### âœ… Supported Formats
 
 | Format | Example | Extracted |
 |--------|---------|-----------|
-| Plain 10 digits | `9876543210` | ✓ |
-| With +91 prefix | `+91 9876543210` | ✓ |
-| With 91 prefix | `91 9876543210` | ✓ |
-| With dashes | `98765-43210` | ✓ |
-| With dots | `98765.43210` | ✓ |
-| With spaces | `98765 43210` | ✓ |
-| With parentheses | `(987) 654-3210` | ✓ |
-| Inside text | `Call 9876543210 now` | ✓ |
-| Multiple formats mixed | `9876543210 or +91 9876543211` | ✓ Both |
+| Plain 10 digits | `9876543210` | âœ“ |
+| With +91 prefix | `+91 9876543210` | âœ“ |
+| With 91 prefix | `91 9876543210` | âœ“ |
+| With dashes | `98765-43210` | âœ“ |
+| With dots | `98765.43210` | âœ“ |
+| With spaces | `98765 43210` | âœ“ |
+| With parentheses | `(987) 654-3210` | âœ“ |
+| Inside text | `Call 9876543210 now` | âœ“ |
+| Multiple formats mixed | `9876543210 or +91 9876543211` | âœ“ Both |
 
-### ❌ Ignored
+### âŒ Ignored
 
 | Case | Reason |
 |------|--------|
@@ -323,7 +332,7 @@ const saveLeadToFirebase = async (phoneInput: string) => {
 
 ## Database Storage Best Practices
 
-### ✓ CORRECT Way
+### âœ“ CORRECT Way
 
 ```typescript
 // Always store clean 10-digit format
@@ -337,14 +346,14 @@ const lead = {
 await firestore.collection('leads').add(lead);
 ```
 
-### ✗ WRONG Way
+### âœ— WRONG Way
 
 ```typescript
 // DON'T store formatted versions in database
 const lead = {
-  phone: '+91 98765 43210',         // ✗ Wrong: formatted
-  phone_formatted: '+91 98765 43210', // ✗ Wrong: redundant
-  phone_display: '+91 98765 43210',  // ✗ Wrong: redundant
+  phone: '+91 98765 43210',         // âœ— Wrong: formatted
+  phone_formatted: '+91 98765 43210', // âœ— Wrong: redundant
+  phone_display: '+91 98765 43210',  // âœ— Wrong: redundant
 };
 
 // This wastes space and causes inconsistency
@@ -354,7 +363,7 @@ const lead = {
 
 ## UI Display Best Practices
 
-### ✓ CORRECT Way
+### âœ“ CORRECT Way
 
 ```typescript
 // Read clean number from database
@@ -366,7 +375,7 @@ const displayPhone = formatPhoneForDisplay(lead.data().phone);
 <Text>{displayPhone}</Text>  // Shows: +91 98765 43210
 ```
 
-### ✗ WRONG Way
+### âœ— WRONG Way
 
 ```typescript
 // Reading pre-formatted from database
@@ -378,12 +387,12 @@ const displayPhone = formatPhoneForDisplay(lead.data().phone);
 ## Validation Rules
 
 ### First Digit (Must be 6-9)
-- ✓ Valid: 6876543210, 7876543210, 8876543210, 9876543210
-- ✗ Invalid: 0876543210, 1876543210, 2876543210, 3876543210, 4876543210, 5876543210
+- âœ“ Valid: 6876543210, 7876543210, 8876543210, 9876543210
+- âœ— Invalid: 0876543210, 1876543210, 2876543210, 3876543210, 4876543210, 5876543210
 
 ### Length (Must be exactly 10 digits)
-- ✓ Valid: 9876543210 (10 digits)
-- ✗ Invalid: 987654321 (9 digits), 98765432100 (11 digits)
+- âœ“ Valid: 9876543210 (10 digits)
+- âœ— Invalid: 987654321 (9 digits), 98765432100 (11 digits)
 
 ### Emergency Numbers (Automatically filtered)
 - Ignored: 100, 101, 102, 112, 999, 1091, 1098, 108
@@ -415,12 +424,12 @@ runAllTests();
 ```
 
 Tests cover:
-- ✓ All supported formats
-- ✓ All invalid formats
-- ✓ Deduplication
-- ✓ Emergency number filtering
-- ✓ Edge cases (empty, null, special chars)
-- ✓ Real-world scenarios
+- âœ“ All supported formats
+- âœ“ All invalid formats
+- âœ“ Deduplication
+- âœ“ Emergency number filtering
+- âœ“ Edge cases (empty, null, special chars)
+- âœ“ Real-world scenarios
 
 ---
 
@@ -463,8 +472,8 @@ console.log('Result:', debug); // null means invalid
 ### Getting incorrect format?
 
 Always use:
-- **Database**: `normalizeNumber()` → stores 10-digit clean format
-- **Display**: `formatPhoneForDisplay()` → formats as +91 XXXXX XXXXX
+- **Database**: `normalizeNumber()` â†’ stores 10-digit clean format
+- **Display**: `formatPhoneForDisplay()` â†’ formats as +91 XXXXX XXXXX
 
 ### Duplicates not removing?
 
@@ -477,22 +486,24 @@ The `extractPhoneNumbers()` function automatically deduplicates. If you're seein
 
 ## Summary
 
-✅ **Use `normalizeNumber()`** when you need to:
+âœ… **Use `normalizeNumber()`** when you need to:
 - Store to database
 - Validate input
 - Ensure clean format
 - Deduplicate
 
-✅ **Use `extractPhoneNumbers()`** when you need to:
+âœ… **Use `extractPhoneNumbers()`** when you need to:
 - Parse bulk text
 - Import from clipboard
 - Process CSV/Excel
 - Handle multiple formats at once
 
-✅ **Use `formatPhoneForDisplay()`** when you need to:
+âœ… **Use `formatPhoneForDisplay()`** when you need to:
 - Show in UI
 - Display in lists
 - Format for user reading
 - **NEVER for storage**
 
-🚀 **You're ready to go!**
+ðŸš€ **You're ready to go!**
+
+

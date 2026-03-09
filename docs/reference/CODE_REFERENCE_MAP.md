@@ -1,6 +1,15 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Code Reference: Complete Location Map
 
-## 📍 Modified Files
+## ðŸ“ Modified Files
 
 ### 1. firestore.rules
 **Location**: `firestore.rules` (root)
@@ -75,7 +84,7 @@ interface Batch {
 
 ---
 
-## ✨ New Files
+## âœ¨ New Files
 
 ### 4. src/services/leadService.ts
 **Location**: `src/services/leadService.ts` (NEW)
@@ -120,7 +129,7 @@ export async function getLeadCountStats(
 
 ---
 
-## 📚 Documentation Files (NEW)
+## ðŸ“š Documentation Files (NEW)
 
 ### 5. BATCH_ARCHITECTURE_GUIDE.md
 **Location**: `BATCH_ARCHITECTURE_GUIDE.md` (root)
@@ -205,7 +214,7 @@ export async function getLeadCountStats(
 
 ---
 
-## 🔍 Import Statements to Use
+## ðŸ” Import Statements to Use
 
 ### In Components/Services
 
@@ -240,7 +249,7 @@ import {
 
 ---
 
-## 📊 Function Call Locations
+## ðŸ“Š Function Call Locations
 
 ### saveBatchToFirebase()
 **Called from**: `src/features/leads/BatchDetailScreen.tsx`
@@ -294,55 +303,55 @@ console.log(`Completed: ${stats.completed}/${stats.total}`);
 
 ---
 
-## 🔗 Dependency Map
+## ðŸ”— Dependency Map
 
 ```
 BatchDetailScreen.tsx
-    ↓
-    ├─ useBatch() context
-    │   ↓
-    │   └─ saveBatchToFirebase() in BatchContext
-    │       ↓
-    │       └─ batchService.saveBatchToFirebase()
-    │           ├─ Create batch document
-    │           └─ leadService.createLeadsForBatch()
-    │               └─ Creates 6 lead documents
-    │
-    └─ firebase Auth
-        └─ getAuth() for userId
+    â†“
+    â”œâ”€ useBatch() context
+    â”‚   â†“
+    â”‚   â””â”€ saveBatchToFirebase() in BatchContext
+    â”‚       â†“
+    â”‚       â””â”€ batchService.saveBatchToFirebase()
+    â”‚           â”œâ”€ Create batch document
+    â”‚           â””â”€ leadService.createLeadsForBatch()
+    â”‚               â””â”€ Creates 6 lead documents
+    â”‚
+    â””â”€ firebase Auth
+        â””â”€ getAuth() for userId
 
 getBatchDetail (batchService)
-    ├─ Fetch batch document
-    └─ leadService.getLeadsForBatch()
-        └─ Fetch leads by batchId
+    â”œâ”€ Fetch batch document
+    â””â”€ leadService.getLeadsForBatch()
+        â””â”€ Fetch leads by batchId
 ```
 
 ---
 
-## 🔒 Security Rules Map
+## ðŸ”’ Security Rules Map
 
 ### firestore.rules Location
 **File**: `firestore.rules` (root)
 
 **batches Collection** (lines 26-39):
 ```
-✓ create: userId, status, action, totalContacts validation
-✓ read: userId ownership check
-✓ update: userId ownership + status validation
-✓ delete: userId ownership check
+âœ“ create: userId, status, action, totalContacts validation
+âœ“ read: userId ownership check
+âœ“ update: userId ownership + status validation
+âœ“ delete: userId ownership check
 ```
 
 **leads Collection** (lines 41-56):
 ```
-✓ create: batchId mandatory, phone mandatory, leadId validation
-✓ read: userId check (app filtered)
-✓ update: leadId immutable, batchId immutable
-✓ delete: userId ownership check
+âœ“ create: batchId mandatory, phone mandatory, leadId validation
+âœ“ read: userId check (app filtered)
+âœ“ update: leadId immutable, batchId immutable
+âœ“ delete: userId ownership check
 ```
 
 ---
 
-## 📈 Files by Size
+## ðŸ“ˆ Files by Size
 
 | File | Lines | Type |
 |------|-------|------|
@@ -361,7 +370,7 @@ getBatchDetail (batchService)
 
 ---
 
-## 🚀 Deployment Checklist
+## ðŸš€ Deployment Checklist
 
 - [ ] **File 1**: firestore.rules
   - [ ] Verify rules syntax is correct
@@ -392,7 +401,7 @@ getBatchDetail (batchService)
 
 ---
 
-## 🧪 Testing Locations
+## ðŸ§ª Testing Locations
 
 ### Test 1: Create Local Batch
 **Location**: `src/features/leads/BatchDetailScreen.tsx`
@@ -415,7 +424,7 @@ getBatchDetail (batchService)
 
 ---
 
-## 🔧 Troubleshooting Locations
+## ðŸ”§ Troubleshooting Locations
 
 ### Issue: Leads not created
 **Check**: Browser console logs from `leadService.ts`
@@ -435,7 +444,7 @@ getBatchDetail (batchService)
 
 ---
 
-## 📝 Code Snippets by Use Case
+## ðŸ“ Code Snippets by Use Case
 
 ### Create a Batch Locally
 ```typescript
@@ -474,7 +483,7 @@ const stats = await getLeadCountStats(batchId);
 
 ---
 
-## 📚 Reading Order
+## ðŸ“š Reading Order
 
 **For Quick Understanding**:
 1. FINAL_IMPLEMENTATION_SUMMARY.md
@@ -483,7 +492,7 @@ const stats = await getLeadCountStats(batchId);
 **For Complete Understanding**:
 1. ARCHITECTURE_VISUAL_GUIDE.md (diagrams first)
 2. BATCH_ARCHITECTURE_GUIDE.md (detailed docs)
-3. Code files: batchService.ts → leadService.ts → batch.ts
+3. Code files: batchService.ts â†’ leadService.ts â†’ batch.ts
 
 **For Debugging**:
 1. QUICK_REFERENCE_BATCH_LEADS.md (common issues)
@@ -492,7 +501,7 @@ const stats = await getLeadCountStats(batchId);
 
 ---
 
-## ✅ Verification Commands
+## âœ… Verification Commands
 
 ### Check for TypeScript Errors
 ```bash
@@ -515,25 +524,25 @@ firebase deploy --dry-run
 
 ---
 
-## 🎯 Key Files Summary
+## ðŸŽ¯ Key Files Summary
 
 | File | Purpose | Status |
 |------|---------|--------|
-| firestore.rules | Security | ✅ Updated |
-| batchService.ts | Batch operations | ✅ Refactored |
-| leadService.ts | Lead operations | ✅ Created |
-| batch.ts | Type definitions | ✅ Updated |
-| 5 Documentation files | Guides & Docs | ✅ Created |
+| firestore.rules | Security | âœ… Updated |
+| batchService.ts | Batch operations | âœ… Refactored |
+| leadService.ts | Lead operations | âœ… Created |
+| batch.ts | Type definitions | âœ… Updated |
+| 5 Documentation files | Guides & Docs | âœ… Created |
 
 **Total Changes**: 4 code files modified/created, 5 docs created  
 **Lines of Code**: ~490  
 **Lines of Documentation**: ~1750  
-**TypeScript Errors**: 0 ✅  
-**Ready for Deployment**: Yes ✅
+**TypeScript Errors**: 0 âœ…  
+**Ready for Deployment**: Yes âœ…
 
 ---
 
-## 🚀 Next Steps
+## ðŸš€ Next Steps
 
 1. **Deploy Firestore Rules**
    ```bash
@@ -555,4 +564,6 @@ firebase deploy --dry-run
 
 ---
 
-**Implementation Complete**: February 5, 2026 ✅
+**Implementation Complete**: February 5, 2026 âœ…
+
+

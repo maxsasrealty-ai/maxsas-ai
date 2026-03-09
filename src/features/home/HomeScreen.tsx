@@ -2,6 +2,7 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { doc, getDoc } from 'firebase/firestore';
 import { ActivityIndicator, Alert, Animated, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+import RequireAuth from '@/src/components/auth/RequireAuth';
 import { AIAvatar } from '@/src/components/ui/AIAvatar';
 import { AppButton } from '@/src/components/ui/AppButton';
 import { AppCard } from '@/src/components/ui/AppCard';
@@ -56,7 +57,7 @@ const isExpiredValue = (value: unknown): boolean => {
 
 export default function HomeScreen() {
   const { colors, typography, radius } = useAppTheme();
-  const { user } = useAuth();
+  const { user, requireAuth } = useAuth();
   const params = useLocalSearchParams<{ hideDemoCard?: string | string[]; pass?: string | string[] }>();
   const passParam = Array.isArray(params?.pass) ? params.pass[0] : params?.pass;
   const secretPass = typeof passParam === 'string' ? passParam.trim() : '';
@@ -578,90 +579,92 @@ export default function HomeScreen() {
   };
 
   const handleStartDemoCall = async () => {
-    if (!effectiveUserId || demoCallLoading || isDemoFinished) {
-      return;
-    }
-
-    const name = demoTargetName.trim().replace(/\s+/g, ' ');
-    const normalizedPhone = normalizePhone(demoTargetPhone);
-
-    if (!name) {
-      setDemoFormError('Name is required before starting demo call.');
-      return;
-    }
-
-    if (!/^[A-Za-z ]+$/.test(name)) {
-      setDemoFormError('Name can contain only alphabets and spaces.');
-      return;
-    }
-
-    if (!normalizedPhone) {
-      setDemoFormError('Enter a valid Indian mobile number (10 digits, starts with 9/8/7).');
-      return;
-    }
-
-    setDemoFormError('');
-
-    try {
-      setDemoScriptReady(false);
-      setIsDemoFinished(false);
-      setDemoReadyScript('');
-      setDemoCallLoading(true);
-      setDemoCallState('calling');
-      demoLatestStatusRef.current = 'initiated';
-      demoLatestScriptRef.current = '';
-
-      const result = await executeDemoCallFlow(effectiveUserId, {
-        targetName: name,
-        targetPhone: `+91${normalizedPhone}`,
-      });
-
-      setCurrentDemoCallId(result.demoCallId);
-
-      // Close the modal immediately after initiating the call
-      setShowDemoConfirmModal(false);
-
-      if (result.status === 'in_progress' || result.status === 'initiated') {
-        showDemoSuccessToast();
-        demoLatestStatusRef.current = result.status;
-
-        // Set up 2-minute timeout - show error if no script received
-        demoTimeoutRef.current = setTimeout(() => {
-          const hasScript = demoLatestScriptRef.current.trim().length > 0;
-
-          // If no script after 2 minutes, show retry error (status doesn't matter)
-          if (!hasScript) {
-            showDemoRetryError();
-          }
-        }, 2 * 60 * 1000); // 2 minutes
-
-        attachDemoCallListener(result.demoCallId);
-
-        getDemoCallById(result.demoCallId)
-          .then((demoCallData) => {
-            applyDemoCallSyncState(demoCallData);
-            if (
-              demoCallData?.status === 'completed' &&
-              typeof demoCallData.script === 'string' &&
-              demoCallData.script.trim() !== ''
-            ) {
-              if (user?.uid) {
-                markDemoCallCompleted(user.uid, result.demoCallId).catch((error) => {
-                  console.error('Failed to mark demo call as completed for user:', error);
-                });
-              }
-            }
-          })
-          .catch((error) => {
-            console.error('Failed immediate demo call sync:', error);
-          });
+    requireAuth(async () => {
+      if (!effectiveUserId || demoCallLoading || isDemoFinished) {
+        return;
       }
-    } catch (error) {
-      console.error('Failed to execute demo call:', error);
-      resetDemoCallFlowState();
-      setShowDemoConfirmModal(false);
-      Alert.alert('Demo Call Failed', 'Unable to complete demo call. Please try again.');
-    }
+
+      const name = demoTargetName.trim().replace(/\s+/g, ' ');
+      const normalizedPhone = normalizePhone(demoTargetPhone);
+
+      if (!name) {
+        setDemoFormError('Name is required before starting demo call.');
+        return;
+      }
+
+      if (!/^[A-Za-z ]+$/.test(name)) {
+        setDemoFormError('Name can contain only alphabets and spaces.');
+        return;
+      }
+
+      if (!normalizedPhone) {
+        setDemoFormError('Enter a valid Indian mobile number (10 digits, starts with 9/8/7).');
+        return;
+      }
+
+      setDemoFormError('');
+
+      try {
+        setDemoScriptReady(false);
+        setIsDemoFinished(false);
+        setDemoReadyScript('');
+        setDemoCallLoading(true);
+        setDemoCallState('calling');
+        demoLatestStatusRef.current = 'initiated';
+        demoLatestScriptRef.current = '';
+
+        const result = await executeDemoCallFlow(effectiveUserId, {
+          targetName: name,
+          targetPhone: `+91${normalizedPhone}`,
+        });
+
+        setCurrentDemoCallId(result.demoCallId);
+
+        // Close the modal immediately after initiating the call
+        setShowDemoConfirmModal(false);
+
+        if (result.status === 'in_progress' || result.status === 'initiated') {
+          showDemoSuccessToast();
+          demoLatestStatusRef.current = result.status;
+
+          // Set up 2-minute timeout - show error if no script received
+          demoTimeoutRef.current = setTimeout(() => {
+            const hasScript = demoLatestScriptRef.current.trim().length > 0;
+
+            // If no script after 2 minutes, show retry error (status doesn't matter)
+            if (!hasScript) {
+              showDemoRetryError();
+            }
+          }, 2 * 60 * 1000); // 2 minutes
+
+          attachDemoCallListener(result.demoCallId);
+
+          getDemoCallById(result.demoCallId)
+            .then((demoCallData) => {
+              applyDemoCallSyncState(demoCallData);
+              if (
+                demoCallData?.status === 'completed' &&
+                typeof demoCallData.script === 'string' &&
+                demoCallData.script.trim() !== ''
+              ) {
+                if (user?.uid) {
+                  markDemoCallCompleted(user.uid, result.demoCallId).catch((error) => {
+                    console.error('Failed to mark demo call as completed for user:', error);
+                  });
+                }
+              }
+            })
+            .catch((error) => {
+              console.error('Failed immediate demo call sync:', error);
+            });
+        }
+      } catch (error) {
+        console.error('Failed to execute demo call:', error);
+        resetDemoCallFlowState();
+        setShowDemoConfirmModal(false);
+        Alert.alert('Demo Call Failed', 'Unable to complete demo call. Please try again.');
+      }
+    });
   };
 
   const handleViewTranscript = () => {
@@ -1111,12 +1114,14 @@ export default function HomeScreen() {
               >
                 <Text style={[styles.modalCancelText, { color: colors.textMuted }]}>Cancel</Text>
               </Pressable>
-              <AppButton
-                title="Call Now"
-                onPress={handleStartDemoCall}
-                loading={demoCallLoading}
-                style={styles.modalConfirmButton}
-              />
+              <RequireAuth>
+                <AppButton
+                  title="Call Now"
+                  onPress={handleStartDemoCall}
+                  loading={demoCallLoading}
+                  style={styles.modalConfirmButton}
+                />
+              </RequireAuth>
             </View>
           </View>
         </View>

@@ -1,3 +1,12 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Firestore Security Rules - Documentation & Test Cases
 
 ## Overview
@@ -47,9 +56,9 @@ function isValidBatchSource(source)     // 'manual', 'csv', 'clipboard', 'image'
 
 **Document Path**: `batches/{batchId}`
 
-#### CREATE ✅ Allowed
+#### CREATE âœ… Allowed
 ```
-✅ User creates batch after selecting "Call Now" or "Schedule"
+âœ… User creates batch after selecting "Call Now" or "Schedule"
 ```
 
 **Conditions**:
@@ -59,23 +68,23 @@ function isValidBatchSource(source)     // 'manual', 'csv', 'clipboard', 'image'
 - `status` in ['running', 'scheduled', 'completed']
 - `action` in ['call_now', 'schedule']
 - `source` in ['manual', 'csv', 'clipboard', 'image']
-- `totalContacts` > 0 and ≤ 10,000
+- `totalContacts` > 0 and â‰¤ 10,000
 - `createdAt` timestamp exists
 
-#### READ ✅ Allowed
+#### READ âœ… Allowed
 ```
-✅ User reads their own batches
-✅ Automation service reads batches
+âœ… User reads their own batches
+âœ… Automation service reads batches
 ```
 
 **Conditions**:
 - User is authenticated AND
 - (`userId` = `auth.uid` OR user has automation role)
 
-#### UPDATE ✅ Allowed
+#### UPDATE âœ… Allowed
 ```
-✅ User updates status (e.g., running → completed)
-✅ Automation service updates batch status
+âœ… User updates status (e.g., running â†’ completed)
+âœ… Automation service updates batch status
 ```
 
 **Conditions**:
@@ -87,9 +96,9 @@ function isValidBatchSource(source)     // 'manual', 'csv', 'clipboard', 'image'
   - `createdAt` (cannot change creation time)
 - `status` is valid
 
-#### DELETE ✅ Allowed
+#### DELETE âœ… Allowed
 ```
-✅ User deletes their own batches
+âœ… User deletes their own batches
 ```
 
 **Conditions**:
@@ -102,9 +111,9 @@ function isValidBatchSource(source)     // 'manual', 'csv', 'clipboard', 'image'
 
 **Document Path**: `leads/{leadId}`
 
-#### CREATE ✅ Allowed
+#### CREATE âœ… Allowed
 ```
-✅ User creates lead for their batch
+âœ… User creates lead for their batch
 ```
 
 **CRITICAL CONDITIONS** (Referential Integrity):
@@ -118,20 +127,20 @@ function isValidBatchSource(source)     // 'manual', 'csv', 'clipboard', 'image'
 - `status` = 'queued' (initial status)
 - `createdAt` timestamp exists
 
-#### READ ✅ Allowed
+#### READ âœ… Allowed
 ```
-✅ User reads their own leads
-✅ Automation service reads leads
+âœ… User reads their own leads
+âœ… Automation service reads leads
 ```
 
 **Conditions**:
 - User is authenticated AND
 - (`userId` = `auth.uid` OR user has automation role)
 
-#### UPDATE ✅ Allowed
+#### UPDATE âœ… Allowed
 ```
-✅ User updates lead status (queued → calling → completed)
-✅ Automation service updates lead status
+âœ… User updates lead status (queued â†’ calling â†’ completed)
+âœ… Automation service updates lead status
 ```
 
 **Conditions**:
@@ -144,9 +153,9 @@ function isValidBatchSource(source)     // 'manual', 'csv', 'clipboard', 'image'
   - `createdAt` (cannot change creation time)
 - `status` is valid
 
-#### DELETE ✅ Allowed
+#### DELETE âœ… Allowed
 ```
-✅ User deletes their own leads
+âœ… User deletes their own leads
 ```
 
 **Conditions**:
@@ -157,7 +166,7 @@ function isValidBatchSource(source)     // 'manual', 'csv', 'clipboard', 'image'
 
 ## Test Cases
 
-### Test 1: CREATE BATCH ✅
+### Test 1: CREATE BATCH âœ…
 
 **Scenario**: User creates a batch with 45 contacts
 
@@ -169,49 +178,49 @@ const batchId = 'batch-xyz789';
 // BATCH DOCUMENT
 {
   batchId: 'batch-xyz789',
-  userId: 'user-001-abc123',          // ✅ Matches auth.uid
-  status: 'running',                   // ✅ Valid status
-  action: 'call_now',                  // ✅ Valid action
-  source: 'clipboard',                 // ✅ Valid source
-  totalContacts: 45,                   // ✅ > 0 and ≤ 10,000
-  createdAt: Timestamp.now(),          // ✅ Timestamp exists
+  userId: 'user-001-abc123',          // âœ… Matches auth.uid
+  status: 'running',                   // âœ… Valid status
+  action: 'call_now',                  // âœ… Valid action
+  source: 'clipboard',                 // âœ… Valid source
+  totalContacts: 45,                   // âœ… > 0 and â‰¤ 10,000
+  createdAt: Timestamp.now(),          // âœ… Timestamp exists
 }
 ```
 
-**Expected Result**: ✅ **CREATE ALLOWED**
+**Expected Result**: âœ… **CREATE ALLOWED**
 
 **Security Checks**:
-- ✅ User is authenticated (request.auth != null)
-- ✅ `userId` matches `auth.uid`
-- ✅ `batchId` field matches document ID
-- ✅ Valid status, action, source
-- ✅ Valid totalContacts
-- ✅ createdAt timestamp provided
+- âœ… User is authenticated (request.auth != null)
+- âœ… `userId` matches `auth.uid`
+- âœ… `batchId` field matches document ID
+- âœ… Valid status, action, source
+- âœ… Valid totalContacts
+- âœ… createdAt timestamp provided
 
 **Failure Cases**:
 ```javascript
-// ❌ FAIL: userId doesn't match auth.uid
+// âŒ FAIL: userId doesn't match auth.uid
 {
   userId: 'user-002-different',  // NOT user-001-abc123
   ...
 }
 // Error: userId != request.auth.uid
 
-// ❌ FAIL: Invalid status
+// âŒ FAIL: Invalid status
 {
   status: 'draft',  // NOT in ['running', 'scheduled', 'completed']
   ...
 }
 // Error: status not valid
 
-// ❌ FAIL: No contacts
+// âŒ FAIL: No contacts
 {
   totalContacts: 0,  // NOT > 0
   ...
 }
 // Error: totalContacts must be > 0
 
-// ❌ FAIL: Missing createdAt
+// âŒ FAIL: Missing createdAt
 {
   createdAt: null,  // Missing timestamp
   ...
@@ -221,7 +230,7 @@ const batchId = 'batch-xyz789';
 
 ---
 
-### Test 2: CREATE LEADS (Referential Integrity) ✅
+### Test 2: CREATE LEADS (Referential Integrity) âœ…
 
 **Scenario**: User creates 45 lead documents for the batch
 
@@ -232,59 +241,59 @@ const batchId = 'batch-xyz789';
 // LEAD DOCUMENT (repeat for each contact)
 const lead1 = {
   leadId: 'lead-001-abc',
-  batchId: 'batch-xyz789',             // ✅ References existing batch
-  userId: 'user-001-abc123',           // ✅ Matches auth.uid AND batch owner
-  phone: '+1-555-1234',                // ✅ Valid phone
+  batchId: 'batch-xyz789',             // âœ… References existing batch
+  userId: 'user-001-abc123',           // âœ… Matches auth.uid AND batch owner
+  phone: '+1-555-1234',                // âœ… Valid phone
   name: 'John Doe',
-  status: 'queued',                    // ✅ Valid initial status
-  createdAt: Timestamp.now(),          // ✅ Timestamp exists
+  status: 'queued',                    // âœ… Valid initial status
+  createdAt: Timestamp.now(),          // âœ… Timestamp exists
 };
 ```
 
-**Expected Result**: ✅ **CREATE ALLOWED**
+**Expected Result**: âœ… **CREATE ALLOWED**
 
 **CRITICAL Security Checks**:
-- ✅ User is authenticated
-- ✅ `userId` matches `auth.uid`
-- ✅ Batch exists (`exists(/databases/.../batches/batch-xyz789)`)
-- ✅ Batch belongs to user (`get(.../batches/batch-xyz789).data.userId == auth.uid`)
-- ✅ `phone` is not null/empty
-- ✅ `status` is valid
-- ✅ `createdAt` timestamp provided
+- âœ… User is authenticated
+- âœ… `userId` matches `auth.uid`
+- âœ… Batch exists (`exists(/databases/.../batches/batch-xyz789)`)
+- âœ… Batch belongs to user (`get(.../batches/batch-xyz789).data.userId == auth.uid`)
+- âœ… `phone` is not null/empty
+- âœ… `status` is valid
+- âœ… `createdAt` timestamp provided
 
 **Failure Cases**:
 ```javascript
-// ❌ FAIL: Batch doesn't exist
+// âŒ FAIL: Batch doesn't exist
 {
   batchId: 'batch-nonexistent',  // Batch doesn't exist
   ...
 }
-// Error: batchExists() = false → CREATE DENIED
+// Error: batchExists() = false â†’ CREATE DENIED
 // Result: User cannot create orphaned leads
 
-// ❌ FAIL: Batch belongs to different user
+// âŒ FAIL: Batch belongs to different user
 {
   batchId: 'batch-user002',  // Batch owner is user-002
   userId: 'user-001-abc123', // But trying to add as user-001
 }
-// Error: isBatchOwner() = false → CREATE DENIED
+// Error: isBatchOwner() = false â†’ CREATE DENIED
 // Result: User cannot add leads to other users' batches
 
-// ❌ FAIL: Missing phone
+// âŒ FAIL: Missing phone
 {
   phone: null,  // OR empty string
   ...
 }
 // Error: phone must not be null/empty
 
-// ❌ FAIL: Invalid status
+// âŒ FAIL: Invalid status
 {
   status: 'calling',  // Only 'queued' acceptable at creation
   ...
 }
 // Error: Only initial status allowed
 
-// ❌ FAIL: userId mismatch
+// âŒ FAIL: userId mismatch
 {
   userId: 'user-002-different',
   ...
@@ -294,7 +303,7 @@ const lead1 = {
 
 ---
 
-### Test 3: READ BATCHES ✅
+### Test 3: READ BATCHES âœ…
 
 **Scenario**: User reads their own batch
 
@@ -306,33 +315,33 @@ const lead1 = {
 GET /batches/batch-xyz789
 ```
 
-**Expected Result**: ✅ **READ ALLOWED**
+**Expected Result**: âœ… **READ ALLOWED**
 
 **Security Check**:
-- ✅ User is authenticated
-- ✅ `auth.uid == resource.data.userId`
+- âœ… User is authenticated
+- âœ… `auth.uid == resource.data.userId`
 
 **Failure Cases**:
 ```javascript
-// ❌ FAIL: User reads another user's batch
+// âŒ FAIL: User reads another user's batch
 // auth.uid = 'user-001-abc123'
 // Document userId = 'user-002-different'
 
 GET /batches/batch-user002
-// Error: auth.uid != resource.data.userId → READ DENIED
+// Error: auth.uid != resource.data.userId â†’ READ DENIED
 // Result: User cannot read other users' batches
 
-// ❌ FAIL: Unauthenticated access
+// âŒ FAIL: Unauthenticated access
 // No auth token
 
 GET /batches/batch-xyz789
-// Error: request.auth == null → READ DENIED
+// Error: request.auth == null â†’ READ DENIED
 // Result: Anonymous users cannot read batches
 ```
 
 ---
 
-### Test 4: READ LEADS ✅
+### Test 4: READ LEADS âœ…
 
 **Scenario**: User reads their own leads
 
@@ -344,27 +353,27 @@ GET /batches/batch-xyz789
 GET /leads/lead-001
 ```
 
-**Expected Result**: ✅ **READ ALLOWED**
+**Expected Result**: âœ… **READ ALLOWED**
 
 **Security Check**:
-- ✅ User is authenticated
-- ✅ `auth.uid == resource.data.userId`
+- âœ… User is authenticated
+- âœ… `auth.uid == resource.data.userId`
 
 **Failure Cases**:
 ```javascript
-// ❌ FAIL: User reads another user's lead
+// âŒ FAIL: User reads another user's lead
 // auth.uid = 'user-001-abc123'
 // Document userId = 'user-002-different'
 
 GET /leads/lead-user002
-// Error: Unauthorized → READ DENIED
+// Error: Unauthorized â†’ READ DENIED
 // Result: User cannot read other users' leads
 
-// ❌ FAIL: Unauthenticated access
+// âŒ FAIL: Unauthenticated access
 // No auth token
 
 GET /leads/lead-001
-// Error: Unauthenticated → READ DENIED
+// Error: Unauthenticated â†’ READ DENIED
 // Result: Anonymous users cannot read leads
 ```
 
@@ -374,14 +383,14 @@ GET /leads/lead-001
 
 | Operation | User1 Own Data | User2 Own Data | Unauthenticated | Automation | Expected |
 |-----------|---|---|---|---|---|
-| **BATCH CREATE** | ✅ | ❌ | ❌ | ❌ | Owner Only |
-| **BATCH READ** | ✅ | ❌ | ❌ | ✅ | Owner + Automation |
-| **BATCH UPDATE** | ✅ | ❌ | ❌ | ✅ | Owner + Automation |
-| **BATCH DELETE** | ✅ | ❌ | ❌ | ❌ | Owner Only |
-| **LEAD CREATE** | ✅* | ❌ | ❌ | ❌ | Owner Only* |
-| **LEAD READ** | ✅ | ❌ | ❌ | ✅ | Owner + Automation |
-| **LEAD UPDATE** | ✅ | ❌ | ❌ | ✅ | Owner + Automation |
-| **LEAD DELETE** | ✅ | ❌ | ❌ | ❌ | Owner Only |
+| **BATCH CREATE** | âœ… | âŒ | âŒ | âŒ | Owner Only |
+| **BATCH READ** | âœ… | âŒ | âŒ | âœ… | Owner + Automation |
+| **BATCH UPDATE** | âœ… | âŒ | âŒ | âœ… | Owner + Automation |
+| **BATCH DELETE** | âœ… | âŒ | âŒ | âŒ | Owner Only |
+| **LEAD CREATE** | âœ…* | âŒ | âŒ | âŒ | Owner Only* |
+| **LEAD READ** | âœ… | âŒ | âŒ | âœ… | Owner + Automation |
+| **LEAD UPDATE** | âœ… | âŒ | âŒ | âœ… | Owner + Automation |
+| **LEAD DELETE** | âœ… | âŒ | âŒ | âŒ | Owner Only |
 
 \* **LEAD CREATE** has additional requirement: Parent batch must exist and belong to owner
 
@@ -395,7 +404,7 @@ GET /leads/lead-001
 - [x] Batch ownership check before lead creation
 - [x] Immutable field protection (IDs, timestamps)
 - [x] Valid enum values for status, action, source
-- [x] Contact count limits (0 < value ≤ 10,000)
+- [x] Contact count limits (0 < value â‰¤ 10,000)
 - [x] Automation service access (special role)
 - [x] Explicit deny-all for unknown collections
 - [x] Documentation of all rules
@@ -417,7 +426,7 @@ GET /leads/lead-001
 
 3. **Verify in Console**:
    - Go to Firebase Console
-   - Navigate to Firestore → Rules
+   - Navigate to Firestore â†’ Rules
    - Check deployment status
 
 ---
@@ -451,7 +460,7 @@ For the automation service to read/update batches and leads:
   "firebase": {
     "identities": {},
     "sign_in_provider": "custom",
-    "role": "automation"  ← This custom claim enables automation access
+    "role": "automation"  â† This custom claim enables automation access
   }
 }
 ```
@@ -490,3 +499,5 @@ await admin.auth().setCustomUserClaims(automationUid, { role: 'automation' });
 3. Monitor security logs in Firebase Console
 4. Update rules if new collections are added
 5. Review and audit quarterly
+
+

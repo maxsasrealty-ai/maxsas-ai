@@ -1,3 +1,12 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Code Change Reference - Exact Before & After
 
 **File:** `src/features/leads/BatchDetailScreen.tsx`  
@@ -6,7 +15,7 @@
 
 ---
 
-## 📝 Complete Code Change
+## ðŸ“ Complete Code Change
 
 ### BEFORE (Broken - Lines 240-256)
 
@@ -63,20 +72,20 @@
 
 ---
 
-## 📊 Diff Summary
+## ðŸ“Š Diff Summary
 
 | Aspect | Before | After |
 |--------|--------|-------|
 | **Filter condition** | `(lead.retryCount \|\| 0) > 0 \|\| !!lead.nextRetryAt` | `lead.status === 'failed_retryable' \|\| (lead.retryCount \|\| 0) > 0 \|\| !!lead.nextRetryAt` |
 | **Lines of code** | 1 line condition | 3 line condition |
-| **Status check** | ❌ Missing | ✅ Added |
+| **Status check** | âŒ Missing | âœ… Added |
 | **Comment** | None | Added explanation |
 | **Lines changed** | 1 | 5 (added 3 + comment + formatting) |
-| **Breaking changes** | N/A | None ✅ |
+| **Breaking changes** | N/A | None âœ… |
 
 ---
 
-## 🔍 Detailed Comparison
+## ðŸ” Detailed Comparison
 
 ### Line-by-Line Changes
 
@@ -120,7 +129,7 @@ return (
 
 ---
 
-## 🧪 Test Before & After
+## ðŸ§ª Test Before & After
 
 ### BEFORE Fix - Test Scenario
 ```
@@ -130,7 +139,7 @@ Filter: if (leadFilter === 'retrying')
   Calc:  (0) > 0 || false
   Calc:  false || false
   Result: FALSE
-Output: Lead NOT displayed in "Show Retrying" tab ❌
+Output: Lead NOT displayed in "Show Retrying" tab âŒ
 ```
 
 ### AFTER Fix - Test Scenario
@@ -139,12 +148,12 @@ Input: Lead with status: "failed_retryable", retryCount: 0, nextRetryAt: null
 Filter: if (leadFilter === 'retrying')
   Check 1: "failed_retryable" === "failed_retryable"
   Result:  TRUE (short-circuit)
-Output: Lead DISPLAYED in "Show Retrying" tab ✅
+Output: Lead DISPLAYED in "Show Retrying" tab âœ…
 ```
 
 ---
 
-## 📋 Context Around Change
+## ðŸ“‹ Context Around Change
 
 ### What's Above (Lines 235-239)
 ```typescript
@@ -167,36 +176,36 @@ Output: Lead DISPLAYED in "Show Retrying" tab ✅
 
   const handleCallNow = async () => {
     console.log('--- TRIGGERED: handleCallNow ---');
-    console.log('🎯 Showing Call Now confirmation modal');
+    console.log('ðŸŽ¯ Showing Call Now confirmation modal');
     setShowCallNowModal(true);
   };
 ```
 
 ---
 
-## ✅ Verification
+## âœ… Verification
 
 ### Code Syntax Check
-✅ Valid TypeScript syntax  
-✅ No type errors  
-✅ No syntax errors  
-✅ Proper JSX/TSX formatting  
+âœ… Valid TypeScript syntax  
+âœ… No type errors  
+âœ… No syntax errors  
+âœ… Proper JSX/TSX formatting  
 
 ### Logic Verification
-✅ OR operator precedence correct  
-✅ Condition always evaluates to boolean  
-✅ No infinite loops  
-✅ No side effects  
+âœ… OR operator precedence correct  
+âœ… Condition always evaluates to boolean  
+âœ… No infinite loops  
+âœ… No side effects  
 
 ### Integration Verification
-✅ useMemo dependencies unchanged  
-✅ Lead type matches (Lead interface)  
-✅ leadFilter enum values valid  
-✅ Return type matches expected (boolean)
+âœ… useMemo dependencies unchanged  
+âœ… Lead type matches (Lead interface)  
+âœ… leadFilter enum values valid  
+âœ… Return type matches expected (boolean)
 
 ---
 
-## 🔐 Safety Checklist
+## ðŸ” Safety Checklist
 
 - [x] No breaking changes
 - [x] Backward compatible
@@ -211,10 +220,10 @@ Output: Lead DISPLAYED in "Show Retrying" tab ✅
 
 ---
 
-## 📌 Deployment Notes
+## ðŸ“Œ Deployment Notes
 
 ### Safe to Deploy
-✅ This is a **safe, low-risk change**
+âœ… This is a **safe, low-risk change**
 
 **Why:**
 1. **Single responsibility:** Only affects one filter condition
@@ -238,27 +247,27 @@ If for any reason this change needs to be reverted:
 
 ---
 
-## 🎯 Impact Analysis
+## ðŸŽ¯ Impact Analysis
 
 ### What This Fixes
-- ✅ "Show Retrying" tab now includes failed_retryable leads
-- ✅ Real-time updates work correctly
-- ✅ Lead metadata displays properly
-- ✅ Retry info card shows up
+- âœ… "Show Retrying" tab now includes failed_retryable leads
+- âœ… Real-time updates work correctly
+- âœ… Lead metadata displays properly
+- âœ… Retry info card shows up
 
 ### What This Doesn't Change
-- ✅ Other tabs (Pending, Completed, Failed) unchanged
-- ✅ Real-time listener behavior unchanged
-- ✅ Firestore data unchanged
-- ✅ API contracts unchanged
-- ✅ Database schema unchanged
+- âœ… Other tabs (Pending, Completed, Failed) unchanged
+- âœ… Real-time listener behavior unchanged
+- âœ… Firestore data unchanged
+- âœ… API contracts unchanged
+- âœ… Database schema unchanged
 
 ### Side Effects
 None. Pure filter logic change.
 
 ---
 
-## 📊 Code Metrics
+## ðŸ“Š Code Metrics
 
 ### Complexity
 - **Cyclomatic complexity:** No change (still simple OR conditions)
@@ -279,7 +288,7 @@ None. Pure filter logic change.
 
 ---
 
-## 🔗 Related Contexts
+## ðŸ”— Related Contexts
 
 ### Function Context
 **Function Name:** `filteredLeads` useMemo hook  
@@ -301,7 +310,7 @@ None. Pure filter logic change.
 
 ---
 
-## ✨ Quality Assurance
+## âœ¨ Quality Assurance
 
 ### Pre-Deployment Checks
 - [x] Code review completed
@@ -320,7 +329,7 @@ None. Pure filter logic change.
 
 ---
 
-## 📚 References
+## ðŸ“š References
 
 - **Issue:** Dashboard "Show Retrying" tab shows "No contacts in this batch"
 - **Root Cause:** Missing status check in filter
@@ -330,7 +339,7 @@ None. Pure filter logic change.
 
 ---
 
-## 🎯 Summary
+## ðŸŽ¯ Summary
 
 **Change:** Add status check to retrying filter  
 **File:** `src/features/leads/BatchDetailScreen.tsx`  
@@ -338,7 +347,9 @@ None. Pure filter logic change.
 **Additions:** 5 lines  
 **Deletions:** 1 line  
 **Net Change:** +4 lines  
-**Risk Level:** 🟢 LOW  
-**Ready to Deploy:** ✅ YES  
+**Risk Level:** ðŸŸ¢ LOW  
+**Ready to Deploy:** âœ… YES  
 
 The fix is minimal, safe, and addresses the root cause directly. No side effects or dependencies introduced.
+
+

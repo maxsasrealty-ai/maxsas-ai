@@ -1,3 +1,12 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Notification and Dashboard UX
 
 ## Goal
@@ -118,3 +127,5 @@ This structure is ready to be extended for:
 - Team analytics
 - Notification preferences
 - Conversion funnel reporting
+
+

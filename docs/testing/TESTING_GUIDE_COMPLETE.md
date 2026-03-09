@@ -1,10 +1,19 @@
-# 🚀 BATCH SYSTEM - COMPLETE TESTING GUIDE
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
+# ðŸš€ BATCH SYSTEM - COMPLETE TESTING GUIDE
 
 Complete end-to-end regression testing for the batch creation, real-time updates, and wallet integration system.
 
 ---
 
-## 📋 Table of Contents
+## ðŸ“‹ Table of Contents
 1. [Test Environment Setup](#test-environment-setup)
 2. [Manual Testing Guide](#manual-testing-guide)
 3. [Automated Testing Setup](#automated-testing-setup)
@@ -18,12 +27,12 @@ Complete end-to-end regression testing for the batch creation, real-time updates
 
 ### Prerequisites
 ```
-✓ Node.js 16+ installed
-✓ React Native/Expo setup complete
-✓ Firebase and Firestore connected
-✓ Test user account created and authenticated
-✓ Initial wallet balance ≥ ₹5000
-✓ Network connectivity stable
+âœ“ Node.js 16+ installed
+âœ“ React Native/Expo setup complete
+âœ“ Firebase and Firestore connected
+âœ“ Test user account created and authenticated
+âœ“ Initial wallet balance â‰¥ â‚¹5000
+âœ“ Network connectivity stable
 ```
 
 ### Start Development Server
@@ -159,7 +168,7 @@ npm start
 
 # 2. Open app in browser/emulator
 # 3. Log in with test account
-# 4. Verify wallet balance (should be ₹5000+)
+# 4. Verify wallet balance (should be â‚¹5000+)
 # 5. Open browser DevTools Console
 ```
 
@@ -198,39 +207,39 @@ finishTestSuite();
 
 The test reporter will print a formatted console report showing:
 ```
-════════════════════════════════════════════════════════════════════════════════
-════════ UI REGRESSION TEST REPORT ════════════════════════════════════════════════
-════════════════════════════════════════════════════════════════════════════════
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+â•â•â•â•â•â•â•â• UI REGRESSION TEST REPORT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-📊 TEST SUMMARY
-─────────────────────────────────────────────────────────────────────────────────
+ðŸ“Š TEST SUMMARY
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Timestamp: 2026-02-06T12:34:56.789Z
   Total Tests: 23
-  ✅ Passed: 23
-  ❌ Failed: 0
-  ⏭️  Skipped: 0
+  âœ… Passed: 23
+  âŒ Failed: 0
+  â­ï¸  Skipped: 0
   Success Rate: 100.0%
   Total Duration: 123.45s
 
-🌍 ENVIRONMENT
-─────────────────────────────────────────────────────────────────────────────────
+ðŸŒ ENVIRONMENT
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   device: Mobile (React Native)
   network: WiFi
   auth: Logged In
 
-🧪 TEST CASES
-─────────────────────────────────────────────────────────────────────────────────
-  ✅ TC-1.1: Create Batch via Manual Entry
+ðŸ§ª TEST CASES
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  âœ… TC-1.1: Create Batch via Manual Entry
      Duration: 1234ms
-       ✅ PASS: Batch created successfully
-       ✅ PASS: Contact count > 0
+       âœ… PASS: Batch created successfully
+       âœ… PASS: Contact count > 0
   ...
 
-💡 RECOMMENDATIONS
-─────────────────────────────────────────────────────────────────────────────────
-  ✅ All tests passed! Ready for release.
+ðŸ’¡ RECOMMENDATIONS
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  âœ… All tests passed! Ready for release.
 
-════════════════════════════════════════════════════════════════════════════════
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 ```
 
 ---
@@ -271,9 +280,9 @@ console.log(JSON.stringify(report, null, 2));
 
 ### Test Report Structure
 ```
-✅ PASSED - All tests passed, no issues
-⚠️  PASSED WITH WARNINGS - Tests passed but minor issues found
-❌ FAILED - Critical issues found, needs fixes before release
+âœ… PASSED - All tests passed, no issues
+âš ï¸  PASSED WITH WARNINGS - Tests passed but minor issues found
+âŒ FAILED - Critical issues found, needs fixes before release
 ```
 
 ---
@@ -283,15 +292,15 @@ console.log(JSON.stringify(report, null, 2));
 ### Scenario 1: Create Batch (Manual)
 ```
 Steps:
-  1. Home → "Add Lead" or "Upload Leads"
+  1. Home â†’ "Add Lead" or "Upload Leads"
   2. Enter phone numbers
   3. Save batch
   4. Verify in Dashboard
 
 Expected:
-  • Batch appears with "draft" status
-  • Contact count correct
-  • All details visible
+  â€¢ Batch appears with "draft" status
+  â€¢ Contact count correct
+  â€¢ All details visible
 ```
 
 ### Scenario 2: Call Now with Balance Check
@@ -303,11 +312,11 @@ Steps:
   4. Watch for Firebase save
 
 Expected:
-  • Wallet check passes
-  • Balance sufficient
-  • Batch saved successfully
-  • Status changes from "draft"
-  • Dashboard updates
+  â€¢ Wallet check passes
+  â€¢ Balance sufficient
+  â€¢ Batch saved successfully
+  â€¢ Status changes from "draft"
+  â€¢ Dashboard updates
 ```
 
 ### Scenario 3: Real-Time Updates
@@ -319,11 +328,11 @@ Steps:
   4. Verify live updates
 
 Expected:
-  • Real-time listener active
-  • Status colors correct
-  • Retry info visible
-  • Progress bar updates
-  • No manual refresh needed
+  â€¢ Real-time listener active
+  â€¢ Status colors correct
+  â€¢ Retry info visible
+  â€¢ Progress bar updates
+  â€¢ No manual refresh needed
 ```
 
 ### Scenario 4: Error Handling
@@ -335,10 +344,10 @@ Steps:
   4. Retry
 
 Expected:
-  • Error shown to user
-  • Batch not saved (corrupted)
-  • Can retry after reconnect
-  • No app crash
+  â€¢ Error shown to user
+  â€¢ Batch not saved (corrupted)
+  â€¢ Can retry after reconnect
+  â€¢ No app crash
 ```
 
 ---
@@ -347,26 +356,26 @@ Expected:
 
 ### All Tests Pass
 ```
-✅ Success Rate: 100%
-✅ No critical issues
-✅ Minor issues < 5
-✅ Ready for release
+âœ… Success Rate: 100%
+âœ… No critical issues
+âœ… Minor issues < 5
+âœ… Ready for release
 ```
 
 ### Some Tests Fail
 ```
-⚠️ Success Rate: 80-99%
-⚠️ Review failures
-⚠️ Fix critical blockers
-⚠️ Re-test before release
+âš ï¸ Success Rate: 80-99%
+âš ï¸ Review failures
+âš ï¸ Fix critical blockers
+âš ï¸ Re-test before release
 ```
 
 ### Many Tests Fail
 ```
-❌ Success Rate: < 80%
-❌ Do not release
-❌ Investigate root cause
-❌ Fix and re-test all
+âŒ Success Rate: < 80%
+âŒ Do not release
+âŒ Investigate root cause
+âŒ Fix and re-test all
 ```
 
 ---
@@ -426,7 +435,7 @@ Solution:
 
 ## Success Criteria
 
-### Must Have (Release Blocker) ✅
+### Must Have (Release Blocker) âœ…
 - [x] All 4 batch creation methods work
 - [x] Wallet check prevents insufficient balance
 - [x] Real-time updates work without refresh
@@ -434,7 +443,7 @@ Solution:
 - [x] Progress bar updates automatically
 - [x] No crashes or critical errors
 
-### Should Have (Quality) ✅
+### Should Have (Quality) âœ…
 - [x] All 23 test cases pass
 - [x] < 5 minor warnings
 - [x] Performance metrics good
@@ -442,7 +451,7 @@ Solution:
 - [x] Color coding correct
 - [x] Retry info visible
 
-### Nice to Have (Polish) ✅
+### Nice to Have (Polish) âœ…
 - [x] Smooth animations
 - [x] Loading indicators visible
 - [x] Error messages helpful
@@ -509,12 +518,14 @@ Sign-off:
    - Get sign-off
 
 4. **Release Decision**
-   - All pass → Release ✅
-   - Some fail → Fix & Re-test 🔧
-   - Many fail → Block release 🛑
+   - All pass â†’ Release âœ…
+   - Some fail â†’ Fix & Re-test ðŸ”§
+   - Many fail â†’ Block release ðŸ›‘
 
 ---
 
 **Questions?** Check the relevant test file or review test example code.
 
-Good luck with testing! 🚀
+Good luck with testing! ðŸš€
+
+

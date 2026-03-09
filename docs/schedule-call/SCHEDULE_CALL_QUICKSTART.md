@@ -1,3 +1,12 @@
+﻿<!-- ARCH_SYNC:2026-03-08 -->
+## Architecture Sync
+
+- Synced On: 2026-03-08
+- Baseline: `docs/architecture/CURRENT_ARCHITECTURE_BASELINE.md`
+- Status: This document has been aligned to the current repository architecture baseline.
+- Rule: If implementation and this document differ, treat the baseline file as source of truth and update this doc.
+
+---
 # Schedule Call - Quick Start & Deployment Guide
 
 ## What's Being Built
@@ -14,19 +23,19 @@ A production-grade **Schedule Call** feature that allows users to:
 
 ## 3-Part Implementation
 
-### Part 1: Database Rules Update ✅ DONE
+### Part 1: Database Rules Update âœ… DONE
 **File**: [firestore.rules](firestore.rules#L151-L190)
 
 **What Changed**:
 - Added protection: Users cannot modify a batch once it's 'scheduled'
-- Only automation (n8n) can transition scheduled → running
+- Only automation (n8n) can transition scheduled â†’ running
 - Firestore now enforces atomic transitions
 
 **Deployment**: Deploy rules to Firebase Console
 
 ---
 
-### Part 2: Batch Service Enhancement ✅ DONE
+### Part 2: Batch Service Enhancement âœ… DONE
 **File**: [src/services/batchService.ts](src/services/batchService.ts#L80-L120)
 
 **What Changed**:
@@ -43,7 +52,7 @@ npm test -- batch.schedule.test.ts
 
 ---
 
-### Part 3: n8n Scheduler Workflow ✅ DONE
+### Part 3: n8n Scheduler Workflow âœ… DONE
 **File**: [N8N_BATCH_SCHEDULER_SETUP.md](N8N_BATCH_SCHEDULER_SETUP.md)
 
 **What It Does**:
@@ -58,7 +67,7 @@ npm test -- batch.schedule.test.ts
 
 ## Deployment Checklist
 
-### ✓ Completed Changes
+### âœ“ Completed Changes
 - [x] Firestore rules updated with schedule transition protection
 - [x] batchService.ts updated with scheduleAt validation
 - [x] Comprehensive documentation created
@@ -66,14 +75,14 @@ npm test -- batch.schedule.test.ts
   - [x] n8n setup guide: [N8N_BATCH_SCHEDULER_SETUP.md](N8N_BATCH_SCHEDULER_SETUP.md)
   - [x] This quickstart guide
 
-### → Next: Deployment Steps
+### â†’ Next: Deployment Steps
 
 #### Phase 1: Database (FIRST - No app changes needed)
 ```
 [ ] 1. Deploy Firestore rules to production
       Command: firebase deploy --only firestore:rules
       
-[ ] 2. Verify rules in Firebase Console Firestore → Rules tab
+[ ] 2. Verify rules in Firebase Console Firestore â†’ Rules tab
       
 [ ] 3. No restart needed for Firebase
 ```
@@ -205,7 +214,7 @@ Day 7 (Production Cron):
 5. Firestore atomically applies update (succeeds)
 6. Second issues: UPDATE status='running' WHERE status='scheduled'
 7. Firestore atomically rejects (batch no longer 'scheduled')
-8. Result: Only ONE transition occurs ✓
+8. Result: Only ONE transition occurs âœ“
 ```
 
 ---
@@ -279,45 +288,45 @@ If anything goes wrong during deployment:
 **Before** with just "Call Now":
 ```
 Batch Detail Screen
-┌─────────────────────────┐
-│ 4 Contacts              │
-│ [CALL NOW] [DELETE]     │
-└─────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ 4 Contacts              â”‚
+â”‚ [CALL NOW] [DELETE]     â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 **After** with "Schedule":
 ```
 Batch Detail Screen
-┌─────────────────────────────┐
-│ 4 Contacts                  │
-│ [CALL NOW] [SCHEDULE]       │
-│ [DELETE] [VIEW HISTORY]     │
-│                             │
-│ When user clicks SCHEDULE:  │
-│ ┌─────────────────────────┐ │
-│ │ Schedule Date/Time      │ │
-│ │ [Calender Widget]       │ │
-│ │ [Time Picker]           │ │
-│ │ [CONFIRM] [CANCEL]      │ │
-│ └─────────────────────────┘ │
-└─────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ 4 Contacts                  â”‚
+â”‚ [CALL NOW] [SCHEDULE]       â”‚
+â”‚ [DELETE] [VIEW HISTORY]     â”‚
+â”‚                             â”‚
+â”‚ When user clicks SCHEDULE:  â”‚
+â”‚ â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â” â”‚
+â”‚ â”‚ Schedule Date/Time      â”‚ â”‚
+â”‚ â”‚ [Calender Widget]       â”‚ â”‚
+â”‚ â”‚ [Time Picker]           â”‚ â”‚
+â”‚ â”‚ [CONFIRM] [CANCEL]      â”‚ â”‚
+â”‚ â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜ â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 **Dashboard** shows both:
 ```
 Batch Dashboard
-┌─────────────────────────────┐
-│ [Running (3)] [Scheduled (2)]│
-│                             │
-│ Running:                    │
-│  • Batch A - 10 leads      │
-│                             │
-│ Scheduled:                  │
-│  • Batch B - 5 leads       │
-│    (Tomorrow 10 AM)         │
-│  • Batch C - 8 leads       │
-│    (Next Monday 2 PM)       │
-└─────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ [Running (3)] [Scheduled (2)]â”‚
+â”‚                             â”‚
+â”‚ Running:                    â”‚
+â”‚  â€¢ Batch A - 10 leads      â”‚
+â”‚                             â”‚
+â”‚ Scheduled:                  â”‚
+â”‚  â€¢ Batch B - 5 leads       â”‚
+â”‚    (Tomorrow 10 AM)         â”‚
+â”‚  â€¢ Batch C - 8 leads       â”‚
+â”‚    (Next Monday 2 PM)       â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ---
@@ -330,22 +339,22 @@ Batch Dashboard
 Dashboard: Batch Scheduler Health
 
 n8n.batch_scheduler.cron_runs (per cycle)
-├─ Batches found (count)
-├─ Successfully transitioned (count)
-├─ Failed transitions (count)
-└─ Webhook successful (count)
+â”œâ”€ Batches found (count)
+â”œâ”€ Successfully transitioned (count)
+â”œâ”€ Failed transitions (count)
+â””â”€ Webhook successful (count)
 
 schedule_batch_created (total)
-├─ By user (top 10)
-├─ By schedule time (distribution)
-└─ By batch size (distribution)
+â”œâ”€ By user (top 10)
+â”œâ”€ By schedule time (distribution)
+â””â”€ By batch size (distribution)
 
 schedule_transition_latency_ms (histogram)
-├─ p50, p95, p99
-└─ Alert if p95 > 5 seconds
+â”œâ”€ p50, p95, p99
+â””â”€ Alert if p95 > 5 seconds
 
 duplicate_schedule_attempts (should be 0)
-└─ Alert if > 0 (indicates race condition)
+â””â”€ Alert if > 0 (indicates race condition)
 ```
 
 ### Support Runbook
@@ -393,54 +402,54 @@ Fix:
 
 ```
 User Flow:
-┌─────────────┐
-│ User        │
-│ Schedule    │
-│ Batch 10 AM │
-└──────┬──────┘
-       │
-       ▼
-┌─────────────────────────┐    Firebase
-│ saveBatchToFirebase()   │    Validation
-│ action='schedule'       ├─→ status='scheduled'
-│ scheduleAt=[timestamp]  │    scheduleAt=[10 AM]
-└──────┬──────────────────┘
-       │
-       ▼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ User        â”‚
+â”‚ Schedule    â”‚
+â”‚ Batch 10 AM â”‚
+â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”˜
+       â”‚
+       â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”    Firebase
+â”‚ saveBatchToFirebase()   â”‚    Validation
+â”‚ action='schedule'       â”œâ”€â†’ status='scheduled'
+â”‚ scheduleAt=[timestamp]  â”‚    scheduleAt=[10 AM]
+â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+       â”‚
+       â–¼
    Dashboard shows "Scheduled"
    
    [Time passes...]
    
-       │ 10:00 AM
-       ▼
-┌──────────────────────────────┐
-│ n8n Cron Trigger (every 30s) │
-└──────┬───────────────────────┘
-       │
-       ▼
-┌────────────────────────────────────┐
-│ Query: status='scheduled'          │
-│        AND scheduleAt <= now       │
-└──────┬─────────────────────────────┘
-       │
-       ▼
-┌────────────────────────────────────┐    Atomic
-│ Update (with precondition):        │    Update
-│ status='running'                   ├─→ One batch
-│ startedAt=now                      │    succeeds
-└──────┬─────────────────────────────┘
-       │
-       ▼
-┌──────────────────────────┐
-│ Notify Dispatcher        │
-│ Webhook: batch_running   │
-└──────┬───────────────────┘
-       │
-       ▼
-┌──────────────────────────┐
-│ Dispatcher picks batch   │
-│ Processes leads normally │
-└──────────────────────────┘
+       â”‚ 10:00 AM
+       â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ n8n Cron Trigger (every 30s) â”‚
+â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+       â”‚
+       â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ Query: status='scheduled'          â”‚
+â”‚        AND scheduleAt <= now       â”‚
+â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+       â”‚
+       â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”    Atomic
+â”‚ Update (with precondition):        â”‚    Update
+â”‚ status='running'                   â”œâ”€â†’ One batch
+â”‚ startedAt=now                      â”‚    succeeds
+â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+       â”‚
+       â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ Notify Dispatcher        â”‚
+â”‚ Webhook: batch_running   â”‚
+â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+       â”‚
+       â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ Dispatcher picks batch   â”‚
+â”‚ Processes leads normally â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ---
@@ -449,16 +458,16 @@ User Flow:
 
 ### Launch is successful when:
 
-- ✓ Users can create scheduled batches without errors
-- ✓ Scheduled batches appear in dashboard with correct time
-- ✓ n8n automatically transitions batches at scheduled time
-- ✓ Transitioned batches begin processing immediately
-- ✓ No manual intervention needed after schedule time arrives
-- ✓ Zero duplicate transitions (verified through logs)
-- ✓ Global concurrency control works for scheduled batches
-- ✓ Error rate < 0.1%
-- ✓ No impact on "Call Now" functionality
-- ✓ No performance degradation in dispatcher
+- âœ“ Users can create scheduled batches without errors
+- âœ“ Scheduled batches appear in dashboard with correct time
+- âœ“ n8n automatically transitions batches at scheduled time
+- âœ“ Transitioned batches begin processing immediately
+- âœ“ No manual intervention needed after schedule time arrives
+- âœ“ Zero duplicate transitions (verified through logs)
+- âœ“ Global concurrency control works for scheduled batches
+- âœ“ Error rate < 0.1%
+- âœ“ No impact on "Call Now" functionality
+- âœ“ No performance degradation in dispatcher
 
 ---
 
@@ -485,4 +494,6 @@ Refer to:
 2. **n8n step-by-step**: [N8N_BATCH_SCHEDULER_SETUP.md](N8N_BATCH_SCHEDULER_SETUP.md)
 3. **Code changes**: Look at git diff for [firestore.rules](firestore.rules) and [batchService.ts](src/services/batchService.ts)
 4. **Architecture diagrams**: See ASCII diagrams in implementation guide
+
+
 
