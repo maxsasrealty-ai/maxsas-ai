@@ -2,11 +2,11 @@ import { getAuth } from 'firebase/auth';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { startRazorpayRecharge } from '../services/razorpayCheckoutService';
 import {
-  calculateDeductionPreview,
-  checkBalanceBeforeBatch,
-  COST_PER_CALL,
-  subscribeToTransactions,
-  subscribeToWallet,
+    calculateDeductionPreview,
+    checkBalanceBeforeBatch,
+    COST_PER_CALL,
+    subscribeToTransactions,
+    subscribeToWallet,
 } from '../services/walletService';
 import { Wallet, WalletOperationResult, WalletTransaction } from '../types/batch';
 import { useAuth } from './AuthContext';
@@ -51,23 +51,18 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     setError(null);
 
-    console.log('💳 Setting up wallet subscription for user:', user.uid);
-
     // Subscribe to wallet changes
     const unsubscribeWallet = subscribeToWallet(user.uid, (walletData) => {
-      console.log('💰 Wallet updated:', walletData);
       setWallet(walletData);
       setLoading(false);
     });
 
     // Subscribe to transaction history
     const unsubscribeTransactions = subscribeToTransactions(user.uid, (txns) => {
-      console.log('📝 Transactions updated:', txns.length);
       setTransactions(txns);
     });
 
     return () => {
-      console.log('🔌 Cleaning up wallet subscriptions');
       unsubscribeWallet();
       unsubscribeTransactions();
     };
@@ -120,7 +115,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
   // Manual refresh (usually not needed with real-time)
   const refreshWallet = () => {
-    console.log('🔄 Manual wallet refresh requested (real-time listener active)');
+    // No-op: wallet is already synced via real-time listeners.
   };
 
   return (

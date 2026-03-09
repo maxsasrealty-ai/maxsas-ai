@@ -1,5 +1,5 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Redirect, Stack, usePathname, useSegments } from 'expo-router';
+import { Redirect, Stack, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useMemo } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -14,7 +14,6 @@ import { useAppTheme } from '@/src/theme/use-app-theme';
 function RootLayoutNav() {
   const { authLoaded, user } = useAuth();
   const segments = useSegments();
-  const pathname = usePathname();
   const rootRoute = segments[0] ?? '';
 
   const { colors, typography } = useAppTheme();
@@ -42,12 +41,6 @@ function RootLayoutNav() {
   }
 
   const inTabsGroup = rootRoute === '(tabs)';
-  const inAuthGroup = pathname.startsWith('/(auth)') || pathname === '/login' || pathname === '/signup';
-  const onLandingRoute = pathname === '/';
-
-  if (user && (inAuthGroup || onLandingRoute)) {
-    return <Redirect href="/(tabs)" />;
-  }
 
   if (!user && inTabsGroup) {
     return <Redirect href="/" />;

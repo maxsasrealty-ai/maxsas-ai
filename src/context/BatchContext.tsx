@@ -45,14 +45,12 @@ export const BatchProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return;
     }
 
-    console.log('🔌 BatchContext: Setting up real-time batch listener');
     setLoading(true);
     setError(null);
 
     const unsubscribe = subscribeToBatches(
       userId,
       (batches) => {
-        console.log('📥 BatchContext: Received real-time update -', batches.length, 'Firebase batches');
         setFirebaseBatches(batches);
         setLoading(false);
       },
@@ -65,7 +63,6 @@ export const BatchProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // Cleanup listener on unmount
     return () => {
-      console.log('🔌 BatchContext: Cleaning up batch listener');
       unsubscribe();
     };
   }, [userId]);
