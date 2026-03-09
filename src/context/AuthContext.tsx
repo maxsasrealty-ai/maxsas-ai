@@ -1,5 +1,4 @@
 import { auth, db, User, UserCredential } from '@/src/lib/firebase';
-import { router } from 'expo-router';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
@@ -29,13 +28,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const unsub = auth.onAuthStateChanged((firebaseUser: User | null) => {
       setUser(firebaseUser);
-      if (!authLoaded) {
-        setAuthLoaded(true);
-      }
+      setAuthLoaded(true);
     });
 
     return unsub;
-  }, [authLoaded]);
+  }, []);
 
   const login = async (email: string, password: string) => {
     setLoading(true);
@@ -86,7 +83,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     await auth.signOut();
-    router.replace('/');
   };
 
   const openLoginModal = () => setIsLoginModalVisible(true);

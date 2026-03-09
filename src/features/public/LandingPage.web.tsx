@@ -1527,9 +1527,33 @@ const Footer = () => (
       </div>
 
       {[
-        { title: 'Product', links: ['Features', 'Pricing', 'Demo', 'API Docs'] },
-        { title: 'Company', links: ['About', 'Blog', 'Careers', 'Contact'] },
-        { title: 'Legal', links: ['Privacy Policy', 'Terms of Service', 'Cookie Policy'] },
+        {
+          title: 'Product',
+          links: [
+            { label: 'Features', href: '#features' },
+            { label: 'Pricing', href: '#pricing' },
+            { label: 'Demo', href: '#demo' },
+            { label: 'How It Works', href: '#how-it-works' },
+          ],
+        },
+        {
+          title: 'Company',
+          links: [
+            { label: 'Home', href: '/' },
+            { label: 'Login', href: '/login' },
+            { label: 'Signup', href: '/signup' },
+            { label: 'Dashboard', href: '/(tabs)' },
+          ],
+        },
+        {
+          title: 'Legal',
+          links: [
+            { label: 'Privacy Policy', href: '/privacy-policy' },
+            { label: 'Terms and Conditions', href: '/terms-and-conditions' },
+            { label: 'Refund Policy', href: '/refund-policy' },
+            { label: 'Return Policy', href: '/return-policy' },
+          ],
+        },
       ].map((col) => (
         <div key={col.title}>
           <div
@@ -1548,11 +1572,11 @@ const Footer = () => (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {col.links.map((l) => (
               <a
-                key={l}
-                href="#"
+                key={l.label}
+                href={l.href}
                 style={{ color: 'rgba(232,237,245,0.4)', textDecoration: 'none', fontSize: 13 }}
               >
-                {l}
+                {l.label}
               </a>
             ))}
           </div>

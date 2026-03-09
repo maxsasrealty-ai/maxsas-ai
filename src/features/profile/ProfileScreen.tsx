@@ -86,6 +86,7 @@ export default function ProfileScreen() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -222,8 +223,14 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = async () => {
-    await logout();
-    router.replace('/');
+    if (loggingOut) return;
+
+    setLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      setLoggingOut(false);
+    }
   };
 
   return (
@@ -402,10 +409,81 @@ export default function ProfileScreen() {
               </Pressable>
             </View>
 
+            <View style={[styles.divider, { backgroundColor: colors.border, marginVertical: spacing.md }]} />
+
+            <Text style={[styles.groupLabel, { color: colors.textMuted, fontSize: typography.caption, marginBottom: spacing.xs }]}>
+              Legal and Policies
+            </Text>
+            <Text style={[styles.billingSubtitle, { color: colors.textMuted, fontSize: typography.caption, marginBottom: spacing.sm }]}>
+              PhonePe compliance and user transparency documents
+            </Text>
+
+            <View style={styles.policyLinksWrap}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.policyLinkRow,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: colors.card,
+                    opacity: pressed ? 0.9 : 1,
+                  },
+                ]}
+                onPress={() => router.push('/terms-and-conditions')}
+              >
+                <Text style={[styles.policyLinkTitle, { color: colors.text }]}>Terms and Conditions</Text>
+                <Feather name="chevron-right" size={16} color={colors.textMuted} />
+              </Pressable>
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.policyLinkRow,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: colors.card,
+                    opacity: pressed ? 0.9 : 1,
+                  },
+                ]}
+                onPress={() => router.push('/refund-policy')}
+              >
+                <Text style={[styles.policyLinkTitle, { color: colors.text }]}>Refund Policy</Text>
+                <Feather name="chevron-right" size={16} color={colors.textMuted} />
+              </Pressable>
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.policyLinkRow,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: colors.card,
+                    opacity: pressed ? 0.9 : 1,
+                  },
+                ]}
+                onPress={() => router.push('/privacy-policy')}
+              >
+                <Text style={[styles.policyLinkTitle, { color: colors.text }]}>Privacy Policy</Text>
+                <Feather name="chevron-right" size={16} color={colors.textMuted} />
+              </Pressable>
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.policyLinkRow,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: colors.card,
+                    opacity: pressed ? 0.9 : 1,
+                  },
+                ]}
+                onPress={() => router.push('/return-policy')}
+              >
+                <Text style={[styles.policyLinkTitle, { color: colors.text }]}>Return Policy (No returns supported)</Text>
+                <Feather name="chevron-right" size={16} color={colors.textMuted} />
+              </Pressable>
+            </View>
+
             {error ? <Text style={[styles.feedback, { color: colors.danger }]}>{error}</Text> : null}
 
             <View style={[styles.actions, { gap: spacing.sm, marginTop: spacing.xs }]}>
-              <AppButton title="Logout" variant="destructive" onPress={handleLogout} />
+              <AppButton title="Logout" variant="destructive" onPress={handleLogout} loading={loggingOut} disabled={loggingOut} />
             </View>
           </>
         )}
@@ -587,6 +665,25 @@ const styles = StyleSheet.create({
   },
   billingSubtitle: {
     lineHeight: 16,
+  },
+  policyLinksWrap: {
+    gap: 8,
+    marginBottom: 12,
+  },
+  policyLinkRow: {
+    borderWidth: 1,
+    borderRadius: 10,
+    minHeight: 44,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  policyLinkTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    flexShrink: 1,
+    paddingRight: 8,
   },
   actions: {},
 });

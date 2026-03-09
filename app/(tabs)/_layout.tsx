@@ -18,9 +18,7 @@ export default function TabLayout() {
     );
   }
 
-  if (!user) {
-    return <Redirect href='/' />;
-  }
+
 
   return (
     <Tabs
