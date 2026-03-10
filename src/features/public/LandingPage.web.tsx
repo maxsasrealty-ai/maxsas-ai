@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { router } from 'expo-router';
+import { type MouseEvent, useEffect, useState } from 'react';
 
 const FontInjector = () => {
   useEffect(() => {
@@ -133,10 +134,16 @@ const Nav = () => {
           alignItems: 'center',
         }}
       >
-        {['Features', 'How It Works', 'Pricing', 'Demo'].map((item) => (
+        {[
+          { label: 'Features', href: '#features' },
+          { label: 'How It Works', href: '#how-it-works' },
+          { label: 'Pricing', href: '#pricing' },
+          { label: 'Demo', href: '#demo' },
+          { label: 'Company Profile', href: '/company-profile' },
+        ].map((item) => (
           <a
-            key={item}
-            href={`#${item.toLowerCase().replace(/ /g, '-')}`}
+            key={item.label}
+            href={item.href}
             style={{
               color: 'rgba(232,237,245,0.7)',
               textDecoration: 'none',
@@ -144,14 +151,18 @@ const Nav = () => {
               fontWeight: 500,
               transition: 'color 0.2s',
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = '#fff')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(232,237,245,0.7)')}
+            onMouseEnter={(e: MouseEvent<HTMLElement>) => (e.currentTarget.style.color = '#fff')}
+            onMouseLeave={(e: MouseEvent<HTMLElement>) => (e.currentTarget.style.color = 'rgba(232,237,245,0.7)')}
           >
-            {item}
+            {item.label}
           </a>
         ))}
         <a
           href="/login"
+          onClick={(e: MouseEvent<HTMLAnchorElement>) => {
+            e.preventDefault();
+            router.push('/login');
+          }}
           style={{
             color: 'rgba(232,237,245,0.6)',
             textDecoration: 'none',
@@ -162,6 +173,10 @@ const Nav = () => {
         </a>
         <a
           href="/signup"
+          onClick={(e: MouseEvent<HTMLAnchorElement>) => {
+            e.preventDefault();
+            router.push('/signup');
+          }}
           style={{
             background: 'linear-gradient(135deg,#4F8CFF,#2563eb)',
             color: '#fff',
@@ -521,11 +536,11 @@ const HeroSection = () => (
               transition: 'transform 0.2s,box-shadow 0.2s',
               textDecoration: 'none',
             }}
-            onMouseEnter={(e) => {
+            onMouseEnter={(e: MouseEvent<HTMLElement>) => {
               e.currentTarget.style.transform = 'translateY(-2px)';
               e.currentTarget.style.boxShadow = '0 0 50px rgba(79,140,255,0.5)';
             }}
-            onMouseLeave={(e) => {
+            onMouseLeave={(e: MouseEvent<HTMLElement>) => {
               e.currentTarget.style.transform = 'translateY(0)';
               e.currentTarget.style.boxShadow = '0 0 30px rgba(79,140,255,0.35)';
             }}
@@ -547,13 +562,17 @@ const HeroSection = () => (
               transition: 'border-color 0.2s',
               textDecoration: 'none',
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'rgba(79,140,255,0.5)')}
-            onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'rgba(232,237,245,0.2)')}
+            onMouseEnter={(e: MouseEvent<HTMLElement>) => (e.currentTarget.style.borderColor = 'rgba(79,140,255,0.5)')}
+            onMouseLeave={(e: MouseEvent<HTMLElement>) => (e.currentTarget.style.borderColor = 'rgba(232,237,245,0.2)')}
           >
             See How It Works
           </a>
           <a
             href="/login"
+            onClick={(e: MouseEvent<HTMLAnchorElement>) => {
+              e.preventDefault();
+              router.push('/login');
+            }}
             style={{
               color: 'rgba(232,237,245,0.45)',
               textDecoration: 'none',
@@ -786,12 +805,12 @@ const FeatureGrid = () => (
             transition: 'transform 0.3s,border-color 0.3s,box-shadow 0.3s',
             cursor: 'default',
           }}
-          onMouseEnter={(e) => {
+          onMouseEnter={(e: MouseEvent<HTMLElement>) => {
             e.currentTarget.style.transform = 'translateY(-4px)';
             e.currentTarget.style.borderColor = 'rgba(79,140,255,0.35)';
             e.currentTarget.style.boxShadow = '0 20px 40px rgba(79,140,255,0.1)';
           }}
-          onMouseLeave={(e) => {
+          onMouseLeave={(e: MouseEvent<HTMLElement>) => {
             e.currentTarget.style.transform = 'translateY(0)';
             e.currentTarget.style.borderColor = 'rgba(79,140,255,0.12)';
             e.currentTarget.style.boxShadow = 'none';
@@ -1163,58 +1182,43 @@ const DemoSection = () => {
 const PricingSection = () => {
   const plans = [
     {
-      name: 'Basic',
-      price: 'INR 4,999',
-      per: '/month',
+      name: 'Starter',
+      price: 'Starting from INR 299',
+      per: '/campaign',
       tag: null,
       color: 'rgba(79,140,255,0.1)',
       border: 'rgba(79,140,255,0.2)',
       features: [
-        'Up to 500 AI calls/month',
-        'Lead qualification scoring',
-        'Basic call transcripts',
-        'Email support',
-        '1 AI agent voice',
-        'Standard analytics',
+        'AI outbound and follow-up calling',
+        'Campaign dashboard with lead upload',
+        'Suitable for small campaign runs',
       ],
     },
     {
-      name: 'Diamond',
-      price: 'INR 12,999',
+      name: 'Growth',
+      price: 'Starting from INR 999',
       per: '/month',
       tag: 'Most Popular',
       color: 'rgba(79,140,255,0.15)',
       border: '#4F8CFF',
       highlight: true,
       features: [
-        'Up to 3,000 AI calls/month',
-        'Advanced lead qualification AI',
-        'Full conversation transcripts',
-        'Priority support + onboarding',
-        '5 AI agent voices & personas',
-        'CRM integration (HubSpot, Zoho)',
-        'Follow-up automation',
-        'Real-time analytics dashboard',
-        'Batch campaign calling',
+        'AI campaign automation and lead management',
+        'Analytics dashboard for campaign insights',
+        'Built for scaling monthly operations',
       ],
     },
     {
-      name: 'Enterprise',
-      price: 'Custom',
-      per: 'pricing',
+      name: 'Pro',
+      price: 'Starting from INR 2,999',
+      per: '/month',
       tag: null,
       color: 'rgba(0,208,132,0.05)',
       border: 'rgba(0,208,132,0.25)',
       features: [
-        'Unlimited AI calls',
-        'Custom AI voice & branding',
-        'Multi-team management',
-        'Dedicated account manager',
-        'Custom CRM & API integration',
-        'White-label option',
-        'SLA + compliance support',
-        'Advanced reporting & BI export',
-        'On-premise deployment available',
+        'Unlimited campaigns with AI voice agents',
+        'Full analytics and priority support',
+        'Ideal for advanced high-volume teams',
       ],
     },
   ];
@@ -1369,7 +1373,7 @@ const PricingSection = () => {
                   boxShadow: p.highlight ? '0 0 25px rgba(79,140,255,0.3)' : 'none',
                 }}
               >
-                {p.name === 'Enterprise' ? 'Contact Sales' : 'Start Free Trial'}
+                {p.name === 'Pro' ? 'Start Pro Plan' : 'Start Free Trial'}
               </button>
             </div>
           ))}
@@ -1432,6 +1436,10 @@ const FinalCTA = () => (
       <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
         <a
           href="/signup"
+          onClick={(e: MouseEvent<HTMLAnchorElement>) => {
+            e.preventDefault();
+            router.push('/signup');
+          }}
           style={{
             background: 'linear-gradient(135deg,#4F8CFF,#2563eb)',
             color: '#fff',
@@ -1449,6 +1457,10 @@ const FinalCTA = () => (
         </a>
         <a
           href="/login"
+          onClick={(e: MouseEvent<HTMLAnchorElement>) => {
+            e.preventDefault();
+            router.push('/login');
+          }}
           style={{
             background: 'transparent',
             color: 'rgba(232,237,245,0.8)',
@@ -1540,6 +1552,7 @@ const Footer = () => (
           title: 'Company',
           links: [
             { label: 'Home', href: '/' },
+            { label: 'Company Profile', href: '/company-profile' },
             { label: 'Login', href: '/login' },
             { label: 'Signup', href: '/signup' },
             { label: 'Dashboard', href: '/(tabs)' },
@@ -1549,8 +1562,9 @@ const Footer = () => (
           title: 'Legal',
           links: [
             { label: 'Privacy Policy', href: '/privacy-policy' },
-            { label: 'Terms and Conditions', href: '/terms-and-conditions' },
+            { label: 'Terms of Service', href: '/terms-of-service' },
             { label: 'Refund Policy', href: '/refund-policy' },
+            { label: 'Contact Us', href: '/contact-us' },
           ],
         },
       ].map((col) => (

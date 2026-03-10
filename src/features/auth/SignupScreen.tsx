@@ -3,16 +3,15 @@ import { AppInput } from '@/src/components/ui/AppInput';
 import { ScreenContainer } from '@/src/components/ui/ScreenContainer';
 import { useAuth } from '@/src/context/AuthContext';
 import { useAppTheme } from '@/src/theme/use-app-theme';
-import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 
 const SignupScreen = () => {
@@ -51,9 +50,9 @@ const SignupScreen = () => {
   };
 
   return (
-    <ScreenContainer>
+    <ScreenContainer scroll={false}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.flex}
       >
         <ScrollView
@@ -62,7 +61,7 @@ const SignupScreen = () => {
         >
           <View style={styles.header}>
             <View style={[styles.logo, { backgroundColor: colors.surface }]}>
-              <Ionicons name="aperture" size={40} color={colors.accent} />
+              <Text style={[styles.logoMark, { color: colors.accent }]}>M</Text>
             </View>
             <Text style={[styles.title, { color: colors.text }]}>Create Account</Text>
             <Text style={[styles.tagline, { color: colors.textMuted }]}>
@@ -71,41 +70,54 @@ const SignupScreen = () => {
           </View>
 
           <View style={styles.form}>
-            <AppInput
-              label="EMAIL"
-              placeholder="you@example.com"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            <AppInput
-              label="PASSWORD"
-              placeholder="••••••••"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!isPasswordVisible}
-              rightIcon={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
-              onRightIconPress={() => setIsPasswordVisible(!isPasswordVisible)}
-            />
-            <AppInput
-              label="CONFIRM PASSWORD"
-              placeholder="••••••••"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry={!isConfirmPasswordVisible}
-              rightIcon={isConfirmPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
-              onRightIconPress={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)}
-            />
+            <View>
+              <AppInput
+                label="EMAIL"
+                placeholder="you@example.com"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                autoCorrect={false}
+                spellCheck={false}
+              />
+              <AppInput
+                label="PASSWORD"
+                placeholder="••••••••"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!isPasswordVisible}
+                rightIcon={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+                onRightIconPress={() => setIsPasswordVisible(!isPasswordVisible)}
+                autoCapitalize="none"
+                autoComplete="new-password"
+                autoCorrect={false}
+                spellCheck={false}
+              />
+              <AppInput
+                label="CONFIRM PASSWORD"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={!isConfirmPasswordVisible}
+                rightIcon={isConfirmPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+                onRightIconPress={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)}
+                autoCapitalize="none"
+                autoComplete="new-password"
+                autoCorrect={false}
+                spellCheck={false}
+              />
 
-            {error ? <Text style={[styles.errorText, { color: colors.danger }]}>{error}</Text> : null}
+              {error ? <Text style={[styles.errorText, { color: colors.danger }]}>{error}</Text> : null}
 
-            <AppButton
-              title="Create Account"
-              onPress={handleSignup}
-              loading={loading}
-              style={{ marginTop: 16 }}
-            />
+              <AppButton
+                title="Create Account"
+                onPress={handleSignup}
+                loading={loading}
+                style={{ marginTop: 16 }}
+              />
+            </View>
           </View>
 
           <View style={styles.footer}>
@@ -152,6 +164,11 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '800',
     letterSpacing: 0.5,
+  },
+  logoMark: {
+    fontSize: 32,
+    fontWeight: '800',
+    lineHeight: 36,
   },
   tagline: {
     fontSize: 16,

@@ -26,6 +26,10 @@ jest.mock('@/src/hooks/useForgotPassword', () => ({
   useForgotPassword: jest.fn(),
 }));
 
+jest.mock('@/src/modules/admin/services/createEnterpriseClient', () => ({
+  isEnterpriseClientAuthUid: jest.fn(),
+}));
+
 // Mock Ionicons
 jest.mock('@expo/vector-icons', () => {
   const { View } = require('react-native');
@@ -39,6 +43,8 @@ describe('LoginScreen', () => {
   const mockUseAuth = useAuth as jest.Mock;
   const mockUseGoogleAuth = useGoogleAuth as jest.Mock;
   const mockUseForgotPassword = require('@/src/hooks/useForgotPassword').useForgotPassword as jest.Mock;
+  const mockIsEnterpriseClientAuthUid = require('@/src/modules/admin/services/createEnterpriseClient')
+    .isEnterpriseClientAuthUid as jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -61,6 +67,7 @@ describe('LoginScreen', () => {
       sendResetEmail: jest.fn(),
       clearMessages: jest.fn(),
     });
+    mockIsEnterpriseClientAuthUid.mockResolvedValue(false);
   });
 
   it('renders correctly', () => {

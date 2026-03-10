@@ -1,5 +1,4 @@
 import { useAppTheme } from '@/src/theme/use-app-theme';
-import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View, ViewStyle } from 'react-native';
 
 type AppInputProps = {
@@ -10,11 +9,14 @@ type AppInputProps = {
   onChangeText?: (text: string) => void;
   keyboardType?: 'default' | 'email-address' | 'phone-pad';
   autoCapitalize?: 'none' | 'words' | 'sentences' | 'characters';
-  rightIcon?: keyof typeof Ionicons.glyphMap;
+  rightIcon?: string;
   onRightIconPress?: () => void;
   containerStyle?: ViewStyle;
   maxLength?: number;
   editable?: boolean;
+  autoComplete?: string;
+  autoCorrect?: boolean;
+  spellCheck?: boolean;
 };
 
 export const AppInput = (props: AppInputProps) => {
@@ -31,6 +33,9 @@ export const AppInput = (props: AppInputProps) => {
     containerStyle,
     maxLength,
     editable = true,
+    autoComplete,
+    autoCorrect,
+    spellCheck,
   } = props;
   const { colors, spacing, radius, typography } = useAppTheme();
 
@@ -79,10 +84,13 @@ export const AppInput = (props: AppInputProps) => {
           ]}
           maxLength={maxLength}
           editable={editable}
+          autoComplete={autoComplete as any}
+          autoCorrect={autoCorrect}
+          spellCheck={spellCheck}
         />
         {rightIcon && (
           <TouchableOpacity onPress={onRightIconPress} style={styles.icon}>
-            <Ionicons name={rightIcon} size={22} color={colors.textMuted} />
+            <Text style={[styles.iconText, { color: colors.textMuted }]}>{rightIcon.includes('off') ? 'HIDE' : 'SHOW'}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -105,5 +113,10 @@ const styles = StyleSheet.create({
   },
   icon: {
     paddingHorizontal: 12,
+  },
+  iconText: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.6,
   },
 });

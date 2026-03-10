@@ -1,5 +1,5 @@
-import HomeScreen from '@/src/features/home/HomeScreen';
+import BasicHomeScreen from '@/src/modules/basic/dashboard';
 
 export default function HomeRoute() {
-  return <HomeScreen />;
+  return <BasicHomeScreen />;
 }

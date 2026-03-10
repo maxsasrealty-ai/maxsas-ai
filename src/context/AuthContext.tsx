@@ -1,4 +1,5 @@
 import { auth, db, User, UserCredential } from '@/src/lib/firebase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
@@ -86,6 +87,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setAuthLoaded(true);
     await auth.signOut();
+
+    try {
+      await AsyncStorage.multiRemove(['devLogin', 'devUserRole', 'devUserEmail']);
+    } catch (storageError) {
+      console.error('Failed to clear DEV session keys during logout:', storageError);
+    }
   };
 
   const openLoginModal = () => setIsLoginModalVisible(true);

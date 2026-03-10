@@ -1,7 +1,8 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Redirect, Stack, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -14,7 +15,9 @@ import { useAppTheme } from '@/src/theme/use-app-theme';
 function RootLayoutNav() {
   const { authLoaded, user } = useAuth();
   const segments = useSegments();
-  const rootRoute = segments[0] ?? '';
+  const rootRoute = String(segments[0] ?? '');
+  const [devRole, setDevRole] = useState<string | null>(null);
+  const [devSessionLoaded, setDevSessionLoaded] = useState(false);
 
   const { colors, typography } = useAppTheme();
   const stackScreenOptions = useMemo(
@@ -35,19 +38,68 @@ function RootLayoutNav() {
     }),
     [colors.background, colors.card, colors.text, typography.body]
   );
+
+  useEffect(() => {
+    let active = true;
+
+    const loadDevSessionRole = async () => {
+      if (!__DEV__) {
+        if (active) {
+          setDevRole(null);
+          setDevSessionLoaded(true);
+        }
+        return;
+      }
+
+      try {
+        const [devLogin, role] = await Promise.all([
+          AsyncStorage.getItem('devLogin'),
+          AsyncStorage.getItem('devUserRole'),
+        ]);
+
+        if (!active) {
+          return;
+        }
+
+        setDevRole(devLogin === 'true' ? role : null);
+      } catch (storageError) {
+        if (active) {
+          console.error('Failed to read DEV auth session:', storageError);
+          setDevRole(null);
+        }
+      } finally {
+        if (active) {
+          setDevSessionLoaded(true);
+        }
+      }
+    };
+
+    setDevSessionLoaded(false);
+    void loadDevSessionRole();
+
+    return () => {
+      active = false;
+    };
+  }, [rootRoute, user]);
   
-  if (!authLoaded) {
+  if (!authLoaded || !devSessionLoaded) {
     return null;
   }
 
   const inTabsGroup = rootRoute === '(tabs)';
+  const inEnterpriseGroup = rootRoute === '(enterprise)';
+  const hasEnterpriseDevSession = __DEV__ && devRole === 'enterprise_client';
 
   if (!user && inTabsGroup) {
     return <Redirect href="/" />;
   }
 
+  if (!user && inEnterpriseGroup && !hasEnterpriseDevSession) {
+    return <Redirect href="/" />;
+  }
+
   return (
-    <Stack screenOptions={stackScreenOptions}>
+    <Stack initialRouteName="index" screenOptions={stackScreenOptions}>
       <Stack.Screen name="index" options={{ headerShown: false, headerBackVisible: false }} />
       <Stack.Screen name="dashboard" options={{ headerShown: false, headerBackVisible: false }} />
       <Stack.Screen name="(auth)" options={{ headerShown: false, headerBackVisible: false }} />
@@ -55,22 +107,25 @@ function RootLayoutNav() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false, headerBackVisible: false }} />
       <Stack.Screen name="login" options={{ headerShown: false, headerBackVisible: false }} />
       <Stack.Screen name="signup" options={{ headerShown: false, headerBackVisible: false }} />
-      <Stack.Screen name="batch-dashboard" options={{ title: 'Batch Dashboard' }} />
-      <Stack.Screen name="batch-detail" options={{ title: 'Batch Details' }} />
-      <Stack.Screen name="batch-results" options={{ title: 'Batch Results' }} />
-      <Stack.Screen name="imports" options={{ title: 'Import Leads' }} />
-      <Stack.Screen name="upload-leads" options={{ title: 'Upload Leads' }} />
-      <Stack.Screen name="attach-file" options={{ title: 'Attach File' }} />
-      <Stack.Screen name="image-import" options={{ title: 'Image Import' }} />
-      <Stack.Screen name="paste-leads" options={{ title: 'Paste Leads' }} />
-      <Stack.Screen name="follow-up-schedule" options={{ title: 'Schedule Follow-up' }} />
-      <Stack.Screen name="scheduled-follow-ups" options={{ title: 'Scheduled Follow-ups' }} />
+      <Stack.Screen name="(batch)/batch-dashboard" options={{ title: 'Batch Dashboard' }} />
+      <Stack.Screen name="(batch)/batch-detail" options={{ title: 'Batch Details' }} />
+      <Stack.Screen name="(batch)/batch-results" options={{ title: 'Batch Results' }} />
+      <Stack.Screen name="(leads)/imports" options={{ title: 'Import Leads' }} />
+      <Stack.Screen name="(leads)/upload-leads" options={{ title: 'Upload Leads' }} />
+      <Stack.Screen name="(leads)/attach-file" options={{ title: 'Attach File' }} />
+      <Stack.Screen name="(leads)/image-import" options={{ title: 'Image Import' }} />
+      <Stack.Screen name="(leads)/paste-leads" options={{ title: 'Paste Leads' }} />
+      <Stack.Screen name="(batch)/follow-up-schedule" options={{ title: 'Schedule Follow-up' }} />
+      <Stack.Screen name="(batch)/scheduled-follow-ups" options={{ title: 'Scheduled Follow-ups' }} />
       <Stack.Screen name="payment-history" options={{ title: 'Payment History' }} />
       <Stack.Screen name="transaction-history" options={{ title: 'Transaction History' }} />
-      <Stack.Screen name="batch-charges" options={{ title: 'Batch Charges' }} />
-      <Stack.Screen name="batch-billing-detail" options={{ title: 'Batch Billing Detail' }} />
+      <Stack.Screen name="(batch)/batch-charges" options={{ title: 'Batch Charges' }} />
+      <Stack.Screen name="(batch)/batch-billing-detail" options={{ title: 'Batch Billing Detail' }} />
       <Stack.Screen name="settings" options={{ title: 'Settings' }} />
       <Stack.Screen name="feedback" options={{ title: 'Feedback' }} />
+      <Stack.Screen name="company-profile" options={{ title: 'Company Profile' }} />
+      <Stack.Screen name="contact-us" options={{ title: 'Contact Us' }} />
+      <Stack.Screen name="terms-of-service" options={{ title: 'Terms of Service' }} />
       <Stack.Screen name="terms-and-conditions" options={{ title: 'Terms and Conditions' }} />
       <Stack.Screen name="refund-policy" options={{ title: 'Refund Policy' }} />
       <Stack.Screen name="privacy-policy" options={{ title: 'Privacy Policy' }} />
