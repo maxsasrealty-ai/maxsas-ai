@@ -3,19 +3,19 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 const PLANS = [
   {
     title: 'Starter',
-    price: 'Starting from Rs.299',
-    desc: 'Entry pricing for campaign-based AI calling usage.',
+    price: 'Rs.4,999/mo',
+    desc: 'For small teams starting AI lead follow-up.',
   },
   {
     title: 'Growth',
-    price: 'Starting from Rs.999/mo',
-    desc: 'Best for growing teams running automated AI workflows.',
+    price: 'Rs.14,999/mo',
+    desc: 'Scale batch campaigns and analytics across multiple projects.',
     featured: true,
   },
   {
-    title: 'Pro',
-    price: 'Starting from Rs.2,999/mo',
-    desc: 'Advanced setup for high-volume campaigns and priority support.',
+    title: 'Enterprise',
+    price: 'Custom',
+    desc: 'Dedicated AI workflows, advanced controls, and integration support.',
   },
 ];
 

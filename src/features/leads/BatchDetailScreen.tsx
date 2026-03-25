@@ -463,15 +463,7 @@ export const BatchDetailScreen: React.FC = () => {
     setTimeout(() => setRetryToastVisible(false), 2400);
   };
 
-  const getRetryWebhookUrl = () => {
-    const webhookUrl = process.env.EXPO_PUBLIC_RETRY_LEAD_WEBHOOK_URL?.trim() || '';
-
-    if (!webhookUrl) {
-      throw new Error('Retry lead webhook URL is not configured. Set EXPO_PUBLIC_RETRY_LEAD_WEBHOOK_URL.');
-    }
-
-    return webhookUrl;
-  };
+  // Webhook retry logic removed. Use backend-driven retry via internal API/service.
 
   const updateBatchForBillingIfResolved = async (remainingLeads: Lead[]) => {
     if (!batch || batch.status === 'draft') {
@@ -726,8 +718,8 @@ export const BatchDetailScreen: React.FC = () => {
       const { attempts: preservedAttempts, retryCount: preservedRetryCount } =
         await preserveRetryFieldsAndQueue(lead);
 
-      const webhookUrl = getRetryWebhookUrl();
-      await queueRetryLead(lead, webhookUrl, preservedRetryCount, preservedAttempts);
+      // Webhook retry removed: use backend-driven retry or internal logic here.
+      await queueRetryLead(lead, '', preservedRetryCount, preservedAttempts);
 
       showRetryToast('Lead successfully queued for retry', 'success');
     } catch (error) {
@@ -806,13 +798,8 @@ export const BatchDetailScreen: React.FC = () => {
       return;
     }
 
+    // Webhook retry removed: use backend-driven retry or internal logic here.
     let webhookUrl = '';
-    try {
-      webhookUrl = getRetryWebhookUrl();
-    } catch (error) {
-      showRetryToast(error instanceof Error ? error.message : 'Retry webhook is not configured', 'error');
-      return;
-    }
 
     setBulkActionLoading('retry');
 

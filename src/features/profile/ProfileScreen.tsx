@@ -279,7 +279,7 @@ export default function ProfileScreen() {
                     setError('');
                     setIsEditing(true);
                   }}
-                  style={({ pressed }: { pressed: boolean }) => [
+                  style={({ pressed }) => [
                     styles.editButton,
                     {
                       borderColor: colors.border,
@@ -296,7 +296,7 @@ export default function ProfileScreen() {
                   <Pressable
                     onPress={handleCancelEdit}
                     disabled={saving}
-                    style={({ pressed }: { pressed: boolean }) => [
+                    style={({ pressed }) => [
                       styles.inlineActionButton,
                       {
                         borderColor: colors.border,
@@ -311,7 +311,7 @@ export default function ProfileScreen() {
                   <Pressable
                     onPress={handleSave}
                     disabled={saving || !hasChanges}
-                    style={({ pressed }: { pressed: boolean }) => [
+                    style={({ pressed }) => [
                       styles.inlineActionButton,
                       {
                         borderColor: colors.primary,
@@ -365,7 +365,7 @@ export default function ProfileScreen() {
                 <FloatingInputField
                   label="Phone"
                   value={phone}
-                  onChangeText={(value: string) => setPhone(value.replace(/\D/g, '').slice(0, 10))}
+                  onChangeText={(value) => setPhone(value.replace(/\D/g, '').slice(0, 10))}
                   keyboardType="phone-pad"
                   maxLength={10}
                   colors={colors}
@@ -378,7 +378,7 @@ export default function ProfileScreen() {
             <Text style={[styles.groupLabel, { color: colors.textMuted, fontSize: typography.caption, marginBottom: spacing.xs }]}>Billing</Text>
             <View style={[styles.billingCardsRow, { gap: spacing.sm }]}> 
               <Pressable
-                style={({ pressed }: { pressed: boolean }) => [
+                style={({ pressed }) => [
                   styles.billingCard,
                   {
                     borderColor: colors.border,
@@ -397,7 +397,7 @@ export default function ProfileScreen() {
               </Pressable>
 
               <Pressable
-                style={({ pressed }: { pressed: boolean }) => [
+                style={({ pressed }) => [
                   styles.billingCard,
                   {
                     borderColor: colors.border,
@@ -427,7 +427,7 @@ export default function ProfileScreen() {
 
             <View style={styles.policyLinksWrap}>
               <Pressable
-                style={({ pressed }: { pressed: boolean }) => [
+                style={({ pressed }) => [
                   styles.policyLinkRow,
                   {
                     borderColor: colors.border,
@@ -442,7 +442,7 @@ export default function ProfileScreen() {
               </Pressable>
 
               <Pressable
-                style={({ pressed }: { pressed: boolean }) => [
+                style={({ pressed }) => [
                   styles.policyLinkRow,
                   {
                     borderColor: colors.border,
@@ -457,7 +457,7 @@ export default function ProfileScreen() {
               </Pressable>
 
               <Pressable
-                style={({ pressed }: { pressed: boolean }) => [
+                style={({ pressed }) => [
                   styles.policyLinkRow,
                   {
                     borderColor: colors.border,

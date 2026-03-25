@@ -1,6 +1,8 @@
+
+import { ADMIN_CONFIG } from '@/src/config/admin';
 import { auth, db, User, UserCredential } from '@/src/lib/firebase';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { doc, setDoc, Timestamp } from 'firebase/firestore';
+import { useRouter } from 'expo-router';
+import { doc, getDoc, setDoc, Timestamp, updateDoc } from 'firebase/firestore';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 import LoginRequiredModal from '@/src/components/auth/LoginRequiredModal';
@@ -25,6 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [authLoaded, setAuthLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged((firebaseUser: User | null) => {
@@ -38,7 +41,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      return await auth.signInWithEmailAndPassword(email, password);
+      const userCredential = await auth.signInWithEmailAndPassword(email, password);
+      const user = userCredential.user;
+
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+      let role = 'user';
+
+      if (user.email === ADMIN_CONFIG.email) {
+        if (!userDoc.exists()) {
+          await setDoc(userDocRef, {
+            userId: user.uid,
+            email: user.email,
+            role: 'admin',
+          });
+        } else if (userDoc.data().role !== 'admin') {
+          await updateDoc(userDocRef, { role: 'admin' });
+        }
+        role = 'admin';
+      } else if (userDoc.exists()) {
+        role = userDoc.data().role || 'user';
+      }
+
+      if (role === 'admin') {
+        router.replace('/admin');
+      } else {
+        router.replace('/(tabs)');
+      }
+
+      return userCredential;
     } finally {
       setLoading(false);
     }
@@ -58,6 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userData: any = {
         userId: user.uid,
         email: user.email,
+        role: user.email === ADMIN_CONFIG.email ? 'admin' : 'user',
         // PHASE 1: Concurrency control fields
         maxCurrentCalls: 2, // Default for free tier
         currentActiveCalls: 0,
@@ -76,6 +108,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       await setDoc(doc(db, 'users', user.uid), userData);
+      
+      if (userData.role === 'admin') {
+        router.replace('/admin');
+      } else {
+        router.replace('/(tabs)');
+      }
+      
       return userCredential;
     } finally {
       setLoading(false);
@@ -87,12 +126,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setAuthLoaded(true);
     await auth.signOut();
-
-    try {
-      await AsyncStorage.multiRemove(['devLogin', 'devUserRole', 'devUserEmail']);
-    } catch (storageError) {
-      console.error('Failed to clear DEV session keys during logout:', storageError);
-    }
   };
 
   const openLoginModal = () => setIsLoginModalVisible(true);

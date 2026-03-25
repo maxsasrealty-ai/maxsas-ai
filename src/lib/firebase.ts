@@ -4,13 +4,13 @@ import { Platform } from 'react-native';
 
 // Web imports
 import {
-  createUserWithEmailAndPassword,
-  getAuth,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut,
-  User as WebUser,
-  UserCredential as WebUserCredential,
+    createUserWithEmailAndPassword,
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    signOut,
+    User as WebUser,
+    UserCredential as WebUserCredential,
 } from 'firebase/auth';
 
 // Type imports only (no runtime import for native on web)
@@ -34,7 +34,7 @@ export const getCurrentUserId = () => {
   } else {
     // For native platforms, import at runtime
     try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+       
       const nativeAuth = require('@react-native-firebase/auth').default;
       return nativeAuth().currentUser?.uid ?? null;
     } catch (error) {
@@ -42,6 +42,17 @@ export const getCurrentUserId = () => {
       return null;
     }
   }
+};
+
+// Helper to remove undefined values from objects
+const cleanData = (obj: any): any => {
+  const cleaned: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      cleaned[key] = value;
+    }
+  }
+  return cleaned;
 };
 
 /**
@@ -77,7 +88,7 @@ if (Platform.OS === 'web') {
 } else {
   // Dynamic import for native platforms only
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     const nativeAuth = require('@react-native-firebase/auth').default;
     authWrapper = {
       onAuthStateChanged: (callback: any) => nativeAuth().onAuthStateChanged(callback),

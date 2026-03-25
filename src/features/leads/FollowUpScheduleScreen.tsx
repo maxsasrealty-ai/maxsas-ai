@@ -6,7 +6,7 @@
 import { AppHeader } from '@/src/components/ui/AppHeader';
 import { ScreenContainer } from '@/src/components/ui/ScreenContainer';
 import { useAuth } from '@/src/context/AuthContext';
-import { scheduleFollowUp } from '@/src/lib/leadService';
+import { scheduleFollowUp } from '@/src/services/leadService';
 import { useAppTheme } from '@/src/theme/use-app-theme';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
