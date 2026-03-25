@@ -1,0 +1,54 @@
+.web-screen-container {
+  min-height: 100vh;
+  background: #0B1F3A;
+}
+.web-navbar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 32px;
+  background: #0B1F3A;
+  border-bottom: 2px solid #FF00FF;
+  z-index: 100;
+  box-shadow: 0 0 8px 2px #FF00FF;
+}
+.web-navbar-logo {
+  color: #4F8CFF;
+  font-weight: 900;
+  font-size: 22px;
+  letter-spacing: 1.2px;
+  font-family: 'Syne', sans-serif;
+}
+.web-navbar-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  max-width: 100vw;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  background: #222;
+  border: 2px dashed #FF00FF;
+  padding: 4px 0;
+}
+.web-navbar-tab {
+  padding: 8px 16px;
+  border-radius: 18px;
+  color: #E8EDF5;
+  font-weight: 700;
+  font-size: 15px;
+  font-family: 'DM Sans', sans-serif;
+  letter-spacing: 0.2px;
+  text-decoration: none;
+  transition: background 0.15s;
+  white-space: nowrap;
+  border: 2px solid #FF00FF;
+  background: #333;
+}
+.web-navbar-tab:hover {
+  background: rgba(79,140,255,0.08);
+}
+.web-content-scroll {
+  padding: 0 20px;
+}

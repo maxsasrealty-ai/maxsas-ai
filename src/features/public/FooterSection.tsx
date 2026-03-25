@@ -14,9 +14,6 @@ export function FooterSection() {
       <Text style={styles.brand}>Maxsas Realty AI</Text>
       <Text style={styles.copy}>AI Voice Calling Platform for real estate businesses.</Text>
       <View style={styles.links}>
-        <Pressable onPress={() => router.push('/company-profile')}>
-          <Text style={styles.link}>Company Profile</Text>
-        </Pressable>
         <Pressable onPress={() => router.push('/(tabs)')}>
           <Text style={styles.link}>Explore</Text>
         </Pressable>
@@ -30,17 +27,14 @@ export function FooterSection() {
 
       <Text style={styles.legalHeading}>Legal</Text>
       <View style={styles.legalLinks}>
-        <Pressable onPress={() => router.push('/terms-of-service')}>
-          <Text style={styles.legalLink}>Terms of Service</Text>
+        <Pressable onPress={() => router.push('/terms-and-conditions')}>
+          <Text style={styles.legalLink}>Terms and Conditions</Text>
         </Pressable>
         <Pressable onPress={() => router.push('/refund-policy')}>
           <Text style={styles.legalLink}>Refund Policy</Text>
         </Pressable>
         <Pressable onPress={() => router.push('/privacy-policy')}>
           <Text style={styles.legalLink}>Privacy Policy</Text>
-        </Pressable>
-        <Pressable onPress={() => router.push('/contact-us')}>
-          <Text style={styles.legalLink}>Contact Us</Text>
         </Pressable>
       </View>
     </View>

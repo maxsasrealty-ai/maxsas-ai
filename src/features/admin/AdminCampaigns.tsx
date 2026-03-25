@@ -27,17 +27,7 @@ const CAMPAIGNS: Campaign[] = [
   { id: 'CMP-204', name: 'Luxury Segment Reactivation', calls: 980, total: 1200, status: 'Live' },
 ];
 
-function injectFonts(): void {
-  if (typeof document === 'undefined') return;
-  const existing = document.getElementById('maxsas-admin-fonts');
-  if (existing) return;
-  const link = document.createElement('link');
-  link.id = 'maxsas-admin-fonts';
-  link.rel = 'stylesheet';
-  link.href =
-    'https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap';
-  document.head.appendChild(link);
-}
+import injectFonts from './injectFonts';
 
 function statusBadge(status: CampaignStatus): { bg: string; border: string; color: string } {
   if (status === 'Live') return { bg: 'rgba(0,208,132,0.1)', border: '1px solid rgba(0,208,132,0.25)', color: '#00D084' };

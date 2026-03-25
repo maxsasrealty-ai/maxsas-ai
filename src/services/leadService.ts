@@ -827,3 +827,17 @@ export function subscribeToBatchLeads(
 
   return unsubscribe;
 }
+
+/**
+ * Schedules a follow-up call for a lead
+ * 
+ * @param leadId - The lead ID
+ * @param date - The date and time for the follow-up call
+ * @param notes - Notes for the follow-up call
+ * @returns Promise that resolves when the follow-up is scheduled
+ */
+export async function scheduleFollowUp(leadId: string, date: Date, notes: string): Promise<void> {
+  // Placeholder: implement Firestore or mock logic as needed
+  // For now, just resolve after a short delay
+  return new Promise((resolve) => setTimeout(resolve, 500));
+}

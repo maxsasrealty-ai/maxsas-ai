@@ -1,26 +1,23 @@
-// DEV ONLY: Temporary login credentials for testing admin and enterprise panels.
-// Remove before production deployment.
 import { AppButton } from '@/src/components/ui/AppButton';
 import { AppInput } from '@/src/components/ui/AppInput';
 import { ScreenContainer } from '@/src/components/ui/ScreenContainer';
 import { useAuth } from '@/src/context/AuthContext';
 import { SUCCESS_MESSAGE, useForgotPassword } from '@/src/hooks/useForgotPassword';
 import { useGoogleAuth } from '@/src/hooks/useGoogleAuth';
-import { isEnterpriseClientAuthUid } from '@/src/modules/admin/services/createEnterpriseClient';
 import { useAppTheme } from '@/src/theme/use-app-theme';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 const LoginScreen = () => {
@@ -35,43 +32,10 @@ const LoginScreen = () => {
   const { promptAsync, request, loading: googleLoading, error: googleError, isConfigured: isGoogleConfigured } = useGoogleAuth();
   const { loading: resetLoading, error: resetError, success: resetSuccess, sendResetEmail, clearMessages } = useForgotPassword();
 
-  const DEV_ENTERPRISE_EMAIL = 'enterprise@test.com';
-  const DEV_ENTERPRISE_PASSWORD = 'Enterprise@123';
-  const DEV_ADMIN_EMAIL = 'admin@test.com';
-  const DEV_ADMIN_PASSWORD = 'Admin@123';
-
   useEffect(() => {
-    let active = true;
-
-    const routeAuthenticatedUser = async () => {
-      if (!user) {
-        return;
-      }
-
-      try {
-        const isEnterpriseClient = await isEnterpriseClientAuthUid(user.uid);
-        if (!active) {
-          return;
-        }
-
-        if (isEnterpriseClient) {
-          router.replace('/(enterprise)/dashboard');
-          return;
-        }
-      } catch (routingError) {
-        console.error('Failed to resolve enterprise client routing:', routingError);
-      }
-
-      if (active) {
-        router.replace('/(tabs)');
-      }
-    };
-
-    void routeAuthenticatedUser();
-
-    return () => {
-      active = false;
-    };
+    if (user) {
+      router.replace('/(tabs)');
+    }
   }, [user]);
 
   useEffect(() => {
@@ -96,50 +60,6 @@ const LoginScreen = () => {
       return;
     }
     setError('');
-
-    const normalizedEmail = email.trim().toLowerCase();
-    const rawPassword = password;
-
-    if (
-      __DEV__ &&
-      normalizedEmail === DEV_ENTERPRISE_EMAIL &&
-      rawPassword === DEV_ENTERPRISE_PASSWORD
-    ) {
-      try {
-        await Promise.all([
-          AsyncStorage.setItem('devUserRole', 'enterprise_client'),
-          AsyncStorage.setItem('devUserEmail', DEV_ENTERPRISE_EMAIL),
-          AsyncStorage.setItem('devLogin', 'true'),
-        ]);
-        router.replace('/(enterprise)/dashboard');
-        return;
-      } catch (sessionError) {
-        setError('Unable to initialize DEV enterprise session. Please try again.');
-        console.error('DEV enterprise login failed:', sessionError);
-        return;
-      }
-    }
-
-    if (
-      __DEV__ &&
-      normalizedEmail === DEV_ADMIN_EMAIL &&
-      rawPassword === DEV_ADMIN_PASSWORD
-    ) {
-      try {
-        await Promise.all([
-          AsyncStorage.setItem('devUserRole', 'platform_admin'),
-          AsyncStorage.setItem('devUserEmail', DEV_ADMIN_EMAIL),
-          AsyncStorage.setItem('devLogin', 'true'),
-        ]);
-        router.replace('/(admin)/dashboard');
-        return;
-      } catch (sessionError) {
-        setError('Unable to initialize DEV admin session. Please try again.');
-        console.error('DEV admin login failed:', sessionError);
-        return;
-      }
-    }
-
     try {
       await login(email, password);
     } catch (e: any) {
@@ -169,9 +89,9 @@ const LoginScreen = () => {
   };
 
   return (
-    <ScreenContainer scroll={false}>
+    <ScreenContainer>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}
       >
         <ScrollView
@@ -180,7 +100,7 @@ const LoginScreen = () => {
         >
           <View style={styles.header}>
             <View style={[styles.logo, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.logoMark, { color: colors.accent }]}>M</Text>
+              <Ionicons name="aperture" size={40} color={colors.accent} />
             </View>
             <Text style={[styles.title, { color: colors.text }]}>MAXSAS AI</Text>
             <Text style={[styles.tagline, { color: colors.textMuted }]}>
@@ -189,56 +109,36 @@ const LoginScreen = () => {
           </View>
 
           <View style={styles.form}>
-            <View>
-              <AppInput
-                label="EMAIL"
-                placeholder="you@example.com"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-                autoCorrect={false}
-                spellCheck={false}
-              />
-              <AppInput
-                label="PASSWORD"
-                placeholder="••••••••"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!isPasswordVisible}
-                rightIcon={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
-                onRightIconPress={() => setIsPasswordVisible(!isPasswordVisible)}
-                autoCapitalize="none"
-                autoComplete="current-password"
-                autoCorrect={false}
-                spellCheck={false}
-              />
+            <AppInput
+              label="EMAIL"
+              placeholder="you@example.com"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            <AppInput
+              label="PASSWORD"
+              placeholder="••••••••"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!isPasswordVisible}
+              rightIcon={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+              onRightIconPress={() => setIsPasswordVisible(!isPasswordVisible)}
+            />
 
-              <TouchableOpacity
-                style={styles.forgotPasswordContainer}
-                onPress={handleOpenForgotPassword}
-              >
-                <Text style={[styles.forgotPassword, { color: colors.accent }]}>Forgot password?</Text>
-              </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.forgotPasswordContainer}
+              onPress={handleOpenForgotPassword}
+            >
+              <Text style={[styles.forgotPassword, { color: colors.accent }]}>
+                Forgot password?
+              </Text>
+            </TouchableOpacity>
 
-              {error ? <Text style={[styles.errorText, { color: colors.danger }]}>{error}</Text> : null}
+            {error ? <Text style={[styles.errorText, { color: colors.danger }]}>{error}</Text> : null}
 
-              <AppButton title="Login" onPress={handleLogin} loading={loading} />
-            </View>
-
-            {__DEV__ ? (
-              <View style={styles.devAccountsContainer}>
-                <Text style={[styles.devAccountsTitle, { color: colors.text }]}>DEV TEST ACCOUNTS</Text>
-                <Text style={[styles.devAccountsText, { color: colors.textMuted }]}>Enterprise:</Text>
-                <Text style={[styles.devAccountsText, { color: colors.textMuted }]}>enterprise@test.com</Text>
-                <Text style={[styles.devAccountsText, { color: colors.textMuted }]}>Enterprise@123</Text>
-                <Text style={[styles.devAccountsText, { color: colors.textMuted, marginTop: 8 }]}>Admin:</Text>
-                <Text style={[styles.devAccountsText, { color: colors.textMuted }]}>admin@test.com</Text>
-                <Text style={[styles.devAccountsText, { color: colors.textMuted }]}>Admin@123</Text>
-              </View>
-            ) : null}
-
+            <AppButton title="Login" onPress={handleLogin} loading={loading} />
             {isGoogleConfigured && (
               <View style={styles.googleButtonContainer}>
                 <AppButton
@@ -254,6 +154,28 @@ const LoginScreen = () => {
             {googleError ? (
               <Text style={[styles.errorText, { color: colors.danger }]}>{googleError}</Text>
             ) : null}
+
+            {/* TEMP DEV-ONLY ADMIN & ENTERPRISE BUTTONS */}
+            <View style={{ marginTop: 24, alignItems: 'center', gap: 12 }}>
+              <AppButton
+                title="Admin (DEV ONLY)"
+                variant="destructive"
+                onPress={() => router.replace('/(admin)')}
+                style={{ width: 220 }}
+              />
+              <Text style={{ color: colors.danger, fontSize: 12, marginTop: 4 }}>
+                Direct admin access (bypasses login)
+              </Text>
+              <AppButton
+                title="Enterprise (DEV ONLY)"
+                variant="secondary"
+                onPress={() => router.replace('/(enterprise)')}
+                style={{ width: 220, marginTop: 8 }}
+              />
+              <Text style={{ color: colors.accent, fontSize: 12, marginTop: 4 }}>
+                Direct enterprise access (bypasses login)
+              </Text>
+            </View>
           </View>
 
           <View style={styles.footer}>
@@ -280,7 +202,7 @@ const LoginScreen = () => {
               style={styles.modalCloseButton}
               onPress={handleCloseForgotPasswordModal}
             >
-              <Text style={[styles.modalCloseIcon, { color: colors.text }]}>x</Text>
+              <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
 
             {/* Modal Title */}
@@ -359,11 +281,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.5,
   },
-  logoMark: {
-    fontSize: 32,
-    fontWeight: '800',
-    lineHeight: 36,
-  },
   tagline: {
     fontSize: 16,
     marginTop: 8,
@@ -389,22 +306,6 @@ const styles = StyleSheet.create({
   googleButtonContainer: {
     marginTop: 12,
   },
-  devAccountsContainer: {
-    marginTop: 12,
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-  },
-  devAccountsTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  devAccountsText: {
-    fontSize: 12,
-    lineHeight: 18,
-  },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
@@ -426,11 +327,6 @@ const styles = StyleSheet.create({
     top: 16,
     right: 16,
     padding: 8,
-  },
-  modalCloseIcon: {
-    fontSize: 20,
-    fontWeight: '700',
-    lineHeight: 24,
   },
   modalTitle: {
     fontSize: 20,

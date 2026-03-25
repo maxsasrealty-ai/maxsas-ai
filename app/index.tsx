@@ -1,17 +1,5 @@
-import { StyleSheet, View } from "react-native";
-
-import LandingPage from "@/src/features/public/LandingPage";
+import LandingPage from '@/src/features/public/LandingPage';
 
 export default function Index() {
-  return (
-    <View style={styles.container}>
-      <LandingPage />
-    </View>
-  );
+  return <LandingPage />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});

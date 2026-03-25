@@ -1,4 +1,4 @@
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { doc, getDoc } from 'firebase/firestore';
 import { ActivityIndicator, Alert, Animated, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -57,6 +57,8 @@ const isExpiredValue = (value: unknown): boolean => {
 
 export default function HomeScreen() {
   const { colors, typography, radius } = useAppTheme();
+  // router is already imported from expo-router
+  const router = useRouter();
   const { user, requireAuth } = useAuth();
   const params = useLocalSearchParams<{ hideDemoCard?: string | string[]; pass?: string | string[] }>();
   const passParam = Array.isArray(params?.pass) ? params.pass[0] : params?.pass;
@@ -701,8 +703,63 @@ export default function HomeScreen() {
   const isStartDemoDisabled = demoCallState === 'calling' || demoCallLoading || isDemoFinished;
   const shouldShowViewTranscript = demoScriptReady || isDemoFinished;
 
+
+  // --- Top Navigation Bar ---
+  const navTabs = [
+    { label: 'Features', path: '/features' },
+    { label: 'How It Works', path: '/how-it-works' },
+    { label: 'Pricing', path: '/pricing' },
+    { label: 'Demo', path: '/demo' },
+    { label: 'Login', path: '/login' },
+    { label: 'Privacy Policy', path: '/privacy-policy' },
+    { label: 'Refund Policy', path: '/refund-policy' },
+    { label: 'Terms & Conditions', path: '/terms-and-conditions' },
+  ];
+
   return (
     <ScreenContainer>
+      {/* Top Navigation Bar */}
+      <View style={{
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 8,
+        paddingTop: 12,
+        paddingBottom: 8,
+        backgroundColor: colors.background,
+        flexWrap: 'wrap',
+        borderBottomWidth: 1,
+        borderColor: colors.border,
+        marginBottom: 8,
+      }}>
+        {navTabs.map(tab => (
+          <TouchableOpacity
+            key={tab.label}
+            onPress={() => router.push(tab.path)}
+            style={{
+              paddingHorizontal: 14,
+              paddingVertical: 7,
+              borderRadius: 20,
+              backgroundColor: colors.card,
+              marginHorizontal: 2,
+              borderWidth: 1,
+              borderColor: colors.border,
+            }}
+            activeOpacity={0.8}
+          >cls
+          
+            <Text style={{
+              color: colors.text,
+              fontWeight: '600',
+              fontSize: 15,
+              fontFamily: typography.fontFamily,
+              // Additional styles can be added here
+              letterSpacing: 0.2,
+            }}>{tab.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       {/* Hero: primary AI presence for trust and focus */}
       <View style={styles.hero}>
         <AIAvatar />
