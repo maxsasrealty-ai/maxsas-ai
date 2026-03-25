@@ -18,11 +18,11 @@ import { db } from '@/src/lib/firebase';
 import { DemoCallDocument, executeDemoCallFlow, getDemoCallById, subscribeToDemoCall } from '@/src/services/demoCallService';
 import { startOperationalNotificationEngine } from '@/src/services/notificationService';
 import {
-    getUserCurrentDemoCallId,
-    getUserDemoStatus,
-    getUserProfile,
-    markDemoCallCompleted,
-    markUserHasSeenDemo,
+  getUserCurrentDemoCallId,
+  getUserDemoStatus,
+  getUserProfile,
+  markDemoCallCompleted,
+  markUserHasSeenDemo,
 } from '@/src/services/userService';
 import { useAppTheme } from '@/src/theme/use-app-theme';
 import { Ionicons } from '@expo/vector-icons';
